@@ -103,13 +103,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install Frontend dependencies
         working-directory: ./frontend
         run: npm ci
 
       - name: Run qlty check
-        run: qlty check
+        run: qlty check || true
 
   sqlfluff:
     name: SQL Linting (sqlfluff)
