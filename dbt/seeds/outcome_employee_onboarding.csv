@@ -1,0 +1,16 @@
+process_type,case_id,metric_name,metric_value,metric_unit
+employee-onboarding,APP-001,hiring_cost,350000,JPY
+employee-onboarding,APP-001,time_to_hire,45,days
+employee-onboarding,APP-001,candidate_score,85,score
+employee-onboarding,APP-002,hiring_cost,420000,JPY
+employee-onboarding,APP-002,time_to_hire,62,days
+employee-onboarding,APP-002,candidate_score,78,score
+employee-onboarding,APP-003,hiring_cost,280000,JPY
+employee-onboarding,APP-003,time_to_hire,38,days
+employee-onboarding,APP-003,candidate_score,92,score
+employee-onboarding,APP-004,hiring_cost,520000,JPY
+employee-onboarding,APP-004,time_to_hire,75,days
+employee-onboarding,APP-004,candidate_score,88,score
+employee-onboarding,APP-005,hiring_cost,310000,JPY
+employee-onboarding,APP-005,time_to_hire,41,days
+employee-onboarding,APP-005,candidate_score,81,score

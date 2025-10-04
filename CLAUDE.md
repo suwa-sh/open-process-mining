@@ -43,6 +43,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `GET /organization/workload`: 作業負荷分析（リアルタイム）
 - `GET /organization/performance`: パフォーマンス分析（リアルタイム）
 
+成果分析API (`/outcome`):
+- `GET /outcome/metrics`: 利用可能なメトリック一覧を取得
+- `GET /outcome/analyses`: 成果分析結果の一覧を取得
+- `GET /outcome/analyses/{analysis_id}`: 特定の成果分析結果を取得
+- `POST /outcome/analyze`: 成果分析を実行し、結果をDBに保存
+
 ### 3. フロントエンド (React + TypeScript)
 
 **技術スタック**:
@@ -69,6 +75,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `PerformanceChart.tsx`: パフォーマンスチャート
 - `OrganizationNode.tsx`: 組織分析用カスタムノード
 
+成果分析:
+- `OutcomeAnalysisList.tsx`: 成果分析結果一覧画面
+- `OutcomeAnalysisDetail.tsx`: 成果分析詳細画面
+- `CreateOutcomeAnalysisModal.tsx`: 新規成果分析作成モーダル
+- `OutcomeProcessMap.tsx`: 成果分析用プロセスマップ（メトリック表示）
+
 **主要機能**:
 - インタラクティブなプロセスマップ表示
 - パスフィルタリング（頻度閾値による動的フィルタ）
@@ -78,6 +90,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - プロセス比較画面（改善前後の効果測定）
 - 組織分析（ハンドオーバー、作業負荷、パフォーマンス）
 - 社員別・部署別の集計レベル切り替え
+- 成果分析（パス別成果、セグメント比較）
+- 成果メトリック表示（平均値、中央値、合計値）
+- 高成果パスの自動検出
 
 ## データモデル
 
@@ -121,6 +136,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | handover_data | JSONB | ハンドオーバー分析結果 |
 | workload_data | JSONB | 作業負荷分析結果 |
 | performance_data | JSONB | パフォーマンス分析結果 |
+| created_at | timestamp | 作成日時 |
+
+### Case Outcomes Schema (`public.fct_case_outcomes`)
+| 列名 | データ型 | 説明 |
+|------|---------|------|
+| process_type | varchar | プロセスタイプ |
+| case_id | varchar | ケースID（fct_event_logと対応） |
+| metric_name | varchar | メトリック名（例: revenue, profit_margin） |
+| metric_value | numeric | メトリック値 |
+| metric_unit | varchar | 単位（例: JPY, percent, count） |
+
+### Outcome Analysis Result Schema (`public.outcome_analysis_results`)
+| 列名 | データ型 | 説明 |
+|------|---------|------|
+| analysis_id | uuid | 成果分析結果の一意なID |
+| analysis_name | varchar | 分析名 |
+| process_type | varchar | プロセスタイプ |
+| metric_name | varchar | メトリック名 |
+| analysis_type | varchar | 分析タイプ（path-outcome, segment-comparison） |
+| filter_config | JSONB | フィルター条件（オプション） |
+| result_data | JSONB | 成果分析結果のJSONデータ |
 | created_at | timestamp | 作成日時 |
 
 ### result_data JSON構造（プロセス分析）
@@ -250,6 +286,143 @@ curl http://localhost:8000/organization/analyses
 - `/analysis/{id}`: プロセスマップ詳細
 - `/organization`: 組織分析一覧
 - `/organization/{id}`: 組織分析詳細
+- `/outcome`: 成果分析一覧
+- `/outcome/{id}`: 成果分析詳細（パス別成果/セグメント比較）
+
+## UI/UX統一の設計原則
+
+プロセス分析、組織分析、成果分析の3つの機能間で一貫したユーザー体験を提供するため、以下の原則に従ってください。
+
+### 新規作成モーダルの統一
+
+**モーダルサイズ**: すべて `size="xl"` を使用
+```typescript
+<Modal isOpen={isOpen} onClose={onClose} size="xl">
+```
+
+**分析名のデフォルト値生成**:
+- 必須項目を `_` で連結
+- 最後に `yyyy-mm-dd` 形式の日付を付与
+- 例: `employee-onboarding_candidate_score_パス別成果_2025-10-05`
+
+**日付フィルターUI**:
+- ラジオボタン形式を使用（チェックボックスは使用しない）
+- フィールドラベル: 「分析対象期間の基準」
+- 選択肢:
+  - "すべての期間を含める" (`value="all"`)
+  - "ケース開始日で絞り込む（推奨）" (`value="start_date"`)
+  - "ケース完了日で絞り込む" (`value="end_date"`)
+
+```typescript
+<FormControl>
+  <FormLabel>分析対象期間の基準</FormLabel>
+  <RadioGroup value={filterMode} onChange={(value) => setFilterMode(value as 'all' | 'start_date' | 'end_date')}>
+    <Stack>
+      <Radio value="all">すべての期間を含める</Radio>
+      <Radio value="start_date">ケース開始日で絞り込む（推奨）</Radio>
+      <Radio value="end_date">ケース完了日で絞り込む</Radio>
+    </Stack>
+  </RadioGroup>
+</FormControl>
+```
+
+### 一覧画面の統一
+
+**フィルターラベル**: すべて「フィルター:」を使用
+```typescript
+<FormLabel>フィルター:</FormLabel>
+```
+
+**ゼロ件表示**: エラー状態を画面全体ではなくリストエリア内に表示
+```typescript
+{loading ? (
+  <Center py={8}>
+    <VStack spacing={4}>
+      <Spinner size="xl" color="blue.500" />
+      <Text>データを読み込んでいます...</Text>
+    </VStack>
+  </Center>
+) : error ? (
+  <Center py={8}>
+    <VStack spacing={3}>
+      <Text fontSize="md" color="gray.600">
+        分析が見つかりません
+      </Text>
+      <Text fontSize="sm" color="gray.500">
+        「新規分析を作成」ボタンから最初の分析を作成してください。
+      </Text>
+    </VStack>
+  </Center>
+) : ...
+```
+
+**ナビゲーションボタン**: 各分析タイプ間を相互に移動できるボタンを配置
+```typescript
+<HStack>
+  <Button colorScheme="blue" onClick={() => navigate('/')}>
+    📈 プロセス分析
+  </Button>
+  <Button colorScheme="purple" onClick={() => navigate('/organization')}>
+    🏢 組織分析
+  </Button>
+  <Button colorScheme="green" onClick={() => navigate('/outcome')}>
+    📊 成果分析
+  </Button>
+</HStack>
+```
+
+**動的データソース**: フィルターオプションはDBから取得（ハードコーディング禁止）
+```typescript
+// プロセスタイプをAPIから取得
+const [processTypes, setProcessTypes] = useState<string[]>([]);
+useEffect(() => {
+  const fetchProcessTypes = async () => {
+    const types = await getProcessTypes();
+    setProcessTypes(types);
+  };
+  fetchProcessTypes();
+}, []);
+```
+
+### 詳細画面の統一
+
+**一覧に戻るボタン**: 各分析タイプの配色で統一
+- プロセス分析: `colorScheme="blue"`
+- 組織分析: `colorScheme="purple"`
+- 成果分析: `colorScheme="green"`
+- すべて `variant="outline"` を使用
+- ボタンテキスト: `← {分析タイプ}一覧に戻る`
+
+```typescript
+// プロセス分析
+<Button variant="outline" colorScheme="blue" onClick={onBack}>
+  ← プロセス分析一覧に戻る
+</Button>
+
+// 組織分析
+<Button variant="outline" colorScheme="purple" onClick={onBack}>
+  ← 組織分析一覧に戻る
+</Button>
+
+// 成果分析
+<Button variant="outline" colorScheme="green" onClick={() => navigate('/outcome')}>
+  ← 成果分析一覧に戻る
+</Button>
+```
+
+### データベーススキーマの統一
+
+すべての分析結果テーブルに以下のカラムを含める:
+- `analysis_id` (UUID, 主キー, `DEFAULT gen_random_uuid()`)
+- `analysis_name` (VARCHAR(255), NOT NULL)
+- `process_type` (VARCHAR(100), NOT NULL)
+- `created_at` (TIMESTAMP, `DEFAULT CURRENT_TIMESTAMP`)
+- 分析固有の設定カラム
+- 結果データ用のJSONBカラム
+
+インデックス作成:
+- `created_at DESC` (ソート用)
+- `process_type` (フィルタリング用)
 
 ## 実装時の重要な設計パターン
 

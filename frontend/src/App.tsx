@@ -5,6 +5,8 @@ import AnalysisList from './components/AnalysisList';
 import ProcessMap from './components/ProcessMap';
 import OrganizationAnalysisList from './components/OrganizationAnalysisList';
 import OrganizationAnalysisDetail from './components/OrganizationAnalysisDetail';
+import OutcomeAnalysisList from './components/outcome/OutcomeAnalysisList';
+import OutcomeAnalysisDetail from './components/outcome/OutcomeAnalysisDetail';
 
 const AnalysisListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -67,6 +69,8 @@ const App: React.FC = () => {
           <Route path="/analysis/:analysisId" element={<ProcessMapPage />} />
           <Route path="/organization" element={<OrganizationAnalysisListPage />} />
           <Route path="/organization/:analysisId" element={<OrganizationAnalysisDetailPage />} />
+          <Route path="/outcome" element={<OutcomeAnalysisList />} />
+          <Route path="/outcome/:id" element={<OutcomeAnalysisDetail />} />
         </Routes>
       </BrowserRouter>
     </ChakraProvider>

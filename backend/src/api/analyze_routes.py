@@ -14,7 +14,10 @@ from src.db.connection import get_db
 from src.services.analyze_service import execute_analysis, get_preview, calculate_lead_time_statistics
 
 
-router = APIRouter()
+router = APIRouter(
+    tags=["プロセス分析（実行）"],
+    responses={404: {"description": "Not found"}},
+)
 
 
 class AnalyzeRequest(BaseModel):

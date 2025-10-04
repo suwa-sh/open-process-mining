@@ -2,6 +2,8 @@
 
 オープンソースのプロセスマイニングプラットフォーム - データ準備から分析、可視化までの一貫したワークフローを提供
 
+> 💡 **自組織でプロセスマイニングを始めたい方へ**: [利用ガイド (USAGE.md)](USAGE.md) で、データ準備から分析実施までの詳細な手順を説明しています。
+
 ## 概要
 
 **open-process-mining** は、データエンジニアとプロセスアナリストの関心事を分離し、それぞれに最適化されたツールを提供するプロセスマイニングプラットフォームです。
@@ -105,9 +107,12 @@ PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から配
 
 ### 主要な画面
 
-- **分析一覧** (`/`): 作成した分析の一覧を表示
+- **プロセス分析一覧** (`/`): 作成したプロセス分析の一覧を表示
 - **プロセスマップ** (`/analysis/{id}`): DFGベースのプロセスフロー可視化
-- **組織分析** (`/organization`): ハンドオーバー・作業負荷・パフォーマンス分析
+- **組織分析一覧** (`/organization`): 組織分析結果の一覧を表示
+- **組織分析詳細** (`/organization/{id}`): ハンドオーバー・作業負荷・パフォーマンス分析
+- **成果分析一覧** (`/outcome`): 成果分析結果の一覧を表示
+- **成果分析詳細** (`/outcome/{id}`): パス別成果分析・セグメント比較
 
 ## スクリーンショット
 
@@ -145,6 +150,18 @@ PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から配
 - **⏱️ パフォーマンス分析**: 誰の処理時間が長いかを可視化
   - 平均処理時間・中央値・合計時間を分析
   - ボトルネックになっている担当者を特定
+
+### 成果分析（パス別成果・セグメント比較）
+
+- **📈 パス別成果分析**: プロセスパスごとの成果指標を可視化
+  - 各パスの平均値・中央値・合計値を表示
+  - 成果の高いパスを自動検出（平均値の75%以上を強調表示）
+  - プロセスマップ上で成果メトリックを確認
+- **🔍 セグメント比較**: 高成果パスと低成果パスを比較
+  - 上位25% vs 下位25%の成果比較
+  - カスタム閾値による柔軟なセグメント分割
+  - 統計サマリー（平均値、中央値、最小値、最大値、合計値）
+  - パス構造の違いを可視化
 
 ### サンプルデータ
 
@@ -248,6 +265,15 @@ curl "http://localhost:8000/compare?before={id1}&after={id2}"
 | `/organization/workload` | GET | 作業負荷分析 (`?process_type=xxx&aggregation_level=employee/department`) |
 | `/organization/performance` | GET | パフォーマンス分析 (`?process_type=xxx&aggregation_level=employee/department`) |
 
+**成果分析API**
+
+| エンドポイント | メソッド | 説明 |
+|--------------|---------|------|
+| `/outcome/metrics` | GET | 利用可能なメトリック一覧を取得 (`?process_type=xxx`でフィルタ可能) |
+| `/outcome/analyses` | GET | 成果分析結果の一覧取得 (`?process_type=xxx&metric_name=xxx`でフィルタ可能) |
+| `/outcome/analyses/{analysis_id}` | GET | 特定の成果分析結果を取得 |
+| `/outcome/analyze` | POST | 成果分析を実行し、結果をDBに保存 |
+
 ### フロントエンド開発者向け
 
 #### 開発サーバー
@@ -266,6 +292,69 @@ npm run dev
 npm run test
 ```
 
+### E2Eテスト（Playwright）
+
+E2Eテストは、実際のブラウザを使ってアプリケーション全体の動作を検証します。
+
+#### 前提条件
+
+1. Docker Composeサービスが起動していること
+2. サンプルデータが投入されていること
+
+```bash
+# サービス起動
+docker compose up -d
+
+# 全サービスがhealthyになるまで待機
+docker compose ps
+
+# サンプルデータ投入
+docker compose exec backend bash
+cd /app/dbt
+dbt deps
+dbt seed
+dbt run
+exit
+```
+
+#### E2Eテストの実行
+
+```bash
+# E2Eディレクトリに移動
+cd e2e
+
+# 依存関係のインストール（初回のみ）
+npm install
+
+# Playwrightブラウザのインストール（初回のみ）
+npx playwright install chromium
+
+# テスト実行（ヘッドレスモード）
+npm test
+
+# UIモードで実行（対話的にテストを実行・デバッグ）
+npm run test:ui
+
+# ブラウザを表示して実行
+npm run test:headed
+
+# デバッグモード（ステップ実行）
+npm run test:debug
+
+# テストレポートを表示
+npm run report
+```
+
+#### テスト内容
+
+- **プロセス分析**: 一覧表示、新規作成、プロセスマップ表示、ナビゲーション
+- **組織分析**: 一覧表示、新規作成、集計レベル切り替え、ナビゲーション
+- **成果分析**: 一覧表示、パス別成果作成、セグメント比較作成、表示モード切り替え、ナビゲーション
+
+**注意**: E2Eテストは分析処理を実際に実行するため、完了までに数分かかることがあります。タイムアウトが発生する場合は、`playwright.config.ts`の`timeout`設定を調整してください。
+
+詳細は [e2e/README.md](e2e/README.md) を参照してください。
+
 ## データベース接続
 
 ### PostgreSQLデータの保存場所
@@ -283,8 +372,10 @@ npm run test
 | `raw_order_events` | テーブル | dbt seedの生データ |
 | `stg_raw_order_events` | ビュー | dbtステージングモデル |
 | `fct_event_log` | テーブル | プロセスマイニング用イベントログ（組織情報含む） |
+| `fct_case_outcomes` | テーブル | ケース別成果データ（メトリック値） |
 | `analysis_results` | テーブル | プロセス分析結果（JSON形式） |
 | `organization_analysis_results` | テーブル | 組織分析結果（JSON形式） |
+| `outcome_analysis_results` | テーブル | 成果分析結果（JSON形式） |
 | `master_employees` | テーブル | 社員マスター |
 | `master_departments` | テーブル | 部署マスター |
 
@@ -382,6 +473,28 @@ SELECT
   created_at
 FROM public.organization_analysis_results
 ORDER BY created_at DESC;
+
+-- 成果分析結果一覧
+SELECT
+  analysis_id,
+  analysis_name,
+  process_type,
+  metric_name,
+  analysis_type,
+  created_at
+FROM public.outcome_analysis_results
+ORDER BY created_at DESC;
+
+-- ケース別成果データ
+SELECT
+  process_type,
+  case_id,
+  metric_name,
+  metric_value,
+  metric_unit
+FROM public.fct_case_outcomes
+WHERE process_type = 'employee-onboarding'
+ORDER BY case_id, metric_name;
 ```
 
 ## プロジェクト構成
@@ -409,6 +522,10 @@ open-process-mining/
 
 ## ドキュメント
 
+### 利用者向け
+- **[USAGE.md](USAGE.md)**: 自組織でプロセスマイニングを実施する方法（データ準備から分析実施まで）
+
+### 開発者向け
 - [CLAUDE.md](CLAUDE.md): Claude Code向けの開発ガイド
 - [tmp/PRD.md](tmp/PRD.md): プロジェクトキャンバス
 - [tmp/仕様.md](tmp/仕様.md): 詳細実装仕様

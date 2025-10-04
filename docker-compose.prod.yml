@@ -1,3 +1,6 @@
+# Production deployment using GHCR images
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -6,21 +9,20 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5432:5432"
     volumes:
       - .data/postgres/:/var/lib/postgresql/data
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - process-mining-network
+    restart: unless-stopped
 
   backend:
-    build: ./backend
+    image: ghcr.io/suwa-sh/open-process-mining-backend:latest
     container_name: process-mining-backend
     environment:
       POSTGRES_HOST: postgres
@@ -41,13 +43,13 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./backend/src:/app/src
       - ./dbt:/app/dbt
     networks:
       - process-mining-network
+    restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    image: ghcr.io/suwa-sh/open-process-mining-frontend:latest
     container_name: process-mining-frontend
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
@@ -61,10 +63,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    volumes:
-      - ./frontend/src:/app/src
     networks:
       - process-mining-network
+    restart: unless-stopped
 
 networks:
   process-mining-network:

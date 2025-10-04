@@ -24,3 +24,58 @@ models:
 
 seeds:
   open_process_mining:
+    raw_order_delivery:
+      +schema: public
+      +column_types:
+        order_id: varchar
+        order_date: timestamp
+        customer_name: varchar
+        product: varchar
+        quantity: integer
+        amount: integer
+        status: varchar
+        employee_id: varchar
+
+    raw_employee_onboarding:
+      +schema: public
+      +column_types:
+        application_id: varchar
+        application_date: timestamp
+        candidate_name: varchar
+        position: varchar
+        status: varchar
+        employee_id: varchar
+
+    master_employees:
+      +schema: public
+      +column_types:
+        employee_id: varchar
+        employee_name: varchar
+        role: varchar
+        department_id: varchar
+
+    master_departments:
+      +schema: public
+      +column_types:
+        department_id: varchar
+        department_name: varchar
+        department_type: varchar
+        parent_department_id: varchar
+
+    outcome_order_delivery:
+      +schema: public
+      +column_types:
+        process_type: varchar
+        case_id: varchar
+        metric_name: varchar
+        metric_value: numeric
+        metric_unit: varchar
+
+    outcome_employee_onboarding:
+      +schema: public
+      +column_types:
+        process_type: varchar
+        case_id: varchar
+        metric_name: varchar
+        metric_value: numeric
+        metric_unit: varchar

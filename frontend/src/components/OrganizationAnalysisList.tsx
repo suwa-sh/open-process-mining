@@ -62,32 +62,6 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
     fetchAnalyses();
   }, [selectedProcessType]);
 
-  if (loading) {
-    return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Spinner size="xl" color="blue.500" />
-          <Text>組織分析データを読み込んでいます...</Text>
-        </VStack>
-      </Center>
-    );
-  }
-
-  if (error) {
-    return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Text color="red.500" fontSize="lg">
-            {error}
-          </Text>
-          <Text fontSize="sm" color="gray.600">
-            バックエンドが起動しており、データが利用可能であることを確認してください。
-          </Text>
-        </VStack>
-      </Center>
-    );
-  }
-
   const handleAnalysisSuccess = (analysisId: string) => {
     // 分析成功後、リストを再読み込みして新しい分析を表示
     fetchAnalyses();
@@ -108,17 +82,20 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
               組織分析
             </Heading>
             <HStack>
-              <Button variant="outline" onClick={() => navigate('/')}>
-                ← プロセス分析一覧に戻る
+              <Button colorScheme="blue" onClick={() => navigate('/')}>
+                📈 プロセス分析
               </Button>
-              <Button colorScheme="blue" onClick={onOpen}>
+              <Button colorScheme="green" onClick={() => navigate('/outcome')}>
+                📊 成果分析
+              </Button>
+              <Button colorScheme="purple" onClick={onOpen}>
                 + 新規組織分析を作成
               </Button>
             </HStack>
           </HStack>
 
           <Box>
-            <Text fontSize="sm" mb={2} fontWeight="medium">プロセスタイプで絞り込み:</Text>
+            <Text fontSize="sm" mb={2} fontWeight="medium">フィルター:</Text>
             <Select
               value={selectedProcessType}
               onChange={(e) => setSelectedProcessType(e.target.value)}
@@ -132,7 +109,25 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
             </Select>
           </Box>
 
-          {analyses.length === 0 ? (
+          {loading ? (
+            <Center py={8}>
+              <VStack spacing={4}>
+                <Spinner size="xl" color="purple.500" />
+                <Text>組織分析データを読み込んでいます...</Text>
+              </VStack>
+            </Center>
+          ) : error ? (
+            <Center py={8}>
+              <VStack spacing={3}>
+                <Text fontSize="md" color="gray.600">
+                  組織分析が見つかりません
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  「新規組織分析を作成」ボタンから最初の分析を作成してください。
+                </Text>
+              </VStack>
+            </Center>
+          ) : analyses.length === 0 ? (
             <Center py={8}>
               <VStack spacing={3}>
                 <Text fontSize="md" color="gray.600">

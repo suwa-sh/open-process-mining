@@ -101,11 +101,14 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
         <VStack align="stretch" spacing={6}>
           <HStack justify="space-between" align="center">
             <Heading size="lg">
-              プロセスマイニング分析
+              プロセス分析
             </Heading>
             <HStack>
               <Button colorScheme="purple" onClick={() => navigate('/organization')}>
                 🏢 組織分析
+              </Button>
+              <Button colorScheme="green" onClick={() => navigate('/outcome')}>
+                📊 成果分析
               </Button>
               <Button colorScheme="blue" onClick={onOpen}>
                 + 新規分析を作成
@@ -114,7 +117,7 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
           </HStack>
 
           <Box>
-            <Text fontSize="sm" mb={2} fontWeight="medium">プロセスタイプで絞り込み:</Text>
+            <Text fontSize="sm" mb={2} fontWeight="medium">フィルター:</Text>
           <Select
             value={selectedProcessType}
             onChange={(e) => setSelectedProcessType(e.target.value)}

@@ -6,7 +6,10 @@ from sqlalchemy.orm import Session
 from src.db.connection import get_db
 from src.models.analysis_result import AnalysisResultORM, AnalysisListItem, AnalysisResultResponse
 
-router = APIRouter()
+router = APIRouter(
+    tags=["プロセス分析"],
+    responses={404: {"description": "Not found"}},
+)
 
 
 @router.get("/analyses", response_model=List[AnalysisListItem])

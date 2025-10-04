@@ -65,12 +65,8 @@ const CreateOrganizationAnalysisModal: React.FC<CreateOrganizationAnalysisModalP
   // プロセスタイプ変更時に分析名を自動生成
   useEffect(() => {
     if (processType) {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const dateStr = `${year}-${month}-${day}`;
-      setAnalysisName(`${processType}_組織分析_${dateStr}`);
+      const today = new Date().toISOString().split('T')[0];
+      setAnalysisName(`${processType}_${today}`);
     }
   }, [processType]);
 

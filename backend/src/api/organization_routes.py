@@ -16,7 +16,11 @@ from src.services.organization_service import (
     get_organization_analysis_by_id
 )
 
-router = APIRouter(prefix="/organization", tags=["organization"])
+router = APIRouter(
+    prefix="/organization",
+    tags=["組織分析"],
+    responses={404: {"description": "Not found"}},
+)
 
 
 class CreateOrganizationAnalysisRequest(BaseModel):
