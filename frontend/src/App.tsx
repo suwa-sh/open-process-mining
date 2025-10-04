@@ -3,6 +3,8 @@ import { ChakraProvider } from '@chakra-ui/react';
 import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
 import AnalysisList from './components/AnalysisList';
 import ProcessMap from './components/ProcessMap';
+import OrganizationAnalysisList from './components/OrganizationAnalysisList';
+import OrganizationAnalysisDetail from './components/OrganizationAnalysisDetail';
 
 const AnalysisListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -30,6 +32,32 @@ const ProcessMapPage: React.FC = () => {
   return <ProcessMap analysisId={analysisId} onBack={handleBack} />;
 };
 
+const OrganizationAnalysisListPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSelect = (analysisId: string) => {
+    navigate(`/organization/${analysisId}`);
+  };
+
+  return <OrganizationAnalysisList onSelect={handleSelect} />;
+};
+
+const OrganizationAnalysisDetailPage: React.FC = () => {
+  const { analysisId } = useParams<{ analysisId: string }>();
+  const navigate = useNavigate();
+
+  if (!analysisId) {
+    navigate('/organization');
+    return null;
+  }
+
+  const handleBack = () => {
+    navigate('/organization');
+  };
+
+  return <OrganizationAnalysisDetail analysisId={analysisId} onBack={handleBack} />;
+};
+
 const App: React.FC = () => {
   return (
     <ChakraProvider>
@@ -37,6 +65,8 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<AnalysisListPage />} />
           <Route path="/analysis/:analysisId" element={<ProcessMapPage />} />
+          <Route path="/organization" element={<OrganizationAnalysisListPage />} />
+          <Route path="/organization/:analysisId" element={<OrganizationAnalysisDetailPage />} />
         </Routes>
       </BrowserRouter>
     </ChakraProvider>

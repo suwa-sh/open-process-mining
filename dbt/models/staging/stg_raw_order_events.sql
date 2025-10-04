@@ -5,7 +5,7 @@ SELECT
     order_id,
     status,
     event_time::timestamp AS event_time,
-    user_name
+    employee_id
 FROM
     {{ ref('raw_order_events') }}
 WHERE

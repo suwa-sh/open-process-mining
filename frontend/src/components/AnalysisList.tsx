@@ -14,6 +14,7 @@ import {
   Button,
   useDisclosure,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import { getAnalyses, getProcessTypes } from '../api/client';
 import { Analysis } from '../types';
 import CreateAnalysisModal from './CreateAnalysisModal';
@@ -23,6 +24,7 @@ interface AnalysisListProps {
 }
 
 const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
+  const navigate = useNavigate();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [processTypes, setProcessTypes] = useState<string[]>([]);
   const [selectedProcessType, setSelectedProcessType] = useState<string>('');
@@ -101,9 +103,14 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
             <Heading size="lg">
               プロセスマイニング分析
             </Heading>
-            <Button colorScheme="blue" onClick={onOpen}>
-              + 新規分析を作成
-            </Button>
+            <HStack>
+              <Button colorScheme="purple" onClick={() => navigate('/organization')}>
+                🏢 組織分析
+              </Button>
+              <Button colorScheme="blue" onClick={onOpen}>
+                + 新規分析を作成
+              </Button>
+            </HStack>
           </HStack>
 
           <Box>

@@ -1,5 +1,16 @@
 import axios from 'axios';
-import { Analysis, AnalysisResult, AnalyzeRequest, AnalyzeResponse, PreviewResponse, LeadTimeStats } from '../types';
+import {
+  Analysis,
+  AnalysisResult,
+  AnalyzeRequest,
+  AnalyzeResponse,
+  PreviewResponse,
+  LeadTimeStats,
+  HandoverAnalysis,
+  WorkloadAnalysis,
+  PerformanceAnalysis,
+  AggregationLevel,
+} from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
@@ -61,5 +72,88 @@ export const getLeadTimeStats = async (
   if (dateTo) params.date_to = dateTo;
 
   const response = await apiClient.get('/lead-time-stats', { params });
+  return response.data;
+};
+
+// Organization Analysis APIs
+
+export const getHandoverAnalysis = async (
+  processType: string,
+  aggregationLevel: AggregationLevel = 'employee',
+  filterMode: string = 'all',
+  dateFrom?: string,
+  dateTo?: string
+): Promise<HandoverAnalysis> => {
+  const params: any = {
+    process_type: processType,
+    aggregation_level: aggregationLevel,
+    filter_mode: filterMode,
+  };
+  if (dateFrom) params.date_from = dateFrom;
+  if (dateTo) params.date_to = dateTo;
+
+  const response = await apiClient.get('/organization/handover', { params });
+  return response.data;
+};
+
+export const getWorkloadAnalysis = async (
+  processType: string,
+  aggregationLevel: AggregationLevel = 'employee',
+  filterMode: string = 'all',
+  dateFrom?: string,
+  dateTo?: string
+): Promise<WorkloadAnalysis> => {
+  const params: any = {
+    process_type: processType,
+    aggregation_level: aggregationLevel,
+    filter_mode: filterMode,
+  };
+  if (dateFrom) params.date_from = dateFrom;
+  if (dateTo) params.date_to = dateTo;
+
+  const response = await apiClient.get('/organization/workload', { params });
+  return response.data;
+};
+
+export const getPerformanceAnalysis = async (
+  processType: string,
+  aggregationLevel: AggregationLevel = 'employee',
+  filterMode: string = 'all',
+  dateFrom?: string,
+  dateTo?: string
+): Promise<PerformanceAnalysis> => {
+  const params: any = {
+    process_type: processType,
+    aggregation_level: aggregationLevel,
+    filter_mode: filterMode,
+  };
+  if (dateFrom) params.date_from = dateFrom;
+  if (dateTo) params.date_to = dateTo;
+
+  const response = await apiClient.get('/organization/performance', { params });
+  return response.data;
+};
+
+// Organization Analysis (Saved Results)
+export const createOrganizationAnalysis = async (data: {
+  analysis_name: string;
+  process_type: string;
+  aggregation_level: string;
+  filter_mode: string;
+  date_from?: string;
+  date_to?: string;
+}) => {
+  const response = await apiClient.post('/organization/analyze', data);
+  return response.data;
+};
+
+export const getOrganizationAnalyses = async (processType?: string) => {
+  const params = processType ? { process_type: processType } : {};
+  const response = await apiClient.get('/organization/analyses', { params });
+  return response.data;
+};
+
+export const getOrganizationAnalysisById = async (analysisId: string) => {
+  const response = await apiClient.get(`/organization/analyses/${analysisId}`);
   return response.data;
 };

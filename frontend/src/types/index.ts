@@ -97,3 +97,74 @@ export interface LeadTimeStats {
     path: string[];
   };
 }
+
+// Organization Analysis Types
+
+export type AggregationLevel = 'employee' | 'department';
+
+export interface HandoverNode {
+  id: string;
+  label: string;
+  activity_count: number;
+}
+
+export interface HandoverEdge {
+  source: string;
+  target: string;
+  handover_count: number;
+  avg_waiting_time_hours?: number;
+}
+
+export interface HandoverAnalysis {
+  nodes: HandoverNode[];
+  edges: HandoverEdge[];
+  aggregation_level: AggregationLevel;
+}
+
+export interface WorkloadItem {
+  resource_id: string;
+  resource_name: string;
+  activity_count: number;
+  case_count: number;
+}
+
+export interface WorkloadAnalysis {
+  workload: WorkloadItem[];
+  aggregation_level: AggregationLevel;
+}
+
+export interface PerformanceItem {
+  resource_id: string;
+  resource_name: string;
+  avg_duration_hours: number;
+  median_duration_hours: number;
+  total_duration_hours: number;
+  activity_count: number;
+}
+
+export interface PerformanceAnalysis {
+  performance: PerformanceItem[];
+  aggregation_level: AggregationLevel;
+}
+
+export interface OrganizationAnalysisListItem {
+  analysis_id: string;
+  analysis_name: string;
+  process_type: string;
+  aggregation_level: AggregationLevel;
+  created_at: string;
+}
+
+export interface OrganizationAnalysisDetail {
+  analysis_id: string;
+  analysis_name: string;
+  process_type: string;
+  aggregation_level: AggregationLevel;
+  filter_mode: FilterMode;
+  date_from: string | null;
+  date_to: string | null;
+  created_at: string;
+  handover_data: HandoverAnalysis;
+  workload_data: WorkloadAnalysis;
+  performance_data: PerformanceAnalysis;
+}

@@ -4,7 +4,7 @@ SELECT
     order_id as case_id,
     status as activity,
     event_time::timestamp as timestamp,
-    user_name as resource
+    employee_id as resource
 FROM {{ ref('raw_order_events') }}
 
 UNION ALL
@@ -14,5 +14,5 @@ SELECT
     employee_id as case_id,
     status as activity,
     event_time::timestamp as timestamp,
-    user_name as resource
+    assigned_to as resource
 FROM {{ ref('raw_employee_onboarding') }}

@@ -1,0 +1,9 @@
+department_id,department_name,parent_department_id,department_type
+DEPT-SALES,営業部,,営業
+DEPT-WAREHOUSE,倉庫部,,物流
+DEPT-LOGISTICS,配送部,,物流
+DEPT-QA,品質管理部,,品質
+DEPT-HR,人事部,,管理
+DEPT-MGMT,経営管理部,,管理
+DEPT-ADMIN,総務部,,管理
+DEPT-SYS,システム部,,システム

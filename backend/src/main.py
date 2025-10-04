@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from src.api.routes import router
 from src.api.analyze_routes import router as analyze_router
+from src.api.organization_routes import router as organization_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -23,6 +24,7 @@ app.add_middleware(
 # Include API routes
 app.include_router(router)
 app.include_router(analyze_router)
+app.include_router(organization_router)
 
 
 @app.get("/health")
@@ -44,6 +46,9 @@ def root():
             "analysis_by_id": "/analyses/{analysis_id}",
             "compare": "/compare?before={id1}&after={id2}",
             "analyze": "/analyze (POST)",
-            "preview": "/preview"
+            "preview": "/preview",
+            "organization_handover": "/organization/handover",
+            "organization_workload": "/organization/workload",
+            "organization_performance": "/organization/performance"
         }
     }
