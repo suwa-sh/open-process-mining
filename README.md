@@ -598,9 +598,6 @@ open-process-mining/
 ### 開発者向け
 
 - [CLAUDE.md](CLAUDE.md): Claude Code向けの開発ガイド
-- [tmp/PRD.md](tmp/PRD.md): プロジェクトキャンバス
-- [tmp/仕様.md](tmp/仕様.md): 詳細実装仕様
-- [tmp/plan.md](tmp/plan.md): 実装計画書
 
 ## ライセンス
 
