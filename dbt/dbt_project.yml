@@ -1,0 +1,26 @@
+name: 'open_process_mining'
+version: '1.0.0'
+config-version: 2
+
+profile: 'open_process_mining'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  open_process_mining:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  open_process_mining:

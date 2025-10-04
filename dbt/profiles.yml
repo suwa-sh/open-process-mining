@@ -1,0 +1,12 @@
+open_process_mining:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'localhost') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5432') | as_number }}"
+      user: "{{ env_var('POSTGRES_USER', 'process_mining') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'secure_password') }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'process_mining_db') }}"
+      schema: public
+      threads: 4

@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: stg_raw_order_events
+    description: "Staging table for raw order events with basic data cleansing"
+    columns:
+      - name: order_id
+        description: "Order identifier"
+        tests:
+          - not_null
+      - name: status
+        description: "Order status / activity name"
+        tests:
+          - not_null
+      - name: event_time
+        description: "Timestamp when the event occurred"
+        tests:
+          - not_null
+      - name: user_name
+        description: "User or system that triggered the event"
