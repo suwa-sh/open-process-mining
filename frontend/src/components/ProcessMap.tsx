@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback, useState } from 'react';
+import React, { useEffect, useMemo, useCallback, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,15 +6,23 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-} from '@xyflow/react';
-import { Box, Flex, Spinner, Center, VStack, Text, Button } from '@chakra-ui/react';
-import '@xyflow/react/dist/style.css';
+} from "@xyflow/react";
+import {
+  Box,
+  Flex,
+  Spinner,
+  Center,
+  VStack,
+  Text,
+  Button,
+} from "@chakra-ui/react";
+import "@xyflow/react/dist/style.css";
 
-import ActionNode from './ActionNode';
-import Controls from './Controls';
-import { useAnalysisData } from '../hooks/useAnalysisData';
-import { useLayout } from '../hooks/useLayout';
-import { useStore } from '../store/useStore';
+import ActionNode from "./ActionNode";
+import Controls from "./Controls";
+import { useAnalysisData } from "../hooks/useAnalysisData";
+import { useLayout } from "../hooks/useLayout";
+import { useStore } from "../store/useStore";
 
 const nodeTypes = {
   actionNode: ActionNode,
@@ -38,21 +46,27 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
     }
   }, [data, setGraphData]);
 
-  const { layoutedNodes, isLayouting } = useLayout(data?.nodes || [], data?.edges || []);
+  const { layoutedNodes, isLayouting } = useLayout(
+    data?.nodes || [],
+    data?.edges || [],
+  );
 
   const filteredEdges = useMemo(() => {
     if (!data || data.edges.length === 0) return [];
 
     const maxFrequency = Math.max(...data.edges.map((e) => e.data.frequency));
-    const maxWaitingTime = Math.max(...data.edges.map((e) => e.data.avg_waiting_time_hours));
+    const maxWaitingTime = Math.max(
+      ...data.edges.map((e) => e.data.avg_waiting_time_hours),
+    );
 
     return data.edges.map((edge) => {
       const normalizedFreq = edge.data.frequency / maxFrequency;
-      const normalizedWaitingTime = edge.data.avg_waiting_time_hours / maxWaitingTime;
+      const normalizedWaitingTime =
+        edge.data.avg_waiting_time_hours / maxWaitingTime;
       const isHidden = normalizedFreq < pathThreshold;
 
       const label =
-        displayMetric === 'frequency'
+        displayMetric === "frequency"
           ? `${edge.data.frequency} 件`
           : `${edge.data.avg_waiting_time_hours.toFixed(1)}時間`;
 
@@ -60,15 +74,15 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
       const strokeWidth = Math.max(2, normalizedFreq * 8);
 
       // 処理時間が長いパスを赤色で強調
-      let strokeColor = '#555'; // デフォルト
+      let strokeColor = "#555"; // デフォルト
       if (isHidden) {
-        strokeColor = '#ccc';
+        strokeColor = "#ccc";
       } else if (normalizedWaitingTime > 0.7) {
         // 最大待機時間の70%以上は赤色で警告
-        strokeColor = '#e53e3e'; // 赤色
+        strokeColor = "#e53e3e"; // 赤色
       } else if (normalizedFreq > 0.8) {
         // 頻度が高いハッピーパスは青色
-        strokeColor = '#3182ce'; // 青色
+        strokeColor = "#3182ce"; // 青色
       }
 
       return {
@@ -109,7 +123,10 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
     setNodes((currentNodes) => {
       // 現在のノードの位置情報を保存
       const positionMap = new Map(
-        currentNodes.map((node) => [node.id, { x: node.position.x, y: node.position.y }])
+        currentNodes.map((node) => [
+          node.id,
+          { x: node.position.x, y: node.position.y },
+        ]),
       );
 
       // 新しいノードリストに既存の位置をマージ

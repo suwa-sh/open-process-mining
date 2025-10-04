@@ -1,4 +1,3 @@
-import pytest
 from datetime import datetime
 from src.models.event_log import EventLog
 from src.analysis.dfg_discovery import discover_dfg
@@ -7,11 +6,36 @@ from src.analysis.dfg_discovery import discover_dfg
 def test_discover_dfg_basic():
     """Test basic DFG discovery with simple event log."""
     event_log = [
-        EventLog(case_id="C1", activity="A", timestamp=datetime(2025, 1, 1, 10, 0), resource="User1"),
-        EventLog(case_id="C1", activity="B", timestamp=datetime(2025, 1, 1, 11, 0), resource="User1"),
-        EventLog(case_id="C1", activity="C", timestamp=datetime(2025, 1, 1, 12, 0), resource="User2"),
-        EventLog(case_id="C2", activity="A", timestamp=datetime(2025, 1, 2, 10, 0), resource="User1"),
-        EventLog(case_id="C2", activity="B", timestamp=datetime(2025, 1, 2, 11, 0), resource="User1"),
+        EventLog(
+            case_id="C1",
+            activity="A",
+            timestamp=datetime(2025, 1, 1, 10, 0),
+            resource="User1",
+        ),
+        EventLog(
+            case_id="C1",
+            activity="B",
+            timestamp=datetime(2025, 1, 1, 11, 0),
+            resource="User1",
+        ),
+        EventLog(
+            case_id="C1",
+            activity="C",
+            timestamp=datetime(2025, 1, 1, 12, 0),
+            resource="User2",
+        ),
+        EventLog(
+            case_id="C2",
+            activity="A",
+            timestamp=datetime(2025, 1, 2, 10, 0),
+            resource="User1",
+        ),
+        EventLog(
+            case_id="C2",
+            activity="B",
+            timestamp=datetime(2025, 1, 2, 11, 0),
+            resource="User1",
+        ),
     ]
 
     dfg = discover_dfg(event_log)
@@ -46,9 +70,24 @@ def test_discover_dfg_empty():
 def test_discover_dfg_single_case():
     """Test DFG discovery with single case."""
     event_log = [
-        EventLog(case_id="C1", activity="Start", timestamp=datetime(2025, 1, 1, 10, 0), resource="System"),
-        EventLog(case_id="C1", activity="Process", timestamp=datetime(2025, 1, 1, 11, 0), resource="User"),
-        EventLog(case_id="C1", activity="End", timestamp=datetime(2025, 1, 1, 12, 0), resource="System"),
+        EventLog(
+            case_id="C1",
+            activity="Start",
+            timestamp=datetime(2025, 1, 1, 10, 0),
+            resource="System",
+        ),
+        EventLog(
+            case_id="C1",
+            activity="Process",
+            timestamp=datetime(2025, 1, 1, 11, 0),
+            resource="User",
+        ),
+        EventLog(
+            case_id="C1",
+            activity="End",
+            timestamp=datetime(2025, 1, 1, 12, 0),
+            resource="System",
+        ),
     ]
 
     dfg = discover_dfg(event_log)

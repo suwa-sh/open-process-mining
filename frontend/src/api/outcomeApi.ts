@@ -2,15 +2,16 @@
  * Outcome analysis API client
  */
 
-import axios from 'axios';
+import axios from "axios";
 import type {
   MetricInfo,
   OutcomeAnalysisSummary,
   OutcomeAnalysisDetail,
   CreateOutcomeAnalysisParams,
-} from '../types/outcome';
+} from "../types/outcome";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 /**
  * プロセスタイプ一覧を取得
@@ -23,10 +24,15 @@ export const fetchProcessTypes = async (): Promise<string[]> => {
 /**
  * 利用可能なメトリック一覧を取得
  */
-export const fetchAvailableMetrics = async (processType: string): Promise<MetricInfo[]> => {
-  const response = await axios.get<MetricInfo[]>(`${API_BASE_URL}/outcome/metrics`, {
-    params: { process_type: processType },
-  });
+export const fetchAvailableMetrics = async (
+  processType: string,
+): Promise<MetricInfo[]> => {
+  const response = await axios.get<MetricInfo[]>(
+    `${API_BASE_URL}/outcome/metrics`,
+    {
+      params: { process_type: processType },
+    },
+  );
   return response.data;
 };
 
@@ -35,14 +41,17 @@ export const fetchAvailableMetrics = async (processType: string): Promise<Metric
  */
 export const fetchOutcomeAnalyses = async (
   processType?: string,
-  metricName?: string
+  metricName?: string,
 ): Promise<OutcomeAnalysisSummary[]> => {
-  const response = await axios.get<OutcomeAnalysisSummary[]>(`${API_BASE_URL}/outcome/analyses`, {
-    params: {
-      process_type: processType,
-      metric_name: metricName,
+  const response = await axios.get<OutcomeAnalysisSummary[]>(
+    `${API_BASE_URL}/outcome/analyses`,
+    {
+      params: {
+        process_type: processType,
+        metric_name: metricName,
+      },
     },
-  });
+  );
   return response.data;
 };
 
@@ -50,10 +59,10 @@ export const fetchOutcomeAnalyses = async (
  * 特定の成果分析結果を取得
  */
 export const fetchOutcomeAnalysisById = async (
-  analysisId: string
+  analysisId: string,
 ): Promise<OutcomeAnalysisDetail> => {
   const response = await axios.get<OutcomeAnalysisDetail>(
-    `${API_BASE_URL}/outcome/analyses/${analysisId}`
+    `${API_BASE_URL}/outcome/analyses/${analysisId}`,
   );
   return response.data;
 };
@@ -62,11 +71,11 @@ export const fetchOutcomeAnalysisById = async (
  * 成果分析を作成
  */
 export const createOutcomeAnalysis = async (
-  params: CreateOutcomeAnalysisParams
+  params: CreateOutcomeAnalysisParams,
 ): Promise<{ analysis_id: string }> => {
   const response = await axios.post<{ analysis_id: string }>(
     `${API_BASE_URL}/outcome/analyze`,
-    params
+    params,
   );
   return response.data;
 };

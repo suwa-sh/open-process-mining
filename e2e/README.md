@@ -66,18 +66,21 @@ npm run report
 ## Test Coverage
 
 ### Process Analysis
+
 - Display list page
 - Create new analysis
 - Display process map with nodes and edges
 - Navigate back to list
 
 ### Organization Analysis
+
 - Display list page
 - Create new analysis
 - Switch aggregation level (employee/department)
 - Navigate back to list
 
 ### Outcome Analysis
+
 - Display list page
 - Create path outcome analysis
 - Create segment comparison analysis

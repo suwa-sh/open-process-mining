@@ -1,12 +1,18 @@
-import React from 'react';
-import { ChakraProvider } from '@chakra-ui/react';
-import { BrowserRouter, Routes, Route, useNavigate, useParams } from 'react-router-dom';
-import AnalysisList from './components/AnalysisList';
-import ProcessMap from './components/ProcessMap';
-import OrganizationAnalysisList from './components/OrganizationAnalysisList';
-import OrganizationAnalysisDetail from './components/OrganizationAnalysisDetail';
-import OutcomeAnalysisList from './components/outcome/OutcomeAnalysisList';
-import OutcomeAnalysisDetail from './components/outcome/OutcomeAnalysisDetail';
+import React from "react";
+import { ChakraProvider } from "@chakra-ui/react";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+import AnalysisList from "./components/AnalysisList";
+import ProcessMap from "./components/ProcessMap";
+import OrganizationAnalysisList from "./components/OrganizationAnalysisList";
+import OrganizationAnalysisDetail from "./components/OrganizationAnalysisDetail";
+import OutcomeAnalysisList from "./components/outcome/OutcomeAnalysisList";
+import OutcomeAnalysisDetail from "./components/outcome/OutcomeAnalysisDetail";
 
 const AnalysisListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,12 +29,12 @@ const ProcessMapPage: React.FC = () => {
   const navigate = useNavigate();
 
   if (!analysisId) {
-    navigate('/');
+    navigate("/");
     return null;
   }
 
   const handleBack = () => {
-    navigate('/');
+    navigate("/");
   };
 
   return <ProcessMap analysisId={analysisId} onBack={handleBack} />;
@@ -49,15 +55,17 @@ const OrganizationAnalysisDetailPage: React.FC = () => {
   const navigate = useNavigate();
 
   if (!analysisId) {
-    navigate('/organization');
+    navigate("/organization");
     return null;
   }
 
   const handleBack = () => {
-    navigate('/organization');
+    navigate("/organization");
   };
 
-  return <OrganizationAnalysisDetail analysisId={analysisId} onBack={handleBack} />;
+  return (
+    <OrganizationAnalysisDetail analysisId={analysisId} onBack={handleBack} />
+  );
 };
 
 const App: React.FC = () => {
@@ -67,8 +75,14 @@ const App: React.FC = () => {
         <Routes>
           <Route path="/" element={<AnalysisListPage />} />
           <Route path="/analysis/:analysisId" element={<ProcessMapPage />} />
-          <Route path="/organization" element={<OrganizationAnalysisListPage />} />
-          <Route path="/organization/:analysisId" element={<OrganizationAnalysisDetailPage />} />
+          <Route
+            path="/organization"
+            element={<OrganizationAnalysisListPage />}
+          />
+          <Route
+            path="/organization/:analysisId"
+            element={<OrganizationAnalysisDetailPage />}
+          />
           <Route path="/outcome" element={<OutcomeAnalysisList />} />
           <Route path="/outcome/:id" element={<OutcomeAnalysisDetail />} />
         </Routes>

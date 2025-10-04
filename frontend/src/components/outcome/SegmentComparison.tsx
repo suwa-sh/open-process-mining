@@ -2,8 +2,8 @@
  * Segment comparison view for outcome analysis
  */
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -26,9 +26,9 @@ import {
   Th,
   Td,
   TableContainer,
-} from '@chakra-ui/react';
-import { OutcomeAnalysisDetail } from '../../types/outcome';
-import OutcomeProcessMap from './OutcomeProcessMap';
+} from "@chakra-ui/react";
+import { OutcomeAnalysisDetail } from "../../types/outcome";
+import OutcomeProcessMap from "./OutcomeProcessMap";
 
 interface SegmentComparisonProps {
   analysis: OutcomeAnalysisDetail;
@@ -36,17 +36,22 @@ interface SegmentComparisonProps {
 
 const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
   const navigate = useNavigate();
-  const { high_segment, low_segment, differences, summary } = analysis.result_data;
+  const { high_segment, low_segment, differences, summary } =
+    analysis.result_data;
   const metricName = analysis.metric_name;
 
   const formatMetricValue = (value: number): string => {
-    if (metricName === 'revenue' || metricName === 'hiring_cost') {
+    if (metricName === "revenue" || metricName === "hiring_cost") {
       return `¥${Math.round(value).toLocaleString()}`;
     }
-    if (metricName === 'profit_margin') {
+    if (metricName === "profit_margin") {
       return `${(value * 100).toFixed(1)}%`;
     }
-    if (metricName === 'quantity' || metricName === 'time_to_hire' || metricName === 'candidate_score') {
+    if (
+      metricName === "quantity" ||
+      metricName === "time_to_hire" ||
+      metricName === "candidate_score"
+    ) {
       return value.toFixed(1);
     }
     return value.toString();
@@ -59,7 +64,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
           <Button
             variant="outline"
             colorScheme="green"
-            onClick={() => navigate('/outcome')}
+            onClick={() => navigate("/outcome")}
             mb={4}
           >
             ← 成果分析一覧に戻る
@@ -74,7 +79,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
             <Text>メトリック: {metricName}</Text>
             <Text>分析タイプ: セグメント比較</Text>
             <Text>
-              作成日時: {new Date(analysis.created_at).toLocaleString('ja-JP')}
+              作成日時: {new Date(analysis.created_at).toLocaleString("ja-JP")}
             </Text>
           </HStack>
         </Box>
@@ -92,23 +97,33 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                 </Stat>
                 <Stat>
                   <StatLabel>平均値</StatLabel>
-                  <StatNumber>{formatMetricValue(high_segment.outcome_stats.avg)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(high_segment.outcome_stats.avg)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>中央値</StatLabel>
-                  <StatNumber>{formatMetricValue(high_segment.outcome_stats.median)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(high_segment.outcome_stats.median)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>合計値</StatLabel>
-                  <StatNumber>{formatMetricValue(high_segment.outcome_stats.total)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(high_segment.outcome_stats.total)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最小値</StatLabel>
-                  <StatNumber>{formatMetricValue(high_segment.outcome_stats.min)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(high_segment.outcome_stats.min)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最大値</StatLabel>
-                  <StatNumber>{formatMetricValue(high_segment.outcome_stats.max)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(high_segment.outcome_stats.max)}
+                  </StatNumber>
                 </Stat>
               </SimpleGrid>
             </CardBody>
@@ -126,23 +141,33 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                 </Stat>
                 <Stat>
                   <StatLabel>平均値</StatLabel>
-                  <StatNumber>{formatMetricValue(low_segment.outcome_stats.avg)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(low_segment.outcome_stats.avg)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>中央値</StatLabel>
-                  <StatNumber>{formatMetricValue(low_segment.outcome_stats.median)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(low_segment.outcome_stats.median)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>合計値</StatLabel>
-                  <StatNumber>{formatMetricValue(low_segment.outcome_stats.total)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(low_segment.outcome_stats.total)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最小値</StatLabel>
-                  <StatNumber>{formatMetricValue(low_segment.outcome_stats.min)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(low_segment.outcome_stats.min)}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最大値</StatLabel>
-                  <StatNumber>{formatMetricValue(low_segment.outcome_stats.max)}</StatNumber>
+                  <StatNumber>
+                    {formatMetricValue(low_segment.outcome_stats.max)}
+                  </StatNumber>
                 </Stat>
               </SimpleGrid>
             </CardBody>
@@ -154,7 +179,12 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
             <Heading size="md" mb={4} color="green.600">
               {high_segment.label} のプロセス
             </Heading>
-            <Box h="600px" border="1px" borderColor="gray.200" borderRadius="md">
+            <Box
+              h="600px"
+              border="1px"
+              borderColor="gray.200"
+              borderRadius="md"
+            >
               <OutcomeProcessMap
                 analysis={{
                   ...analysis,
@@ -178,7 +208,12 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
             <Heading size="md" mb={4} color="gray.600">
               {low_segment.label} のプロセス
             </Heading>
-            <Box h="600px" border="1px" borderColor="gray.200" borderRadius="md">
+            <Box
+              h="600px"
+              border="1px"
+              borderColor="gray.200"
+              borderRadius="md"
+            >
               <OutcomeProcessMap
                 analysis={{
                   ...analysis,
@@ -226,9 +261,9 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                         <Td
                           isNumeric
                           fontWeight="bold"
-                          color={diff.diff_rate > 0 ? 'green.600' : 'red.600'}
+                          color={diff.diff_rate > 0 ? "green.600" : "red.600"}
                         >
-                          {diff.diff_rate > 0 ? '+' : ''}
+                          {diff.diff_rate > 0 ? "+" : ""}
                           {diff.diff_rate}%
                         </Td>
                       </Tr>

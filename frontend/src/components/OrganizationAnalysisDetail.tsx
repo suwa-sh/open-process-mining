@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
@@ -17,41 +17,51 @@ import {
   useToast,
   Badge,
   Center,
-} from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
 import {
   getOrganizationAnalysisById,
   getHandoverAnalysis,
   getWorkloadAnalysis,
   getPerformanceAnalysis,
-} from '../api/client';
+} from "../api/client";
 import {
   HandoverAnalysis as HandoverAnalysisType,
   WorkloadAnalysis as WorkloadAnalysisType,
   PerformanceAnalysis as PerformanceAnalysisType,
   AggregationLevel,
   OrganizationAnalysisDetail as OrganizationAnalysisDetailType,
-} from '../types';
-import HandoverNetwork from './HandoverNetwork';
-import WorkloadChart from './WorkloadChart';
-import PerformanceChart from './PerformanceChart';
+} from "../types";
+import HandoverNetwork from "./HandoverNetwork";
+import WorkloadChart from "./WorkloadChart";
+import PerformanceChart from "./PerformanceChart";
 
 interface OrganizationAnalysisDetailProps {
   analysisId: string;
   onBack: () => void;
 }
 
-const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({ analysisId, onBack }) => {
+const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
+  analysisId,
+  onBack,
+}) => {
   const toast = useToast();
 
-  const [analysis, setAnalysis] = useState<OrganizationAnalysisDetailType | null>(null);
-  const [aggregationLevel, setAggregationLevel] = useState<AggregationLevel>('employee');
+  const [analysis, setAnalysis] =
+    useState<OrganizationAnalysisDetailType | null>(null);
+  const [aggregationLevel, setAggregationLevel] =
+    useState<AggregationLevel>("employee");
   const [loading, setLoading] = useState(true);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const [handoverData, setHandoverData] = useState<HandoverAnalysisType | null>(null);
-  const [workloadData, setWorkloadData] = useState<WorkloadAnalysisType | null>(null);
-  const [performanceData, setPerformanceData] = useState<PerformanceAnalysisType | null>(null);
+  const [handoverData, setHandoverData] = useState<HandoverAnalysisType | null>(
+    null,
+  );
+  const [workloadData, setWorkloadData] = useState<WorkloadAnalysisType | null>(
+    null,
+  );
+  const [performanceData, setPerformanceData] =
+    useState<PerformanceAnalysisType | null>(null);
 
   // Load saved analysis on mount
   useEffect(() => {
@@ -67,9 +77,9 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
         setIsInitialLoad(false);
       } catch (error) {
         toast({
-          title: 'エラー',
-          description: '組織分析データの取得に失敗しました',
-          status: 'error',
+          title: "エラー",
+          description: "組織分析データの取得に失敗しました",
+          status: "error",
           duration: 3000,
         });
       } finally {
@@ -91,21 +101,21 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
               aggregationLevel,
               analysis.filter_mode,
               analysis.date_from || undefined,
-              analysis.date_to || undefined
+              analysis.date_to || undefined,
             ),
             getWorkloadAnalysis(
               analysis.process_type,
               aggregationLevel,
               analysis.filter_mode,
               analysis.date_from || undefined,
-              analysis.date_to || undefined
+              analysis.date_to || undefined,
             ),
             getPerformanceAnalysis(
               analysis.process_type,
               aggregationLevel,
               analysis.filter_mode,
               analysis.date_from || undefined,
-              analysis.date_to || undefined
+              analysis.date_to || undefined,
             ),
           ]);
 
@@ -114,9 +124,9 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
           setPerformanceData(performance);
         } catch (error) {
           toast({
-            title: 'エラー',
-            description: '組織分析の取得に失敗しました',
-            status: 'error',
+            title: "エラー",
+            description: "組織分析の取得に失敗しました",
+            status: "error",
             duration: 3000,
           });
         } finally {
@@ -162,10 +172,12 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
             <HStack>
               <Badge colorScheme="purple">{analysis.process_type}</Badge>
               <Badge colorScheme="cyan">
-                {analysis.aggregation_level === 'employee' ? '👤 社員別' : '🏢 部署別'}
+                {analysis.aggregation_level === "employee"
+                  ? "👤 社員別"
+                  : "🏢 部署別"}
               </Badge>
               <Text fontSize="sm" color="gray.600">
-                作成: {new Date(analysis.created_at).toLocaleString('ja-JP')}
+                作成: {new Date(analysis.created_at).toLocaleString("ja-JP")}
               </Text>
             </HStack>
           </VStack>
@@ -178,7 +190,12 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
         <Box p={4} borderWidth="1px" borderRadius="md" bg="purple.50">
           <HStack spacing={4}>
             <Box flex={1}>
-              <Text mb={2} fontWeight="semibold" fontSize="sm" color="purple.900">
+              <Text
+                mb={2}
+                fontWeight="semibold"
+                fontSize="sm"
+                color="purple.900"
+              >
                 プロセスタイプ（固定）
               </Text>
               <Text fontSize="md" fontWeight="bold" color="purple.700">
@@ -187,12 +204,19 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
             </Box>
 
             <Box flex={1}>
-              <Text mb={2} fontWeight="semibold" fontSize="sm" color="purple.900">
+              <Text
+                mb={2}
+                fontWeight="semibold"
+                fontSize="sm"
+                color="purple.900"
+              >
                 集計レベル
               </Text>
               <Select
                 value={aggregationLevel}
-                onChange={(e) => setAggregationLevel(e.target.value as AggregationLevel)}
+                onChange={(e) =>
+                  setAggregationLevel(e.target.value as AggregationLevel)
+                }
                 bg="white"
               >
                 <option value="employee">👤 社員別</option>
@@ -231,8 +255,7 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
                 <VStack align="stretch" spacing={4} h="calc(100vh - 280px)">
                   <Box p={4} bg="blue.50" borderRadius="md">
                     <Text fontSize="sm" color="blue.900">
-                      💡{' '}
-                      <strong>ハンドオーバー分析:</strong>{' '}
+                      💡 <strong>ハンドオーバー分析:</strong>{" "}
                       誰と誰が連携して作業しているかを可視化します。矢印は作業の引き継ぎ（ハンドオーバー）を表します。
                     </Text>
                   </Box>
@@ -246,8 +269,7 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
                 <VStack align="stretch" spacing={4}>
                   <Box p={4} bg="green.50" borderRadius="md">
                     <Text fontSize="sm" color="green.900">
-                      💡{' '}
-                      <strong>作業負荷分析:</strong>{' '}
+                      💡 <strong>作業負荷分析:</strong>{" "}
                       誰の作業量が多いかを可視化します。上位の担当者は作業が集中している可能性があります。
                     </Text>
                   </Box>
@@ -259,8 +281,7 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
                 <VStack align="stretch" spacing={4}>
                   <Box p={4} bg="purple.50" borderRadius="md">
                     <Text fontSize="sm" color="purple.900">
-                      💡{' '}
-                      <strong>パフォーマンス分析:</strong>{' '}
+                      💡 <strong>パフォーマンス分析:</strong>{" "}
                       誰の処理時間が長いかを可視化します。上位の担当者はボトルネックになっている可能性があります。
                     </Text>
                   </Box>

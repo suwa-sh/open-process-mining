@@ -2,8 +2,8 @@
  * Outcome analysis list page
  */
 
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -18,16 +18,16 @@ import {
   Center,
   Badge,
   useDisclosure,
-} from '@chakra-ui/react';
-import { useOutcomeStore } from '../../stores/outcomeStore';
-import { getProcessTypes } from '../../api/client';
-import CreateOutcomeAnalysisModal from './CreateOutcomeAnalysisModal';
+} from "@chakra-ui/react";
+import { useOutcomeStore } from "../../stores/outcomeStore";
+import { getProcessTypes } from "../../api/client";
+import CreateOutcomeAnalysisModal from "./CreateOutcomeAnalysisModal";
 
 const OutcomeAnalysisList: React.FC = () => {
   const navigate = useNavigate();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [processTypeFilter, setProcessTypeFilter] = useState<string>('');
-  const [metricNameFilter, setMetricNameFilter] = useState<string>('');
+  const [processTypeFilter, setProcessTypeFilter] = useState<string>("");
+  const [metricNameFilter, setMetricNameFilter] = useState<string>("");
   const [processTypes, setProcessTypes] = useState<string[]>([]);
   const [metricNames, setMetricNames] = useState<string[]>([]);
 
@@ -39,7 +39,7 @@ const OutcomeAnalysisList: React.FC = () => {
         const types = await getProcessTypes();
         setProcessTypes(types);
       } catch (error) {
-        console.error('Failed to fetch process types', error);
+        console.error("Failed to fetch process types", error);
       }
     };
 
@@ -47,12 +47,17 @@ const OutcomeAnalysisList: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchAnalyses(processTypeFilter || undefined, metricNameFilter || undefined);
+    fetchAnalyses(
+      processTypeFilter || undefined,
+      metricNameFilter || undefined,
+    );
   }, [processTypeFilter, metricNameFilter, fetchAnalyses]);
 
   useEffect(() => {
     // 分析一覧から利用可能なメトリック名を抽出
-    const uniqueMetrics = Array.from(new Set(analyses.map(a => a.metric_name)));
+    const uniqueMetrics = Array.from(
+      new Set(analyses.map((a) => a.metric_name)),
+    );
     setMetricNames(uniqueMetrics);
   }, [analyses]);
 
@@ -61,20 +66,21 @@ const OutcomeAnalysisList: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('ja-JP');
+    return new Date(dateString).toLocaleString("ja-JP");
   };
 
   return (
     <Box p={8} maxW="800px" mx="auto">
       <HStack justify="space-between" align="center" mb={6}>
-        <Heading size="lg">
-          成果分析
-        </Heading>
+        <Heading size="lg">成果分析</Heading>
         <HStack>
-          <Button colorScheme="blue" onClick={() => navigate('/')}>
+          <Button colorScheme="blue" onClick={() => navigate("/")}>
             📈 プロセス分析
           </Button>
-          <Button colorScheme="purple" onClick={() => navigate('/organization')}>
+          <Button
+            colorScheme="purple"
+            onClick={() => navigate("/organization")}
+          >
             🏢 組織分析
           </Button>
           <Button colorScheme="green" onClick={onOpen}>
@@ -84,7 +90,9 @@ const OutcomeAnalysisList: React.FC = () => {
       </HStack>
 
       <Box mb={6}>
-        <Text fontSize="sm" mb={2} fontWeight="medium">フィルター:</Text>
+        <Text fontSize="sm" mb={2} fontWeight="medium">
+          フィルター:
+        </Text>
         <HStack spacing={4}>
           <Select
             placeholder="すべてのプロセスタイプ"
@@ -151,7 +159,11 @@ const OutcomeAnalysisList: React.FC = () => {
               borderRadius="md"
               cursor="pointer"
               transition="all 0.2s"
-              _hover={{ bg: 'green.50', borderColor: 'green.500', transform: 'translateY(-2px)' }}
+              _hover={{
+                bg: "green.50",
+                borderColor: "green.500",
+                transform: "translateY(-2px)",
+              }}
               onClick={() => handleRowClick(analysis.analysis_id)}
             >
               <VStack align="start" spacing={1}>
@@ -159,14 +171,12 @@ const OutcomeAnalysisList: React.FC = () => {
                   <Text fontWeight="bold" fontSize="lg">
                     {analysis.analysis_name}
                   </Text>
-                  <Badge colorScheme="green">
-                    {analysis.process_type}
-                  </Badge>
-                  <Badge colorScheme="orange">
-                    {analysis.metric_name}
-                  </Badge>
+                  <Badge colorScheme="green">{analysis.process_type}</Badge>
+                  <Badge colorScheme="orange">{analysis.metric_name}</Badge>
                   <Badge colorScheme="cyan">
-                    {analysis.analysis_type === 'path-outcome' ? 'パス別成果' : 'セグメント比較'}
+                    {analysis.analysis_type === "path-outcome"
+                      ? "パス別成果"
+                      : "セグメント比較"}
                   </Badge>
                 </HStack>
                 <Text fontSize="sm" color="gray.600">

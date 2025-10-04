@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   List,
@@ -13,21 +13,23 @@ import {
   Badge,
   Button,
   useDisclosure,
-} from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
-import { getOrganizationAnalyses, getProcessTypes } from '../api/client';
-import { OrganizationAnalysisListItem } from '../types';
-import CreateOrganizationAnalysisModal from './CreateOrganizationAnalysisModal';
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import { getOrganizationAnalyses, getProcessTypes } from "../api/client";
+import { OrganizationAnalysisListItem } from "../types";
+import CreateOrganizationAnalysisModal from "./CreateOrganizationAnalysisModal";
 
 interface OrganizationAnalysisListProps {
   onSelect: (analysisId: string) => void;
 }
 
-const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onSelect }) => {
+const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({
+  onSelect,
+}) => {
   const navigate = useNavigate();
   const [analyses, setAnalyses] = useState<OrganizationAnalysisListItem[]>([]);
   const [processTypes, setProcessTypes] = useState<string[]>([]);
-  const [selectedProcessType, setSelectedProcessType] = useState<string>('');
+  const [selectedProcessType, setSelectedProcessType] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -38,7 +40,7 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
         const types = await getProcessTypes();
         setProcessTypes(types);
       } catch (error) {
-        console.error('Failed to fetch process types', error);
+        console.error("Failed to fetch process types", error);
       }
     };
 
@@ -48,11 +50,13 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
   const fetchAnalyses = async () => {
     try {
       setLoading(true);
-      const data = await getOrganizationAnalyses(selectedProcessType || undefined);
+      const data = await getOrganizationAnalyses(
+        selectedProcessType || undefined,
+      );
       setAnalyses(data);
     } catch (error) {
-      console.error('Failed to fetch organization analyses', error);
-      setError('Failed to load organization analyses');
+      console.error("Failed to fetch organization analyses", error);
+      setError("Failed to load organization analyses");
     } finally {
       setLoading(false);
     }
@@ -70,7 +74,7 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
   };
 
   const aggregationLevelLabel = (level: string) => {
-    return level === 'employee' ? '👤 社員別' : '🏢 部署別';
+    return level === "employee" ? "👤 社員別" : "🏢 部署別";
   };
 
   return (
@@ -78,14 +82,12 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
       <Box p={8} maxW="800px" mx="auto">
         <VStack align="stretch" spacing={6}>
           <HStack justify="space-between" align="center">
-            <Heading size="lg">
-              組織分析
-            </Heading>
+            <Heading size="lg">組織分析</Heading>
             <HStack>
-              <Button colorScheme="blue" onClick={() => navigate('/')}>
+              <Button colorScheme="blue" onClick={() => navigate("/")}>
                 📈 プロセス分析
               </Button>
-              <Button colorScheme="green" onClick={() => navigate('/outcome')}>
+              <Button colorScheme="green" onClick={() => navigate("/outcome")}>
                 📊 成果分析
               </Button>
               <Button colorScheme="purple" onClick={onOpen}>
@@ -95,7 +97,9 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
           </HStack>
 
           <Box>
-            <Text fontSize="sm" mb={2} fontWeight="medium">フィルター:</Text>
+            <Text fontSize="sm" mb={2} fontWeight="medium">
+              フィルター:
+            </Text>
             <Select
               value={selectedProcessType}
               onChange={(e) => setSelectedProcessType(e.target.value)}
@@ -148,7 +152,11 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
                   borderRadius="md"
                   cursor="pointer"
                   transition="all 0.2s"
-                  _hover={{ bg: 'purple.50', borderColor: 'purple.500', transform: 'translateY(-2px)' }}
+                  _hover={{
+                    bg: "purple.50",
+                    borderColor: "purple.500",
+                    transform: "translateY(-2px)",
+                  }}
                   onClick={() => onSelect(analysis.analysis_id)}
                 >
                   <VStack align="start" spacing={1}>
@@ -166,7 +174,8 @@ const OrganizationAnalysisList: React.FC<OrganizationAnalysisListProps> = ({ onS
                       </Badge>
                     </HStack>
                     <Text fontSize="sm" color="gray.600">
-                      作成日時: {new Date(analysis.created_at).toLocaleString('ja-JP')}
+                      作成日時:{" "}
+                      {new Date(analysis.created_at).toLocaleString("ja-JP")}
                     </Text>
                   </VStack>
                 </ListItem>

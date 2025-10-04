@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,14 +6,14 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { Box, Text, Spinner, Center, Flex } from '@chakra-ui/react';
-import { HandoverAnalysis, Node, Edge } from '../types';
-import { useLayout } from '../hooks/useLayout';
-import { useStore } from '../store/useStore';
-import OrganizationNode from './OrganizationNode';
-import Controls from './Controls';
+} from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { Box, Text, Spinner, Center, Flex } from "@chakra-ui/react";
+import { HandoverAnalysis, Node, Edge } from "../types";
+import { useLayout } from "../hooks/useLayout";
+import { useStore } from "../store/useStore";
+import OrganizationNode from "./OrganizationNode";
+import Controls from "./Controls";
 
 const nodeTypes = {
   organizationNode: OrganizationNode,
@@ -30,7 +30,7 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
   const { initialNodes, initialEdges } = useMemo(() => {
     const nodes: Node[] = data.nodes.map((node) => ({
       id: node.id,
-      type: 'organizationNode',
+      type: "organizationNode",
       data: {
         label: node.label,
         frequency: node.activity_count,
@@ -52,7 +52,11 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
   }, [data]);
 
   // Use layout hook to calculate positions
-  const { layoutedNodes, isLayouting } = useLayout(initialNodes, initialEdges, 'DOWN');
+  const { layoutedNodes, isLayouting } = useLayout(
+    initialNodes,
+    initialEdges,
+    "DOWN",
+  );
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -62,28 +66,31 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
     if (!initialEdges || initialEdges.length === 0) return [];
 
     const maxFrequency = Math.max(...initialEdges.map((e) => e.data.frequency));
-    const maxWaitingTime = Math.max(...initialEdges.map((e) => e.data.avg_waiting_time_hours));
+    const maxWaitingTime = Math.max(
+      ...initialEdges.map((e) => e.data.avg_waiting_time_hours),
+    );
 
     return initialEdges.map((edge) => {
       const normalizedFreq = edge.data.frequency / maxFrequency;
-      const normalizedWaitingTime = edge.data.avg_waiting_time_hours / maxWaitingTime;
+      const normalizedWaitingTime =
+        edge.data.avg_waiting_time_hours / maxWaitingTime;
       const isHidden = normalizedFreq < pathThreshold;
 
       const label =
-        displayMetric === 'frequency'
+        displayMetric === "frequency"
           ? `${edge.data.frequency} 件`
           : `${edge.data.avg_waiting_time_hours.toFixed(1)}時間`;
 
       const strokeWidth = Math.max(2, normalizedFreq * 8);
 
       // Color based on waiting time and frequency (same logic as ProcessMap)
-      let strokeColor = '#555'; // Default
+      let strokeColor = "#555"; // Default
       if (isHidden) {
-        strokeColor = '#ccc';
+        strokeColor = "#ccc";
       } else if (normalizedWaitingTime > 0.7) {
-        strokeColor = '#e53e3e'; // Red for long waiting time
+        strokeColor = "#e53e3e"; // Red for long waiting time
       } else if (normalizedFreq > 0.8) {
-        strokeColor = '#3182ce'; // Blue for high-frequency paths
+        strokeColor = "#3182ce"; // Blue for high-frequency paths
       }
 
       return {
@@ -131,7 +138,9 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
         <Box flex={1}>
           <Center h="100%">
             <Spinner size="xl" color="blue.500" />
-            <Text ml={4} color="gray.600">レイアウトを計算中...</Text>
+            <Text ml={4} color="gray.600">
+              レイアウトを計算中...
+            </Text>
           </Center>
         </Box>
         <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">

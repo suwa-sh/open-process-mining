@@ -2,26 +2,26 @@
  * Outcome analysis state management
  */
 
-import { create } from 'zustand';
+import { create } from "zustand";
 import type {
   MetricInfo,
   OutcomeAnalysisSummary,
   OutcomeAnalysisDetail,
   CreateOutcomeAnalysisParams,
-} from '../types/outcome';
+} from "../types/outcome";
 import {
   fetchAvailableMetrics,
   fetchOutcomeAnalyses,
   fetchOutcomeAnalysisById,
   createOutcomeAnalysis,
-} from '../api/outcomeApi';
+} from "../api/outcomeApi";
 
 interface OutcomeState {
   analyses: OutcomeAnalysisSummary[];
   currentAnalysis: OutcomeAnalysisDetail | null;
   availableMetrics: MetricInfo[];
   selectedMetric: string;
-  displayMode: 'avg' | 'median' | 'total';
+  displayMode: "avg" | "median" | "total";
   loading: boolean;
   error: string | null;
 
@@ -29,7 +29,7 @@ interface OutcomeState {
   fetchAnalysisById: (analysisId: string) => Promise<void>;
   fetchMetrics: (processType: string) => Promise<void>;
   setSelectedMetric: (metricName: string) => void;
-  setDisplayMode: (mode: 'avg' | 'median' | 'total') => void;
+  setDisplayMode: (mode: "avg" | "median" | "total") => void;
   createAnalysis: (params: CreateOutcomeAnalysisParams) => Promise<string>;
   clearError: () => void;
 }
@@ -38,8 +38,8 @@ export const useOutcomeStore = create<OutcomeState>((set, get) => ({
   analyses: [],
   currentAnalysis: null,
   availableMetrics: [],
-  selectedMetric: '',
-  displayMode: 'avg',
+  selectedMetric: "",
+  displayMode: "avg",
   loading: false,
   error: null,
 
@@ -49,7 +49,10 @@ export const useOutcomeStore = create<OutcomeState>((set, get) => ({
       const analyses = await fetchOutcomeAnalyses(processType, metricName);
       set({ analyses, loading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch analyses', loading: false });
+      set({
+        error: error.message || "Failed to fetch analyses",
+        loading: false,
+      });
     }
   },
 
@@ -60,10 +63,13 @@ export const useOutcomeStore = create<OutcomeState>((set, get) => ({
       set({
         currentAnalysis: analysis,
         selectedMetric: analysis.metric_name,
-        loading: false
+        loading: false,
       });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch analysis', loading: false });
+      set({
+        error: error.message || "Failed to fetch analysis",
+        loading: false,
+      });
     }
   },
 
@@ -73,7 +79,10 @@ export const useOutcomeStore = create<OutcomeState>((set, get) => ({
       const metrics = await fetchAvailableMetrics(processType);
       set({ availableMetrics: metrics, loading: false });
     } catch (error: any) {
-      set({ error: error.message || 'Failed to fetch metrics', loading: false });
+      set({
+        error: error.message || "Failed to fetch metrics",
+        loading: false,
+      });
     }
   },
 
@@ -81,7 +90,7 @@ export const useOutcomeStore = create<OutcomeState>((set, get) => ({
     set({ selectedMetric: metricName });
   },
 
-  setDisplayMode: (mode: 'avg' | 'median' | 'total') => {
+  setDisplayMode: (mode: "avg" | "median" | "total") => {
     set({ displayMode: mode });
   },
 
@@ -92,7 +101,10 @@ export const useOutcomeStore = create<OutcomeState>((set, get) => ({
       set({ loading: false });
       return result.analysis_id;
     } catch (error: any) {
-      set({ error: error.message || 'Failed to create analysis', loading: false });
+      set({
+        error: error.message || "Failed to create analysis",
+        loading: false,
+      });
       throw error;
     }
   },

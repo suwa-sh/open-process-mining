@@ -1,5 +1,5 @@
-import { create } from 'zustand';
-import { Node, Edge, DisplayMetric } from '../types';
+import { create } from "zustand";
+import { Node, Edge, DisplayMetric } from "../types";
 
 interface StoreState {
   nodes: Node[];
@@ -15,7 +15,7 @@ interface StoreState {
 export const useStore = create<StoreState>((set) => ({
   nodes: [],
   edges: [],
-  displayMetric: 'frequency',
+  displayMetric: "frequency",
   pathThreshold: 0,
 
   setGraphData: (nodes, edges) => set({ nodes, edges }),

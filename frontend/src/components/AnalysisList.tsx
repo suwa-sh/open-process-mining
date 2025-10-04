@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   List,
@@ -13,11 +13,11 @@ import {
   Badge,
   Button,
   useDisclosure,
-} from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom';
-import { getAnalyses, getProcessTypes } from '../api/client';
-import { Analysis } from '../types';
-import CreateAnalysisModal from './CreateAnalysisModal';
+} from "@chakra-ui/react";
+import { useNavigate } from "react-router-dom";
+import { getAnalyses, getProcessTypes } from "../api/client";
+import { Analysis } from "../types";
+import CreateAnalysisModal from "./CreateAnalysisModal";
 
 interface AnalysisListProps {
   onSelect: (analysisId: string) => void;
@@ -27,7 +27,7 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
   const navigate = useNavigate();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [processTypes, setProcessTypes] = useState<string[]>([]);
-  const [selectedProcessType, setSelectedProcessType] = useState<string>('');
+  const [selectedProcessType, setSelectedProcessType] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -38,7 +38,7 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
         const types = await getProcessTypes();
         setProcessTypes(types);
       } catch (error) {
-        console.error('Failed to fetch process types', error);
+        console.error("Failed to fetch process types", error);
       }
     };
 
@@ -51,8 +51,8 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
       const data = await getAnalyses(selectedProcessType || undefined);
       setAnalyses(data);
     } catch (error) {
-      console.error('Failed to fetch analyses', error);
-      setError('Failed to load analyses');
+      console.error("Failed to fetch analyses", error);
+      setError("Failed to load analyses");
     } finally {
       setLoading(false);
     }
@@ -100,14 +100,15 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
       <Box p={8} maxW="800px" mx="auto">
         <VStack align="stretch" spacing={6}>
           <HStack justify="space-between" align="center">
-            <Heading size="lg">
-              プロセス分析
-            </Heading>
+            <Heading size="lg">プロセス分析</Heading>
             <HStack>
-              <Button colorScheme="purple" onClick={() => navigate('/organization')}>
+              <Button
+                colorScheme="purple"
+                onClick={() => navigate("/organization")}
+              >
                 🏢 組織分析
               </Button>
-              <Button colorScheme="green" onClick={() => navigate('/outcome')}>
+              <Button colorScheme="green" onClick={() => navigate("/outcome")}>
                 📊 成果分析
               </Button>
               <Button colorScheme="blue" onClick={onOpen}>
@@ -117,65 +118,72 @@ const AnalysisList: React.FC<AnalysisListProps> = ({ onSelect }) => {
           </HStack>
 
           <Box>
-            <Text fontSize="sm" mb={2} fontWeight="medium">フィルター:</Text>
-          <Select
-            value={selectedProcessType}
-            onChange={(e) => setSelectedProcessType(e.target.value)}
-            placeholder="すべてのプロセス"
-          >
-            {processTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </Select>
-        </Box>
+            <Text fontSize="sm" mb={2} fontWeight="medium">
+              フィルター:
+            </Text>
+            <Select
+              value={selectedProcessType}
+              onChange={(e) => setSelectedProcessType(e.target.value)}
+              placeholder="すべてのプロセス"
+            >
+              {processTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </Select>
+          </Box>
 
-{analyses.length === 0 ? (
-          <Center py={8}>
-            <VStack spacing={3}>
-              <Text fontSize="md" color="gray.600">
-                分析が見つかりません
-              </Text>
-              <Text fontSize="sm" color="gray.500">
-                「新規分析を作成」ボタンから最初の分析を作成してください。
-              </Text>
-            </VStack>
-          </Center>
-        ) : (
-          <List spacing={3}>
-            {analyses.map((analysis) => (
-              <ListItem
-                key={analysis.analysis_id}
-                p={4}
-                borderWidth={1}
-                borderRadius="md"
-                cursor="pointer"
-                transition="all 0.2s"
-                _hover={{ bg: 'blue.50', borderColor: 'blue.500', transform: 'translateY(-2px)' }}
-                onClick={() => onSelect(analysis.analysis_id)}
-              >
-                <VStack align="start" spacing={1}>
-                  <HStack spacing={3}>
-                    <Text fontWeight="bold" fontSize="lg">
-                      {analysis.analysis_name}
+          {analyses.length === 0 ? (
+            <Center py={8}>
+              <VStack spacing={3}>
+                <Text fontSize="md" color="gray.600">
+                  分析が見つかりません
+                </Text>
+                <Text fontSize="sm" color="gray.500">
+                  「新規分析を作成」ボタンから最初の分析を作成してください。
+                </Text>
+              </VStack>
+            </Center>
+          ) : (
+            <List spacing={3}>
+              {analyses.map((analysis) => (
+                <ListItem
+                  key={analysis.analysis_id}
+                  p={4}
+                  borderWidth={1}
+                  borderRadius="md"
+                  cursor="pointer"
+                  transition="all 0.2s"
+                  _hover={{
+                    bg: "blue.50",
+                    borderColor: "blue.500",
+                    transform: "translateY(-2px)",
+                  }}
+                  onClick={() => onSelect(analysis.analysis_id)}
+                >
+                  <VStack align="start" spacing={1}>
+                    <HStack spacing={3}>
+                      <Text fontWeight="bold" fontSize="lg">
+                        {analysis.analysis_name}
+                      </Text>
+                      {analysis.process_type && (
+                        <Badge colorScheme="blue">
+                          {analysis.process_type}
+                        </Badge>
+                      )}
+                    </HStack>
+                    <Text fontSize="sm" color="gray.600">
+                      作成日時:{" "}
+                      {new Date(analysis.created_at).toLocaleString("ja-JP")}
                     </Text>
-                    {analysis.process_type && (
-                      <Badge colorScheme="blue">
-                        {analysis.process_type}
-                      </Badge>
-                    )}
-                  </HStack>
-                  <Text fontSize="sm" color="gray.600">
-                    作成日時: {new Date(analysis.created_at).toLocaleString('ja-JP')}
-                  </Text>
-                </VStack>
-              </ListItem>
-            ))}
-          </List>
-        )}
-      </VStack>
-    </Box>
+                  </VStack>
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </VStack>
+      </Box>
 
       <CreateAnalysisModal
         isOpen={isOpen}

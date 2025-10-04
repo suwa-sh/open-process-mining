@@ -103,7 +103,7 @@ PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から配
 
 6. **Web UIにアクセス**
 
-ブラウザで http://localhost:5173 を開く
+ブラウザで <http://localhost:5173> を開く
 
 ### 主要な画面
 
@@ -208,6 +208,45 @@ PYTHONPATH=/app python src/analysis/run_analysis.py --name "従業員採用_2025
 
 ### バックエンド開発者向け
 
+#### コード品質チェック
+
+プロジェクトでは[qlty](https://qlty.sh)を使用して、複数のlinterとformatterを統合管理しています。
+
+```bash
+# すべてのlinter/formatterを実行
+qlty check
+
+# 自動修正可能な問題を修正
+qlty fmt
+
+# 特定のファイルのみチェック
+qlty check backend/src/main.py
+```
+
+**有効化されているツール:**
+
+- **Python**: ruff (linter), black (formatter), bandit (security)
+- **TypeScript/JavaScript**: prettier (formatter), radarlint (静的解析)
+- **Dockerfile**: hadolint (linter), dockerfmt (formatter), checkov (security)
+- **YAML**: yamllint
+- **Markdown**: markdownlint
+- **SQL**: sqlfluff（別途実行、詳細は下記参照）
+
+**SQLファイルのlint:**
+
+sqlfluffはqltyとは別に実行します：
+
+```bash
+# backend/sql/以下のSQLファイル
+~/.qlty/cache/tools/sqlfluff/3.4.0-f921ba7a9b1c/bin/sqlfluff lint backend/sql/ --dialect postgres
+
+# dbt models
+~/.qlty/cache/tools/sqlfluff/3.4.0-f921ba7a9b1c/bin/sqlfluff lint dbt/models/ --dialect postgres --config .sqlfluff
+
+# 自動修正
+~/.qlty/cache/tools/sqlfluff/3.4.0-f921ba7a9b1c/bin/sqlfluff fix <file> --dialect postgres
+```
+
 #### テストの実行
 
 ```bash
@@ -236,45 +275,73 @@ curl "http://localhost:8000/compare?before={id1}&after={id2}"
 
 **基本API**
 
-| エンドポイント | メソッド | 説明 |
-|--------------|---------|------|
-| `/health` | GET | ヘルスチェック |
-| `/process-types` | GET | 利用可能なプロセスタイプ一覧 |
+| エンドポイント   | メソッド | 説明                         |
+| ---------------- | -------- | ---------------------------- |
+| `/health`        | GET      | ヘルスチェック               |
+| `/process-types` | GET      | 利用可能なプロセスタイプ一覧 |
 
 **プロセス分析API**
 
-| エンドポイント | メソッド | 説明 |
-|--------------|---------|------|
-| `/analyses` | GET | 分析結果の一覧取得 (`?process_type=xxx`でフィルタ可能) |
-| `/analyses/{analysis_id}` | GET | 特定の分析結果を取得 |
-| `/compare` | GET | 2つの分析結果を比較 |
+| エンドポイント            | メソッド | 説明                                                   |
+| ------------------------- | -------- | ------------------------------------------------------ |
+| `/analyses`               | GET      | 分析結果の一覧取得 (`?process_type=xxx`でフィルタ可能) |
+| `/analyses/{analysis_id}` | GET      | 特定の分析結果を取得                                   |
+| `/compare`                | GET      | 2つの分析結果を比較                                    |
 
 **組織分析API（保存型）**
 
-| エンドポイント | メソッド | 説明 |
-|--------------|---------|------|
-| `/organization/analyze` | POST | 組織分析を実行し、結果をDBに保存 |
-| `/organization/analyses` | GET | 組織分析結果の一覧取得 (`?process_type=xxx`でフィルタ可能) |
-| `/organization/analyses/{analysis_id}` | GET | 特定の組織分析結果を取得 |
+| エンドポイント                         | メソッド | 説明                                                       |
+| -------------------------------------- | -------- | ---------------------------------------------------------- |
+| `/organization/analyze`                | POST     | 組織分析を実行し、結果をDBに保存                           |
+| `/organization/analyses`               | GET      | 組織分析結果の一覧取得 (`?process_type=xxx`でフィルタ可能) |
+| `/organization/analyses/{analysis_id}` | GET      | 特定の組織分析結果を取得                                   |
 
 **組織分析API（リアルタイム）**
 
-| エンドポイント | メソッド | 説明 |
-|--------------|---------|------|
-| `/organization/handover` | GET | ハンドオーバー分析 (`?process_type=xxx&aggregation_level=employee/department`) |
-| `/organization/workload` | GET | 作業負荷分析 (`?process_type=xxx&aggregation_level=employee/department`) |
-| `/organization/performance` | GET | パフォーマンス分析 (`?process_type=xxx&aggregation_level=employee/department`) |
+| エンドポイント              | メソッド | 説明                                                                           |
+| --------------------------- | -------- | ------------------------------------------------------------------------------ |
+| `/organization/handover`    | GET      | ハンドオーバー分析 (`?process_type=xxx&aggregation_level=employee/department`) |
+| `/organization/workload`    | GET      | 作業負荷分析 (`?process_type=xxx&aggregation_level=employee/department`)       |
+| `/organization/performance` | GET      | パフォーマンス分析 (`?process_type=xxx&aggregation_level=employee/department`) |
 
 **成果分析API**
 
-| エンドポイント | メソッド | 説明 |
-|--------------|---------|------|
-| `/outcome/metrics` | GET | 利用可能なメトリック一覧を取得 (`?process_type=xxx`でフィルタ可能) |
-| `/outcome/analyses` | GET | 成果分析結果の一覧取得 (`?process_type=xxx&metric_name=xxx`でフィルタ可能) |
-| `/outcome/analyses/{analysis_id}` | GET | 特定の成果分析結果を取得 |
-| `/outcome/analyze` | POST | 成果分析を実行し、結果をDBに保存 |
+| エンドポイント                    | メソッド | 説明                                                                       |
+| --------------------------------- | -------- | -------------------------------------------------------------------------- |
+| `/outcome/metrics`                | GET      | 利用可能なメトリック一覧を取得 (`?process_type=xxx`でフィルタ可能)         |
+| `/outcome/analyses`               | GET      | 成果分析結果の一覧取得 (`?process_type=xxx&metric_name=xxx`でフィルタ可能) |
+| `/outcome/analyses/{analysis_id}` | GET      | 特定の成果分析結果を取得                                                   |
+| `/outcome/analyze`                | POST     | 成果分析を実行し、結果をDBに保存                                           |
 
 ### フロントエンド開発者向け
+
+#### コード品質チェック
+
+フロントエンドもqltyでlint/formatを実行できます：
+
+```bash
+# フロントエンドファイルのチェック
+qlty check frontend/src/
+
+# 自動修正
+qlty fmt frontend/src/
+
+# 特定のファイルのみ
+qlty check frontend/src/App.tsx
+```
+
+**フロントエンドで有効なツール:**
+
+- **prettier**: コードフォーマッター（TypeScript, TSX, CSS, JSON）
+- **radarlint**: TypeScript静的解析（複雑度、コード品質）
+- **markdownlint**: Markdownファイルの検証
+
+**注意**: eslintはnpm経由で実行します（qltyプラグインに互換性問題があるため）：
+
+```bash
+# フロントエンドコンテナ内
+npm run lint
+```
 
 #### 開発サーバー
 
@@ -367,19 +434,20 @@ npm run report
 
 ### テーブル構成（すべて`public`スキーマ）
 
-| テーブル/ビュー | タイプ | 説明 |
-|---------|---------|------|
-| `raw_order_events` | テーブル | dbt seedの生データ |
-| `stg_raw_order_events` | ビュー | dbtステージングモデル |
-| `fct_event_log` | テーブル | プロセスマイニング用イベントログ（組織情報含む） |
-| `fct_case_outcomes` | テーブル | ケース別成果データ（メトリック値） |
-| `analysis_results` | テーブル | プロセス分析結果（JSON形式） |
-| `organization_analysis_results` | テーブル | 組織分析結果（JSON形式） |
-| `outcome_analysis_results` | テーブル | 成果分析結果（JSON形式） |
-| `master_employees` | テーブル | 社員マスター |
-| `master_departments` | テーブル | 部署マスター |
+| テーブル/ビュー                 | タイプ   | 説明                                             |
+| ------------------------------- | -------- | ------------------------------------------------ |
+| `raw_order_events`              | テーブル | dbt seedの生データ                               |
+| `stg_raw_order_events`          | ビュー   | dbtステージングモデル                            |
+| `fct_event_log`                 | テーブル | プロセスマイニング用イベントログ（組織情報含む） |
+| `fct_case_outcomes`             | テーブル | ケース別成果データ（メトリック値）               |
+| `analysis_results`              | テーブル | プロセス分析結果（JSON形式）                     |
+| `organization_analysis_results` | テーブル | 組織分析結果（JSON形式）                         |
+| `outcome_analysis_results`      | テーブル | 成果分析結果（JSON形式）                         |
+| `master_employees`              | テーブル | 社員マスター                                     |
+| `master_departments`            | テーブル | 部署マスター                                     |
 
 `fct_event_log` スキーマ:
+
 - `case_id`: ケースID
 - `activity`: アクティビティ名
 - `timestamp`: イベント発生日時
@@ -430,6 +498,7 @@ psql -h localhost -p 5432 -U process_mining -d process_mining_db
 #### 方法3: GUIツールで接続（TablePlus、DBeaver、pgAdminなど）
 
 接続情報:
+
 - **Host**: `localhost`
 - **Port**: `5432`
 - **Database**: `process_mining_db`
@@ -523,9 +592,11 @@ open-process-mining/
 ## ドキュメント
 
 ### 利用者向け
+
 - **[USAGE.md](USAGE.md)**: 自組織でプロセスマイニングを実施する方法（データ準備から分析実施まで）
 
 ### 開発者向け
+
 - [CLAUDE.md](CLAUDE.md): Claude Code向けの開発ガイド
 - [tmp/PRD.md](tmp/PRD.md): プロジェクトキャンバス
 - [tmp/仕様.md](tmp/仕様.md): 詳細実装仕様

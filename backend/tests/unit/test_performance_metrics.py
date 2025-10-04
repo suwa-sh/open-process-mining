@@ -1,18 +1,40 @@
-import pytest
 from datetime import datetime
 import networkx as nx
 from src.models.event_log import EventLog
 from src.analysis.dfg_discovery import discover_dfg
-from src.analysis.performance_metrics import calculate_performance_metrics, convert_dfg_to_react_flow
+from src.analysis.performance_metrics import (
+    calculate_performance_metrics,
+    convert_dfg_to_react_flow,
+)
 
 
 def test_calculate_performance_metrics():
     """Test performance metrics calculation."""
     event_log = [
-        EventLog(case_id="C1", activity="A", timestamp=datetime(2025, 1, 1, 10, 0), resource="User1"),
-        EventLog(case_id="C1", activity="B", timestamp=datetime(2025, 1, 1, 12, 0), resource="User1"),  # 2 hours later
-        EventLog(case_id="C2", activity="A", timestamp=datetime(2025, 1, 2, 10, 0), resource="User1"),
-        EventLog(case_id="C2", activity="B", timestamp=datetime(2025, 1, 2, 14, 0), resource="User1"),  # 4 hours later
+        EventLog(
+            case_id="C1",
+            activity="A",
+            timestamp=datetime(2025, 1, 1, 10, 0),
+            resource="User1",
+        ),
+        EventLog(
+            case_id="C1",
+            activity="B",
+            timestamp=datetime(2025, 1, 1, 12, 0),
+            resource="User1",
+        ),  # 2 hours later
+        EventLog(
+            case_id="C2",
+            activity="A",
+            timestamp=datetime(2025, 1, 2, 10, 0),
+            resource="User1",
+        ),
+        EventLog(
+            case_id="C2",
+            activity="B",
+            timestamp=datetime(2025, 1, 2, 14, 0),
+            resource="User1",
+        ),  # 4 hours later
     ]
 
     dfg = discover_dfg(event_log)

@@ -1,6 +1,8 @@
 """Unit tests for outcome service"""
+
 import pytest
-from unittest.mock import Mock, MagicMock
+import pandas as pd
+from unittest.mock import Mock, patch
 from src.services.outcome_service import (
     get_available_metrics,
     analyze_path_outcome,
@@ -17,9 +19,9 @@ class TestGetAvailableMetrics:
         mock_db = Mock()
         mock_result = Mock()
         mock_result.fetchall.return_value = [
-            ("revenue", "JPY"),
-            ("profit_margin", "percent"),
-            ("quantity", "count"),
+            ("revenue", "JPY", 10),
+            ("profit_margin", "percent", 10),
+            ("quantity", "count", 10),
         ]
         mock_db.execute.return_value = mock_result
 
@@ -30,6 +32,7 @@ class TestGetAvailableMetrics:
         assert len(metrics) == 3
         assert metrics[0].metric_name == "revenue"
         assert metrics[0].metric_unit == "JPY"
+        assert metrics[0].sample_count == 10
         assert metrics[1].metric_name == "profit_margin"
         assert metrics[2].metric_name == "quantity"
 
@@ -51,40 +54,44 @@ class TestGetAvailableMetrics:
 class TestAnalyzePathOutcome:
     """Tests for analyze_path_outcome function"""
 
-    def test_analyze_path_outcome_basic(self):
+    @patch("src.services.outcome_service.pd.read_sql")
+    def test_analyze_path_outcome_basic(self, mock_read_sql):
         """Test basic path outcome analysis"""
         # Mock database session
         mock_db = Mock()
+        mock_db.bind = Mock()
 
-        # Mock event log query
-        mock_event_result = Mock()
-        mock_event_result.fetchall.return_value = [
-            ("CASE-001", "A", "2025-01-01 10:00:00"),
-            ("CASE-001", "B", "2025-01-01 11:00:00"),
-            ("CASE-002", "A", "2025-01-01 12:00:00"),
-            ("CASE-002", "B", "2025-01-01 13:00:00"),
-        ]
+        # Mock DataFrames
+        events_df = pd.DataFrame(
+            {
+                "case_id": ["CASE-001", "CASE-001", "CASE-002", "CASE-002"],
+                "activity": ["A", "B", "A", "B"],
+                "timestamp": pd.to_datetime(
+                    [
+                        "2025-01-01 10:00:00",
+                        "2025-01-01 11:00:00",
+                        "2025-01-01 12:00:00",
+                        "2025-01-01 13:00:00",
+                    ]
+                ),
+            }
+        )
 
-        # Mock outcome query
-        mock_outcome_result = Mock()
-        mock_outcome_result.fetchall.return_value = [
-            ("CASE-001", 1000.0),
-            ("CASE-002", 2000.0),
-        ]
+        outcomes_df = pd.DataFrame(
+            {"case_id": ["CASE-001", "CASE-002"], "metric_value": [1000.0, 2000.0]}
+        )
 
-        # Set up mock to return different results for different queries
-        def execute_side_effect(query):
+        # Set up mock to return different DataFrames
+        def read_sql_side_effect(query, *args, **kwargs):
             if "fct_event_log" in str(query):
-                return mock_event_result
+                return events_df
             else:
-                return mock_outcome_result
+                return outcomes_df
 
-        mock_db.execute.side_effect = execute_side_effect
+        mock_read_sql.side_effect = read_sql_side_effect
 
         # Execute
-        result = analyze_path_outcome(
-            mock_db, "order-delivery", "revenue", None
-        )
+        result = analyze_path_outcome(mock_db, "order-delivery", "revenue", None)
 
         # Verify structure
         assert "nodes" in result
@@ -93,22 +100,24 @@ class TestAnalyzePathOutcome:
         assert len(result["nodes"]) > 0
         assert len(result["edges"]) > 0
 
-    def test_analyze_path_outcome_with_date_filter(self):
+    @patch("src.services.outcome_service.pd.read_sql")
+    def test_analyze_path_outcome_with_date_filter(self, mock_read_sql):
         """Test path outcome analysis with date filter"""
         # Mock database session
         mock_db = Mock()
-        mock_event_result = Mock()
-        mock_event_result.fetchall.return_value = []
-        mock_outcome_result = Mock()
-        mock_outcome_result.fetchall.return_value = []
+        mock_db.bind = Mock()
 
-        def execute_side_effect(query):
+        # Mock empty DataFrames
+        events_df = pd.DataFrame(columns=["case_id", "activity", "timestamp"])
+        outcomes_df = pd.DataFrame(columns=["case_id", "metric_value"])
+
+        def read_sql_side_effect(query, *args, **kwargs):
             if "fct_event_log" in str(query):
-                return mock_event_result
+                return events_df
             else:
-                return mock_outcome_result
+                return outcomes_df
 
-        mock_db.execute.side_effect = execute_side_effect
+        mock_read_sql.side_effect = read_sql_side_effect
 
         # Execute with date filter
         filter_config = {
@@ -128,35 +137,41 @@ class TestAnalyzePathOutcome:
 class TestAnalyzeSegmentComparison:
     """Tests for analyze_segment_comparison function"""
 
-    def test_analyze_segment_comparison_top25(self):
+    @patch("src.services.outcome_service.pd.read_sql")
+    def test_analyze_segment_comparison_top25(self, mock_read_sql):
         """Test segment comparison with top25 mode"""
         # Mock database session
         mock_db = Mock()
+        mock_db.bind = Mock()
 
-        # Mock event log query
-        mock_event_result = Mock()
-        mock_event_result.fetchall.return_value = [
-            ("CASE-001", "A", "2025-01-01 10:00:00"),
-            ("CASE-001", "B", "2025-01-01 11:00:00"),
-            ("CASE-002", "A", "2025-01-01 12:00:00"),
-            ("CASE-002", "B", "2025-01-01 13:00:00"),
-        ]
+        # Mock DataFrames
+        events_df = pd.DataFrame(
+            {
+                "case_id": ["CASE-001", "CASE-001", "CASE-002", "CASE-002"],
+                "activity": ["A", "B", "A", "B"],
+                "timestamp": pd.to_datetime(
+                    [
+                        "2025-01-01 10:00:00",
+                        "2025-01-01 11:00:00",
+                        "2025-01-01 12:00:00",
+                        "2025-01-01 13:00:00",
+                    ]
+                ),
+            }
+        )
 
-        # Mock outcome query
-        mock_outcome_result = Mock()
-        mock_outcome_result.fetchall.return_value = [
-            ("CASE-001", 1000.0),
-            ("CASE-002", 2000.0),
-        ]
+        outcomes_df = pd.DataFrame(
+            {"case_id": ["CASE-001", "CASE-002"], "metric_value": [1000.0, 2000.0]}
+        )
 
-        # Set up mock to return different results
-        def execute_side_effect(query):
+        # Set up mock to return different DataFrames
+        def read_sql_side_effect(query, *args, **kwargs):
             if "fct_event_log" in str(query):
-                return mock_event_result
+                return events_df
             else:
-                return mock_outcome_result
+                return outcomes_df
 
-        mock_db.execute.side_effect = execute_side_effect
+        mock_read_sql.side_effect = read_sql_side_effect
 
         # Execute
         result = analyze_segment_comparison(
@@ -166,26 +181,29 @@ class TestAnalyzeSegmentComparison:
         # Verify structure
         assert "high_segment" in result
         assert "low_segment" in result
-        assert "segment_definition" in result
+        assert "summary" in result
+        assert "differences" in result
         assert "outcome_stats" in result["high_segment"]
         assert "outcome_stats" in result["low_segment"]
 
-    def test_analyze_segment_comparison_threshold(self):
+    @patch("src.services.outcome_service.pd.read_sql")
+    def test_analyze_segment_comparison_threshold(self, mock_read_sql):
         """Test segment comparison with threshold mode"""
         # Mock database session
         mock_db = Mock()
-        mock_event_result = Mock()
-        mock_event_result.fetchall.return_value = []
-        mock_outcome_result = Mock()
-        mock_outcome_result.fetchall.return_value = []
+        mock_db.bind = Mock()
 
-        def execute_side_effect(query):
+        # Mock empty DataFrames
+        outcomes_df = pd.DataFrame(columns=["case_id", "metric_value"])
+        events_df = pd.DataFrame(columns=["case_id", "activity", "timestamp"])
+
+        def read_sql_side_effect(query, *args, **kwargs):
             if "fct_event_log" in str(query):
-                return mock_event_result
+                return events_df
             else:
-                return mock_outcome_result
+                return outcomes_df
 
-        mock_db.execute.side_effect = execute_side_effect
+        mock_read_sql.side_effect = read_sql_side_effect
 
         # Execute with threshold
         result = analyze_segment_comparison(
@@ -195,7 +213,8 @@ class TestAnalyzeSegmentComparison:
         # Verify structure
         assert "high_segment" in result
         assert "low_segment" in result
-        assert "segment_definition" in result
+        assert "summary" in result
+        assert "differences" in result
 
 
 if __name__ == "__main__":

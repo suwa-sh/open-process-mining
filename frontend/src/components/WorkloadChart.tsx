@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Heading, VStack, HStack, Text, Progress } from '@chakra-ui/react';
-import { WorkloadAnalysis } from '../types';
+import React from "react";
+import { Box, Heading, VStack, HStack, Text, Progress } from "@chakra-ui/react";
+import { WorkloadAnalysis } from "../types";
 
 interface WorkloadChartProps {
   data: WorkloadAnalysis;
@@ -16,7 +16,9 @@ const WorkloadChart: React.FC<WorkloadChartProps> = ({ data }) => {
   }
 
   // Find max activity count for scaling
-  const maxActivityCount = Math.max(...data.workload.map((w) => w.activity_count));
+  const maxActivityCount = Math.max(
+    ...data.workload.map((w) => w.activity_count),
+  );
 
   return (
     <Box width="100%" p={4}>
@@ -30,7 +32,7 @@ const WorkloadChart: React.FC<WorkloadChartProps> = ({ data }) => {
             p={4}
             borderWidth="1px"
             borderRadius="md"
-            bg={index === 0 ? 'yellow.50' : 'white'}
+            bg={index === 0 ? "yellow.50" : "white"}
           >
             <HStack justify="space-between" mb={2}>
               <VStack align="start" spacing={0}>

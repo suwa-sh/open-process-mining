@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { getAnalysisById } from '../api/client';
-import { AnalysisResult } from '../types';
+import { useState, useEffect } from "react";
+import { getAnalysisById } from "../api/client";
+import { AnalysisResult } from "../types";
 
 export const useAnalysisData = (analysisId: string | null) => {
   const [data, setData] = useState<AnalysisResult | null>(null);
@@ -17,7 +17,7 @@ export const useAnalysisData = (analysisId: string | null) => {
         const result = await getAnalysisById(analysisId);
         setData(result);
       } catch (err) {
-        setError('Failed to fetch analysis data');
+        setError("Failed to fetch analysis data");
         console.error(err);
       } finally {
         setLoading(false);

@@ -1,6 +1,6 @@
-import React, { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
-import { Box, Text } from '@chakra-ui/react';
+import React, { memo } from "react";
+import { Handle, Position } from "@xyflow/react";
+import { Box, Text } from "@chakra-ui/react";
 
 interface OrganizationNodeProps {
   data: {
@@ -20,7 +20,7 @@ const OrganizationNode: React.FC<OrganizationNodeProps> = ({ data }) => {
       minW="150px"
       textAlign="center"
       boxShadow="md"
-      _hover={{ boxShadow: 'lg' }}
+      _hover={{ boxShadow: "lg" }}
     >
       <Handle type="target" position={Position.Top} />
       <Text fontWeight="bold" fontSize="md" mb={1}>

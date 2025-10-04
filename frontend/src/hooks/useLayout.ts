@@ -1,10 +1,14 @@
-import { useEffect, useState } from 'react';
-import ELK from 'elkjs/lib/elk.bundled.js';
-import { Node, Edge } from '../types';
+import { useEffect, useState } from "react";
+import ELK from "elkjs/lib/elk.bundled.js";
+import { Node, Edge } from "../types";
 
 const elk = new ELK();
 
-export const useLayout = (nodes: Node[], edges: Edge[], direction: 'DOWN' | 'RIGHT' = 'DOWN') => {
+export const useLayout = (
+  nodes: Node[],
+  edges: Edge[],
+  direction: "DOWN" | "RIGHT" = "DOWN",
+) => {
   const [layoutedNodes, setLayoutedNodes] = useState<Node[]>([]);
   const [isLayouting, setIsLayouting] = useState(false);
 
@@ -18,12 +22,12 @@ export const useLayout = (nodes: Node[], edges: Edge[], direction: 'DOWN' | 'RIG
       setIsLayouting(true);
 
       const elkGraph = {
-        id: 'root',
+        id: "root",
         layoutOptions: {
-          'elk.algorithm': 'layered',
-          'elk.direction': direction,
-          'elk.spacing.nodeNode': '80',
-          'elk.layered.spacing.nodeNodeBetweenLayers': '100',
+          "elk.algorithm": "layered",
+          "elk.direction": direction,
+          "elk.spacing.nodeNode": "80",
+          "elk.layered.spacing.nodeNodeBetweenLayers": "100",
         },
         children: nodes.map((node) => ({
           id: node.id,
@@ -50,7 +54,7 @@ export const useLayout = (nodes: Node[], edges: Edge[], direction: 'DOWN' | 'RIG
 
         setLayoutedNodes(nodesWithPosition);
       } catch (error) {
-        console.error('Layout error:', error);
+        console.error("Layout error:", error);
         setLayoutedNodes(nodes);
       } finally {
         setIsLayouting(false);

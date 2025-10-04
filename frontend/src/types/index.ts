@@ -37,9 +37,9 @@ export interface AnalysisResult {
   lead_time_stats?: LeadTimeStats;
 }
 
-export type DisplayMetric = 'frequency' | 'performance';
+export type DisplayMetric = "frequency" | "performance";
 
-export type FilterMode = 'all' | 'case_start' | 'case_end';
+export type FilterMode = "all" | "case_start" | "case_end";
 
 export interface AnalyzeRequest {
   analysis_name: string;
@@ -100,7 +100,7 @@ export interface LeadTimeStats {
 
 // Organization Analysis Types
 
-export type AggregationLevel = 'employee' | 'department';
+export type AggregationLevel = "employee" | "department";
 
 export interface HandoverNode {
   id: string;

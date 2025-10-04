@@ -1,4 +1,5 @@
 """Outcome analysis API routes"""
+
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -8,7 +9,7 @@ from src.models.outcome import (
     MetricInfo,
     OutcomeAnalysisSummary,
     OutcomeAnalysisDetail,
-    CreateAnalysisParams
+    CreateAnalysisParams,
 )
 from src.services import outcome_service
 
@@ -20,10 +21,7 @@ router = APIRouter(
 
 
 @router.get("/metrics", response_model=List[MetricInfo])
-def get_available_metrics(
-    process_type: str,
-    db: Session = Depends(get_db)
-):
+def get_available_metrics(process_type: str, db: Session = Depends(get_db)):
     """指定プロセスタイプで利用可能なメトリック一覧を取得"""
     try:
         return outcome_service.get_available_metrics(db, process_type)
@@ -35,7 +33,7 @@ def get_available_metrics(
 def get_outcome_analyses(
     process_type: Optional[str] = None,
     metric_name: Optional[str] = None,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """成果分析結果の一覧を取得"""
     try:
@@ -45,10 +43,7 @@ def get_outcome_analyses(
 
 
 @router.get("/analyses/{analysis_id}", response_model=OutcomeAnalysisDetail)
-def get_outcome_analysis_by_id(
-    analysis_id: str,
-    db: Session = Depends(get_db)
-):
+def get_outcome_analysis_by_id(analysis_id: str, db: Session = Depends(get_db)):
     """特定の成果分析結果を取得"""
     try:
         result = outcome_service.get_outcome_analysis_by_id(db, analysis_id)
@@ -63,8 +58,7 @@ def get_outcome_analysis_by_id(
 
 @router.post("/analyze")
 def create_outcome_analysis(
-    params: CreateAnalysisParams,
-    db: Session = Depends(get_db)
+    params: CreateAnalysisParams, db: Session = Depends(get_db)
 ):
     """成果分析を作成"""
     try:

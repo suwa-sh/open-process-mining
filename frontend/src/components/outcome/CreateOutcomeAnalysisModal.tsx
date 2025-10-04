@@ -2,8 +2,8 @@
  * Create outcome analysis modal
  */
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Modal,
   ModalOverlay,
@@ -26,9 +26,9 @@ import {
   Radio,
   RadioGroup,
   Stack,
-} from '@chakra-ui/react';
-import { useOutcomeStore } from '../../stores/outcomeStore';
-import { fetchProcessTypes } from '../../api/outcomeApi';
+} from "@chakra-ui/react";
+import { useOutcomeStore } from "../../stores/outcomeStore";
+import { fetchProcessTypes } from "../../api/outcomeApi";
 
 interface CreateOutcomeAnalysisModalProps {
   isOpen: boolean;
@@ -41,18 +41,25 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
 }) => {
   const navigate = useNavigate();
   const toast = useToast();
-  const { availableMetrics, fetchMetrics, createAnalysis, loading } = useOutcomeStore();
+  const { availableMetrics, fetchMetrics, createAnalysis, loading } =
+    useOutcomeStore();
 
   const [processTypes, setProcessTypes] = useState<string[]>([]);
-  const [analysisName, setAnalysisName] = useState('');
-  const [processType, setProcessType] = useState('');
-  const [metricName, setMetricName] = useState('');
-  const [analysisType, setAnalysisType] = useState<'path-outcome' | 'segment-comparison'>('path-outcome');
-  const [segmentMode, setSegmentMode] = useState<'top25' | 'bottom25' | 'threshold'>('top25');
+  const [analysisName, setAnalysisName] = useState("");
+  const [processType, setProcessType] = useState("");
+  const [metricName, setMetricName] = useState("");
+  const [analysisType, setAnalysisType] = useState<
+    "path-outcome" | "segment-comparison"
+  >("path-outcome");
+  const [segmentMode, setSegmentMode] = useState<
+    "top25" | "bottom25" | "threshold"
+  >("top25");
   const [threshold, setThreshold] = useState<number>(0);
-  const [filterMode, setFilterMode] = useState<'all' | 'start_date' | 'end_date'>('all');
-  const [dateFrom, setDateFrom] = useState<string>('');
-  const [dateTo, setDateTo] = useState<string>('');
+  const [filterMode, setFilterMode] = useState<
+    "all" | "start_date" | "end_date"
+  >("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
 
   // プロセスタイプ一覧を取得
   useEffect(() => {
@@ -64,7 +71,7 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
           setProcessType(types[0]);
         }
       } catch (error) {
-        console.error('Failed to fetch process types', error);
+        console.error("Failed to fetch process types", error);
       }
     };
 
@@ -85,15 +92,16 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
     if (availableMetrics.length > 0) {
       setMetricName(availableMetrics[0].metric_name);
     } else {
-      setMetricName('');
+      setMetricName("");
     }
   }, [availableMetrics]);
 
   // 分析名のデフォルト値を生成
   useEffect(() => {
     if (processType && metricName && analysisType) {
-      const today = new Date().toISOString().split('T')[0];
-      const typeLabel = analysisType === 'path-outcome' ? 'パス別成果' : 'セグメント比較';
+      const today = new Date().toISOString().split("T")[0];
+      const typeLabel =
+        analysisType === "path-outcome" ? "パス別成果" : "セグメント比較";
       setAnalysisName(`${processType}_${metricName}_${typeLabel}_${today}`);
     }
   }, [processType, metricName, analysisType]);
@@ -105,29 +113,36 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
   const handleSubmit = async () => {
     if (!analysisName || !processType || !metricName) {
       toast({
-        title: '入力エラー',
-        description: 'すべての項目を入力してください',
-        status: 'error',
+        title: "入力エラー",
+        description: "すべての項目を入力してください",
+        status: "error",
         duration: 3000,
       });
       return;
     }
 
-    if (analysisType === 'segment-comparison' && segmentMode === 'threshold' && threshold === 0) {
+    if (
+      analysisType === "segment-comparison" &&
+      segmentMode === "threshold" &&
+      threshold === 0
+    ) {
       toast({
-        title: '入力エラー',
-        description: '閾値を設定してください',
-        status: 'error',
+        title: "入力エラー",
+        description: "閾値を設定してください",
+        status: "error",
         duration: 3000,
       });
       return;
     }
 
-    if ((filterMode === 'start_date' || filterMode === 'end_date') && (!dateFrom || !dateTo)) {
+    if (
+      (filterMode === "start_date" || filterMode === "end_date") &&
+      (!dateFrom || !dateTo)
+    ) {
       toast({
-        title: '入力エラー',
-        description: '日付範囲を指定してください',
-        status: 'error',
+        title: "入力エラー",
+        description: "日付範囲を指定してください",
+        status: "error",
         duration: 3000,
       });
       return;
@@ -136,9 +151,9 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
     try {
       const filterConfig: Record<string, unknown> = {};
 
-      if (analysisType === 'segment-comparison') {
+      if (analysisType === "segment-comparison") {
         filterConfig.segment_mode = segmentMode;
-        if (segmentMode === 'threshold') {
+        if (segmentMode === "threshold") {
           filterConfig.threshold = threshold;
         }
       }
@@ -148,14 +163,21 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
         process_type: processType,
         metric_name: metricName,
         analysis_type: analysisType,
-        filter_config: Object.keys(filterConfig).length > 0 ? filterConfig : undefined,
-        date_from: (filterMode === 'start_date' || filterMode === 'end_date') ? dateFrom : undefined,
-        date_to: (filterMode === 'start_date' || filterMode === 'end_date') ? dateTo : undefined,
+        filter_config:
+          Object.keys(filterConfig).length > 0 ? filterConfig : undefined,
+        date_from:
+          filterMode === "start_date" || filterMode === "end_date"
+            ? dateFrom
+            : undefined,
+        date_to:
+          filterMode === "start_date" || filterMode === "end_date"
+            ? dateTo
+            : undefined,
       });
 
       toast({
-        title: '成果分析を作成しました',
-        status: 'success',
+        title: "成果分析を作成しました",
+        status: "success",
         duration: 3000,
       });
 
@@ -163,9 +185,9 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
       navigate(`/outcome/${analysisId}`);
     } catch (error) {
       toast({
-        title: '成果分析の作成に失敗しました',
-        description: error instanceof Error ? error.message : '不明なエラー',
-        status: 'error',
+        title: "成果分析の作成に失敗しました",
+        description: error instanceof Error ? error.message : "不明なエラー",
+        status: "error",
         duration: 5000,
       });
     }
@@ -221,20 +243,28 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
               <FormLabel>分析タイプ</FormLabel>
               <Select
                 value={analysisType}
-                onChange={(e) => setAnalysisType(e.target.value as 'path-outcome' | 'segment-comparison')}
+                onChange={(e) =>
+                  setAnalysisType(
+                    e.target.value as "path-outcome" | "segment-comparison",
+                  )
+                }
               >
                 <option value="path-outcome">パス別成果分析</option>
                 <option value="segment-comparison">セグメント比較分析</option>
               </Select>
             </FormControl>
 
-            {analysisType === 'segment-comparison' && (
+            {analysisType === "segment-comparison" && (
               <>
                 <FormControl isRequired>
                   <FormLabel>セグメント条件</FormLabel>
                   <Select
                     value={segmentMode}
-                    onChange={(e) => setSegmentMode(e.target.value as 'top25' | 'bottom25' | 'threshold')}
+                    onChange={(e) =>
+                      setSegmentMode(
+                        e.target.value as "top25" | "bottom25" | "threshold",
+                      )
+                    }
                   >
                     <option value="top25">上位25%</option>
                     <option value="bottom25">下位25%</option>
@@ -242,12 +272,14 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
                   </Select>
                 </FormControl>
 
-                {segmentMode === 'threshold' && (
+                {segmentMode === "threshold" && (
                   <FormControl isRequired>
                     <FormLabel>閾値</FormLabel>
                     <NumberInput
                       value={threshold}
-                      onChange={(_, valueAsNumber) => setThreshold(valueAsNumber)}
+                      onChange={(_, valueAsNumber) =>
+                        setThreshold(valueAsNumber)
+                      }
                       min={0}
                     >
                       <NumberInputField placeholder="例: 1000000" />
@@ -259,16 +291,23 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
 
             <FormControl>
               <FormLabel>分析対象期間の基準</FormLabel>
-              <RadioGroup value={filterMode} onChange={(value) => setFilterMode(value as 'all' | 'start_date' | 'end_date')}>
+              <RadioGroup
+                value={filterMode}
+                onChange={(value) =>
+                  setFilterMode(value as "all" | "start_date" | "end_date")
+                }
+              >
                 <Stack>
                   <Radio value="all">すべての期間を含める</Radio>
-                  <Radio value="start_date">ケース開始日で絞り込む（推奨）</Radio>
+                  <Radio value="start_date">
+                    ケース開始日で絞り込む（推奨）
+                  </Radio>
                   <Radio value="end_date">ケース完了日で絞り込む</Radio>
                 </Stack>
               </RadioGroup>
             </FormControl>
 
-            {(filterMode === 'start_date' || filterMode === 'end_date') && (
+            {(filterMode === "start_date" || filterMode === "end_date") && (
               <FormControl>
                 <FormLabel>対象期間</FormLabel>
                 <HStack>
@@ -296,11 +335,7 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
           <Button variant="ghost" mr={3} onClick={onClose}>
             キャンセル
           </Button>
-          <Button
-            colorScheme="blue"
-            onClick={handleSubmit}
-            isLoading={loading}
-          >
+          <Button colorScheme="blue" onClick={handleSubmit} isLoading={loading}>
             作成
           </Button>
         </ModalFooter>

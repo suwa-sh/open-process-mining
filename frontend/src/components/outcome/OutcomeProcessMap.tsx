@@ -2,7 +2,7 @@
  * Outcome analysis process map
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -10,14 +10,14 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
-} from '@xyflow/react';
-import { Box, Spinner, Center, Text, Flex } from '@chakra-ui/react';
-import '@xyflow/react/dist/style.css';
+} from "@xyflow/react";
+import { Box, Spinner, Center, Text, Flex } from "@chakra-ui/react";
+import "@xyflow/react/dist/style.css";
 
-import ActionNode from '../ActionNode';
-import { useLayout } from '../../hooks/useLayout';
-import OutcomeControls from './OutcomeControls';
-import type { OutcomeAnalysisDetail, OutcomeStats } from '../../types/outcome';
+import ActionNode from "../ActionNode";
+import { useLayout } from "../../hooks/useLayout";
+import OutcomeControls from "./OutcomeControls";
+import type { OutcomeAnalysisDetail, OutcomeStats } from "../../types/outcome";
 
 const nodeTypes = {
   actionNode: ActionNode,
@@ -25,8 +25,8 @@ const nodeTypes = {
 
 interface OutcomeProcessMapProps {
   analysis: OutcomeAnalysisDetail;
-  displayMode: 'avg' | 'median' | 'total';
-  onDisplayModeChange: (mode: 'avg' | 'median' | 'total') => void;
+  displayMode: "avg" | "median" | "total";
+  onDisplayModeChange: (mode: "avg" | "median" | "total") => void;
   showControls?: boolean;
 }
 
@@ -34,11 +34,11 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
   analysis,
   displayMode,
   onDisplayModeChange,
-  showControls = true
+  showControls = true,
 }) => {
   const { layoutedNodes, isLayouting } = useLayout(
     analysis.result_data.nodes,
-    analysis.result_data.edges
+    analysis.result_data.edges,
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -69,7 +69,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
           ...edge,
           label: `${edge.data.frequency} 件`,
           style: {
-            stroke: '#ccc',
+            stroke: "#ccc",
             strokeWidth: 2,
           },
         };
@@ -79,19 +79,21 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
       const normalized = (value - minValue) / range;
 
       // 値に応じてエッジの色と太さを設定
-      let strokeColor = '#718096'; // デフォルト: グレー
+      let strokeColor = "#718096"; // デフォルト: グレー
       if (normalized > 0.75) {
-        strokeColor = '#38a169'; // 高成果: 緑
+        strokeColor = "#38a169"; // 高成果: 緑
       } else if (normalized < 0.25) {
-        strokeColor = '#e53e3e'; // 低成果: 赤
+        strokeColor = "#e53e3e"; // 低成果: 赤
       }
 
       const strokeWidth = Math.max(2, normalized * 8);
 
       // メトリック単位に応じたラベル表示
-      const unit = analysis.result_data.edges[0]?.data.outcome_stats?.[metricName]
+      const unit = analysis.result_data.edges[0]?.data.outcome_stats?.[
+        metricName
+      ]
         ? getMetricUnit(metricName)
-        : '';
+        : "";
       const formattedValue = formatMetricValue(value, metricName);
       const label = `${formattedValue}${unit} (${edge.data.frequency}件)`;
 
@@ -124,11 +126,19 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         <Box flex={1}>
           <Center h="100%">
             <Spinner size="xl" color="green.500" />
-            <Text ml={4} color="gray.600">レイアウトを計算中...</Text>
+            <Text ml={4} color="gray.600">
+              レイアウトを計算中...
+            </Text>
           </Center>
         </Box>
         {showControls && (
-          <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+          <Box
+            w="300px"
+            p={4}
+            bg="white"
+            borderLeft="1px"
+            borderColor="gray.200"
+          >
             <OutcomeControls
               displayMode={displayMode}
               onDisplayModeChange={onDisplayModeChange}
@@ -150,7 +160,13 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
           </Center>
         </Box>
         {showControls && (
-          <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+          <Box
+            w="300px"
+            p={4}
+            bg="white"
+            borderLeft="1px"
+            borderColor="gray.200"
+          >
             <OutcomeControls
               displayMode={displayMode}
               onDisplayModeChange={onDisplayModeChange}
@@ -199,21 +215,21 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
 // ヘルパー関数
 function getMetricUnit(metricName: string): string {
   const units: Record<string, string> = {
-    revenue: '円',
-    profit_margin: '%',
-    quantity: '個',
-    hiring_cost: '円',
-    time_to_hire: '日',
-    candidate_score: '点',
+    revenue: "円",
+    profit_margin: "%",
+    quantity: "個",
+    hiring_cost: "円",
+    time_to_hire: "日",
+    candidate_score: "点",
   };
-  return units[metricName] || '';
+  return units[metricName] || "";
 }
 
 function formatMetricValue(value: number, metricName: string): string {
-  if (metricName === 'revenue' || metricName === 'hiring_cost') {
+  if (metricName === "revenue" || metricName === "hiring_cost") {
     return Math.round(value).toLocaleString();
   }
-  if (metricName === 'profit_margin') {
+  if (metricName === "profit_margin") {
     return (value * 100).toFixed(1);
   }
   return value.toFixed(1);

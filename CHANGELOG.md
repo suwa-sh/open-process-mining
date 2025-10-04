@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### プロセス分析 (Process Analysis)
+
 - DFGベースのプロセスマイニング分析機能
 - React Flowによるインタラクティブなプロセスマップ可視化
 - ELK.jsによる自動レイアウト計算
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 日付範囲フィルタリング（ケース開始日/完了日による絞り込み）
 
 #### 組織分析 (Organization Analysis)
+
 - ハンドオーバーネットワーク分析
   - 社員別・部署別の集計レベル切り替え
   - ハンドオーバー間の平均待機時間計算
@@ -35,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 日付範囲フィルタリング（ケース開始日/完了日による絞り込み）
 
 #### 成果分析 (Outcome Analysis)
+
 - パス別成果分析
   - 各パスの平均値・中央値・合計値の表示
   - 成果の高いパスの自動検出（平均値の75%以上を強調表示）
@@ -47,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 日付範囲フィルタリング（ケース開始日/完了日による絞り込み）
 
 #### データ基盤
+
 - dbt Coreによる再現可能なデータパイプライン
 - PostgreSQLによるデータストレージ
 - サンプルデータ提供
@@ -56,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 組織マスターデータ（社員・部署）
 
 #### API
+
 - FastAPIによるREST API実装
 - プロセス分析API（一覧取得、詳細取得、比較）
 - 組織分析API（保存型・リアルタイム型）
@@ -63,12 +68,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ヘルスチェックエンドポイント
 
 #### インフラ
+
 - Docker Composeによるコンテナ化
 - PostgreSQL、バックエンド、フロントエンドのヘルスチェック機能
 - データベースインデックス最適化（JSONB GINインデックス、複合インデックス）
 - 自動データベース初期化（init.sql）
 
 #### UI/UX
+
 - 3つの分析機能間での一貫したユーザー体験
 - 統一されたモーダルサイズ（xl）
 - 統一された日付フィルターUI（ラジオボタン形式）
@@ -77,6 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 動的データソース（フィルターオプションをDBから取得）
 
 #### ドキュメント
+
 - README.md（プロジェクト概要、クイックスタート）
 - USAGE.md（自組織でのプロセスマイニング実施ガイド）
 - CLAUDE.md（開発ガイド、UI/UX統一の設計原則）
@@ -86,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Technical Details
 
 #### Backend
+
 - Python 3.11
 - FastAPI
 - SQLAlchemy
@@ -94,6 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - pytest
 
 #### Frontend
+
 - React 18
 - TypeScript
 - Vite
@@ -103,11 +113,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Zustand
 
 #### Infrastructure
+
 - Docker & Docker Compose
 - PostgreSQL 15
 - dbt Core 1.7.3
 
 ### Database Schema
+
 - `fct_event_log`: プロセスイベントログ（組織情報含む）
 - `fct_case_outcomes`: ケース別成果データ
 - `analysis_results`: プロセス分析結果

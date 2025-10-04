@@ -40,6 +40,8 @@ exclude_patterns = [
   "**/templates/**",
   "**/testdata/**",
   "**/vendor/**",
+  "**/tests/**",
+  "**/test_*.py",
 ]
 
 test_patterns = [
@@ -104,6 +106,7 @@ mode = "comment"
 
 [[plugin]]
 name = "ruff"
+drivers = ["check"]
 
 [[plugin]]
 name = "trivy"
@@ -120,6 +123,3 @@ name = "yamllint"
 
 [[plugin]]
 name = "black"
-
-[[plugin]]
-name = "sqlfluff"

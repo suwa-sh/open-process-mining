@@ -9,7 +9,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['order-delivery', 'employee-onboarding']
+              values: ["order-delivery", "employee-onboarding"]
       - name: case_id
         description: "Case identifier (process instance)"
         tests:

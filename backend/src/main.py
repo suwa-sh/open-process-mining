@@ -84,6 +84,6 @@ def root():
             "preview": "/preview",
             "organization_handover": "/organization/handover",
             "organization_workload": "/organization/workload",
-            "organization_performance": "/organization/performance"
-        }
+            "organization_performance": "/organization/performance",
+        },
     }

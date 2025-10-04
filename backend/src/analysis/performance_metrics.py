@@ -5,7 +5,9 @@ import networkx as nx
 from src.models.event_log import EventLog
 
 
-def calculate_performance_metrics(event_log: List[EventLog], dfg: nx.DiGraph) -> nx.DiGraph:
+def calculate_performance_metrics(
+    event_log: List[EventLog], dfg: nx.DiGraph
+) -> nx.DiGraph:
     """
     Calculate performance metrics and add them to the DFG.
 
@@ -43,7 +45,9 @@ def calculate_performance_metrics(event_log: List[EventLog], dfg: nx.DiGraph) ->
     for (source, target), times in edge_waiting_times.items():
         if dfg.has_edge(source, target):
             avg_waiting_time = sum(times) / len(times)
-            dfg.edges[source, target]['avg_waiting_time_hours'] = round(avg_waiting_time, 2)
+            dfg.edges[source, target]["avg_waiting_time_hours"] = round(
+                avg_waiting_time, 2
+            )
 
     return dfg
 
@@ -64,31 +68,31 @@ def convert_dfg_to_react_flow(dfg: nx.DiGraph) -> Dict:
     # Convert nodes
     for node_id in dfg.nodes():
         node_data = dfg.nodes[node_id]
-        nodes.append({
-            "id": node_id,
-            "type": "actionNode",
-            "data": {
-                "label": node_id,
-                "frequency": node_data.get('frequency', 0)
+        nodes.append(
+            {
+                "id": node_id,
+                "type": "actionNode",
+                "data": {"label": node_id, "frequency": node_data.get("frequency", 0)},
             }
-        })
+        )
 
     # Convert edges
     edge_counter = 0
     for source, target in dfg.edges():
         edge_data = dfg.edges[source, target]
         edge_counter += 1
-        edges.append({
-            "id": f"edge-{edge_counter}",
-            "source": source,
-            "target": target,
-            "data": {
-                "frequency": edge_data.get('frequency', 0),
-                "avg_waiting_time_hours": edge_data.get('avg_waiting_time_hours', 0.0)
+        edges.append(
+            {
+                "id": f"edge-{edge_counter}",
+                "source": source,
+                "target": target,
+                "data": {
+                    "frequency": edge_data.get("frequency", 0),
+                    "avg_waiting_time_hours": edge_data.get(
+                        "avg_waiting_time_hours", 0.0
+                    ),
+                },
             }
-        })
+        )
 
-    return {
-        "nodes": nodes,
-        "edges": edges
-    }
+    return {"nodes": nodes, "edges": edges}

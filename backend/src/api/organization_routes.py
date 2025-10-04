@@ -5,7 +5,7 @@ Endpoints for handover, workload, and performance analysis.
 """
 
 from fastapi import APIRouter, Query, HTTPException
-from typing import Optional, List
+from typing import Optional
 from pydantic import BaseModel
 from src.services.organization_service import (
     analyze_handover,
@@ -13,7 +13,7 @@ from src.services.organization_service import (
     analyze_performance,
     create_organization_analysis,
     get_organization_analyses,
-    get_organization_analysis_by_id
+    get_organization_analysis_by_id,
 )
 
 router = APIRouter(
@@ -46,7 +46,7 @@ def create_analysis(request: CreateOrganizationAnalysisRequest):
             aggregation_level=request.aggregation_level,
             filter_mode=request.filter_mode,
             date_from=request.date_from,
-            date_to=request.date_to
+            date_to=request.date_to,
         )
         return result
     except Exception as e:
@@ -87,10 +87,14 @@ def get_analysis(analysis_id: str):
 @router.get("/handover")
 def get_handover_analysis(
     process_type: str = Query(..., description="Process type to analyze"),
-    aggregation_level: str = Query("employee", description="Aggregation level: employee or department"),
+    aggregation_level: str = Query(
+        "employee", description="Aggregation level: employee or department"
+    ),
     filter_mode: str = Query("all", description="Filter mode: all or completed"),
-    date_from: Optional[str] = Query(None, description="Start date filter (ISO format)"),
-    date_to: Optional[str] = Query(None, description="End date filter (ISO format)")
+    date_from: Optional[str] = Query(
+        None, description="Start date filter (ISO format)"
+    ),
+    date_to: Optional[str] = Query(None, description="End date filter (ISO format)"),
 ):
     """
     Get handover analysis (social network of who works with whom).
@@ -102,17 +106,21 @@ def get_handover_analysis(
         aggregation_level=aggregation_level,
         filter_mode=filter_mode,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
     )
 
 
 @router.get("/workload")
 def get_workload_analysis(
     process_type: str = Query(..., description="Process type to analyze"),
-    aggregation_level: str = Query("employee", description="Aggregation level: employee or department"),
+    aggregation_level: str = Query(
+        "employee", description="Aggregation level: employee or department"
+    ),
     filter_mode: str = Query("all", description="Filter mode: all or completed"),
-    date_from: Optional[str] = Query(None, description="Start date filter (ISO format)"),
-    date_to: Optional[str] = Query(None, description="End date filter (ISO format)")
+    date_from: Optional[str] = Query(
+        None, description="Start date filter (ISO format)"
+    ),
+    date_to: Optional[str] = Query(None, description="End date filter (ISO format)"),
 ):
     """
     Get workload analysis (who has the most work).
@@ -124,17 +132,21 @@ def get_workload_analysis(
         aggregation_level=aggregation_level,
         filter_mode=filter_mode,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
     )
 
 
 @router.get("/performance")
 def get_performance_analysis(
     process_type: str = Query(..., description="Process type to analyze"),
-    aggregation_level: str = Query("employee", description="Aggregation level: employee or department"),
+    aggregation_level: str = Query(
+        "employee", description="Aggregation level: employee or department"
+    ),
     filter_mode: str = Query("all", description="Filter mode: all or completed"),
-    date_from: Optional[str] = Query(None, description="Start date filter (ISO format)"),
-    date_to: Optional[str] = Query(None, description="End date filter (ISO format)")
+    date_from: Optional[str] = Query(
+        None, description="Start date filter (ISO format)"
+    ),
+    date_to: Optional[str] = Query(None, description="End date filter (ISO format)"),
 ):
     """
     Get performance analysis (who takes the longest time).
@@ -146,5 +158,5 @@ def get_performance_analysis(
         aggregation_level=aggregation_level,
         filter_mode=filter_mode,
         date_from=date_from,
-        date_to=date_to
+        date_to=date_to,
     )

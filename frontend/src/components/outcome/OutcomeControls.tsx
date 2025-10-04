@@ -2,7 +2,7 @@
  * Outcome analysis controls (right pane)
  */
 
-import React from 'react';
+import React from "react";
 import {
   Box,
   Radio,
@@ -11,11 +11,11 @@ import {
   Text,
   VStack,
   Divider,
-} from '@chakra-ui/react';
+} from "@chakra-ui/react";
 
 interface OutcomeControlsProps {
-  displayMode: 'avg' | 'median' | 'total';
-  onDisplayModeChange: (mode: 'avg' | 'median' | 'total') => void;
+  displayMode: "avg" | "median" | "total";
+  onDisplayModeChange: (mode: "avg" | "median" | "total") => void;
   metricName: string;
   overallStats?: {
     avg: number;
@@ -34,13 +34,17 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
   overallStats,
 }) => {
   const formatMetricValue = (value: number): string => {
-    if (metricName === 'revenue' || metricName === 'hiring_cost') {
+    if (metricName === "revenue" || metricName === "hiring_cost") {
       return `¥${Math.round(value).toLocaleString()}`;
     }
-    if (metricName === 'profit_margin') {
+    if (metricName === "profit_margin") {
       return `${(value * 100).toFixed(1)}%`;
     }
-    if (metricName === 'quantity' || metricName === 'time_to_hire' || metricName === 'candidate_score') {
+    if (
+      metricName === "quantity" ||
+      metricName === "time_to_hire" ||
+      metricName === "candidate_score"
+    ) {
       return value.toFixed(1);
     }
     return value.toString();
@@ -55,7 +59,9 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
           </Text>
           <RadioGroup
             value={displayMode}
-            onChange={(value) => onDisplayModeChange(value as 'avg' | 'median' | 'total')}
+            onChange={(value) =>
+              onDisplayModeChange(value as "avg" | "median" | "total")
+            }
           >
             <Stack direction="column" spacing={2}>
               <Radio value="avg">平均値</Radio>
@@ -74,15 +80,24 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
               </Text>
               <VStack align="start" spacing={1} fontSize="sm">
                 <Text>総ケース数: {overallStats.count}件</Text>
-                <Text mt={2} fontWeight="semibold">平均値:</Text>
+                <Text mt={2} fontWeight="semibold">
+                  平均値:
+                </Text>
                 <Text ml={2}>{formatMetricValue(overallStats.avg)}</Text>
-                <Text mt={2} fontWeight="semibold">中央値:</Text>
+                <Text mt={2} fontWeight="semibold">
+                  中央値:
+                </Text>
                 <Text ml={2}>{formatMetricValue(overallStats.median)}</Text>
-                <Text mt={2} fontWeight="semibold">合計値:</Text>
+                <Text mt={2} fontWeight="semibold">
+                  合計値:
+                </Text>
                 <Text ml={2}>{formatMetricValue(overallStats.total)}</Text>
-                <Text mt={2} fontWeight="semibold">範囲:</Text>
+                <Text mt={2} fontWeight="semibold">
+                  範囲:
+                </Text>
                 <Text ml={2}>
-                  {formatMetricValue(overallStats.min)} - {formatMetricValue(overallStats.max)}
+                  {formatMetricValue(overallStats.min)} -{" "}
+                  {formatMetricValue(overallStats.max)}
                 </Text>
               </VStack>
             </Box>

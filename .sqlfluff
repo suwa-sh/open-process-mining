@@ -1,0 +1,10 @@
+[sqlfluff]
+templater = jinja
+dialect = postgres
+exclude_rules = LT02,LT05,AL01,RF04,CP01,CP02,CP03
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = True
+
+[sqlfluff:templater:jinja:context]
+dbt_project_dir = ./dbt

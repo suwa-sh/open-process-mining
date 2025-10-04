@@ -1,8 +1,8 @@
-name: 'open_process_mining'
-version: '1.0.0'
+name: "open_process_mining"
+version: "1.0.0"
 config-version: 2
 
-profile: 'open_process_mining'
+profile: "open_process_mining"
 
 model-paths: ["models"]
 analysis-paths: ["analyses"]

@@ -1,7 +1,8 @@
 """Unit tests for outcome API endpoints"""
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 from src.main import app
 
 client = TestClient(app)
@@ -15,8 +16,12 @@ class TestOutcomeMetricsEndpoint:
         """Test getting available metrics successfully"""
         # Mock service response
         mock_get_metrics.return_value = [
-            {"metric_name": "revenue", "metric_unit": "JPY"},
-            {"metric_name": "profit_margin", "metric_unit": "percent"},
+            {"metric_name": "revenue", "metric_unit": "JPY", "sample_count": 10},
+            {
+                "metric_name": "profit_margin",
+                "metric_unit": "percent",
+                "sample_count": 10,
+            },
         ]
 
         # Execute
@@ -27,6 +32,7 @@ class TestOutcomeMetricsEndpoint:
         data = response.json()
         assert len(data) == 2
         assert data[0]["metric_name"] == "revenue"
+        assert data[0]["sample_count"] == 10
 
     @patch("src.services.outcome_service.get_available_metrics")
     def test_get_metrics_empty(self, mock_get_metrics):

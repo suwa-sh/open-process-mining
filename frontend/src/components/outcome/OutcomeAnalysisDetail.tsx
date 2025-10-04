@@ -2,8 +2,8 @@
  * Outcome analysis detail page
  */
 
-import React, { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
@@ -23,16 +23,22 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-} from '@chakra-ui/react';
-import { useOutcomeStore } from '../../stores/outcomeStore';
-import OutcomeProcessMap from './OutcomeProcessMap';
-import SegmentComparison from './SegmentComparison';
+} from "@chakra-ui/react";
+import { useOutcomeStore } from "../../stores/outcomeStore";
+import OutcomeProcessMap from "./OutcomeProcessMap";
+import SegmentComparison from "./SegmentComparison";
 
 const OutcomeAnalysisDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentAnalysis, displayMode, loading, error, fetchAnalysisById, setDisplayMode } =
-    useOutcomeStore();
+  const {
+    currentAnalysis,
+    displayMode,
+    loading,
+    error,
+    fetchAnalysisById,
+    setDisplayMode,
+  } = useOutcomeStore();
 
   useEffect(() => {
     if (id) {
@@ -70,7 +76,7 @@ const OutcomeAnalysisDetail: React.FC = () => {
   }
 
   // セグメント比較分析の場合は専用コンポーネントを表示
-  if (currentAnalysis.analysis_type === 'segment-comparison') {
+  if (currentAnalysis.analysis_type === "segment-comparison") {
     return <SegmentComparison analysis={currentAnalysis} />;
   }
 
@@ -78,13 +84,17 @@ const OutcomeAnalysisDetail: React.FC = () => {
   const metricName = currentAnalysis.metric_name;
 
   const formatMetricValue = (value: number): string => {
-    if (metricName === 'revenue' || metricName === 'hiring_cost') {
+    if (metricName === "revenue" || metricName === "hiring_cost") {
       return `¥${Math.round(value).toLocaleString()}`;
     }
-    if (metricName === 'profit_margin') {
+    if (metricName === "profit_margin") {
       return `${(value * 100).toFixed(1)}%`;
     }
-    if (metricName === 'quantity' || metricName === 'time_to_hire' || metricName === 'candidate_score') {
+    if (
+      metricName === "quantity" ||
+      metricName === "time_to_hire" ||
+      metricName === "candidate_score"
+    ) {
       return value.toFixed(1);
     }
     return value.toString();
@@ -97,7 +107,7 @@ const OutcomeAnalysisDetail: React.FC = () => {
           <Button
             variant="outline"
             colorScheme="green"
-            onClick={() => navigate('/outcome')}
+            onClick={() => navigate("/outcome")}
             mb={4}
           >
             ← 成果分析一覧に戻る
@@ -111,7 +121,8 @@ const OutcomeAnalysisDetail: React.FC = () => {
             <Text>プロセス: {currentAnalysis.process_type}</Text>
             <Text>メトリック: {metricName}</Text>
             <Text>
-              作成日時: {new Date(currentAnalysis.created_at).toLocaleString('ja-JP')}
+              作成日時:{" "}
+              {new Date(currentAnalysis.created_at).toLocaleString("ja-JP")}
             </Text>
           </HStack>
         </Box>
@@ -119,8 +130,7 @@ const OutcomeAnalysisDetail: React.FC = () => {
         <VStack align="stretch" spacing={4} h="calc(100vh - 280px)">
           <Box p={4} bg="green.50" borderRadius="md">
             <Text fontSize="sm" color="green.900">
-              💡{' '}
-              <strong>成果分析:</strong>{' '}
+              💡 <strong>成果分析:</strong>{" "}
               各パスでの成果メトリックを可視化します。緑色のパスは高成果、赤色のパスは低成果を示します。
             </Text>
           </Box>
@@ -140,25 +150,27 @@ const OutcomeAnalysisDetail: React.FC = () => {
                 高成果パス（平均値が全体平均の1.2倍以上）
               </Heading>
               <VStack align="stretch" spacing={2}>
-                {currentAnalysis.result_data.summary.top_paths.map((path, index) => (
-                  <Box
-                    key={index}
-                    p={3}
-                    bg="green.50"
-                    borderRadius="md"
-                    borderLeft="4px solid"
-                    borderColor="green.500"
-                  >
-                    <HStack justify="space-between">
-                      <Text>
-                        {path.source} → {path.target}
-                      </Text>
-                      <Text fontWeight="bold" color="green.700">
-                        {formatMetricValue(path.avg_outcome)}
-                      </Text>
-                    </HStack>
-                  </Box>
-                ))}
+                {currentAnalysis.result_data.summary.top_paths.map(
+                  (path, index) => (
+                    <Box
+                      key={index}
+                      p={3}
+                      bg="green.50"
+                      borderRadius="md"
+                      borderLeft="4px solid"
+                      borderColor="green.500"
+                    >
+                      <HStack justify="space-between">
+                        <Text>
+                          {path.source} → {path.target}
+                        </Text>
+                        <Text fontWeight="bold" color="green.700">
+                          {formatMetricValue(path.avg_outcome)}
+                        </Text>
+                      </HStack>
+                    </Box>
+                  ),
+                )}
               </VStack>
             </CardBody>
           </Card>
