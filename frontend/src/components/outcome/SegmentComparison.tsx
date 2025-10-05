@@ -41,20 +41,19 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
   const metricName = analysis.metric_name;
 
   const formatMetricValue = (value: number): string => {
+    const roundedValue = Math.round(value * 100) / 100; // 小数点以下2桁で丸め
+    const formattedNumber = roundedValue.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
     if (metricName === "revenue" || metricName === "hiring_cost") {
-      return `¥${Math.round(value).toLocaleString()}`;
+      return `¥${formattedNumber}`;
     }
     if (metricName === "profit_margin") {
-      return `${(value * 100).toFixed(1)}%`;
+      return `${formattedNumber}%`;
     }
-    if (
-      metricName === "quantity" ||
-      metricName === "time_to_hire" ||
-      metricName === "candidate_score"
-    ) {
-      return value.toFixed(1);
-    }
-    return value.toString();
+    return formattedNumber;
   };
 
   return (
@@ -93,7 +92,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
               <SimpleGrid columns={3} spacing={4}>
                 <Stat>
                   <StatLabel>ケース数</StatLabel>
-                  <StatNumber>{high_segment.case_count}</StatNumber>
+                  <StatNumber>{high_segment.case_count.toLocaleString()}</StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>平均値</StatLabel>
@@ -137,7 +136,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
               <SimpleGrid columns={3} spacing={4}>
                 <Stat>
                   <StatLabel>ケース数</StatLabel>
-                  <StatNumber>{low_segment.case_count}</StatNumber>
+                  <StatNumber>{low_segment.case_count.toLocaleString()}</StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>平均値</StatLabel>
@@ -283,7 +282,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
             <VStack align="stretch" spacing={2}>
               <HStack>
                 <Text fontWeight="bold">総ケース数:</Text>
-                <Text>{summary.total_cases}</Text>
+                <Text>{summary.total_cases.toLocaleString()}</Text>
               </HStack>
               <HStack>
                 <Text fontWeight="bold">セグメント条件:</Text>

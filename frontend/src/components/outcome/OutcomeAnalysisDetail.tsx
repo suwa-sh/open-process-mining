@@ -84,20 +84,19 @@ const OutcomeAnalysisDetail: React.FC = () => {
   const metricName = currentAnalysis.metric_name;
 
   const formatMetricValue = (value: number): string => {
+    const roundedValue = Math.round(value * 100) / 100; // 小数点以下2桁で丸め
+    const formattedNumber = roundedValue.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+
     if (metricName === "revenue" || metricName === "hiring_cost") {
-      return `¥${Math.round(value).toLocaleString()}`;
+      return `¥${formattedNumber}`;
     }
     if (metricName === "profit_margin") {
-      return `${(value * 100).toFixed(1)}%`;
+      return `${formattedNumber}%`;
     }
-    if (
-      metricName === "quantity" ||
-      metricName === "time_to_hire" ||
-      metricName === "candidate_score"
-    ) {
-      return value.toFixed(1);
-    }
-    return value.toString();
+    return formattedNumber;
   };
 
   return (
