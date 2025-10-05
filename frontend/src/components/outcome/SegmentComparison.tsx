@@ -199,6 +199,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                 displayMode="avg"
                 onDisplayModeChange={() => {}}
                 showControls={false}
+                highlightDifferences={differences}
               />
             </Box>
           </Box>
@@ -228,6 +229,7 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                 displayMode="avg"
                 onDisplayModeChange={() => {}}
                 showControls={false}
+                highlightDifferences={differences}
               />
             </Box>
           </Box>

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from src.api.routes import router
+from src.api.routes import router, common_router
 from src.api.analyze_routes import router as analyze_router
 from src.api.organization_routes import router as organization_router
 from src.api.outcome_routes import router as outcome_router
@@ -56,6 +56,7 @@ app.add_middleware(
 )
 
 # Include API routes
+app.include_router(common_router)  # 共通エンドポイント（プレフィックスなし）
 app.include_router(router)
 app.include_router(analyze_router)
 app.include_router(organization_router)

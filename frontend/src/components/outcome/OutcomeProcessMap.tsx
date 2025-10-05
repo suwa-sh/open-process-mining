@@ -17,17 +17,22 @@ import "@xyflow/react/dist/style.css";
 import ActionNode from "../ActionNode";
 import { useLayout } from "../../hooks/useLayout";
 import OutcomeControls from "./OutcomeControls";
-import type { OutcomeAnalysisDetail, OutcomeStats } from "../../types/outcome";
+import type {
+  OutcomeAnalysisDetail,
+  OutcomeStats,
+  PathDifference,
+} from "../../types/outcome";
 
 const nodeTypes = {
   actionNode: ActionNode,
-};
+}
 
 interface OutcomeProcessMapProps {
   analysis: OutcomeAnalysisDetail;
   displayMode: "avg" | "median" | "total";
   onDisplayModeChange: (mode: "avg" | "median" | "total") => void;
   showControls?: boolean;
+  highlightDifferences?: PathDifference[];
 }
 
 const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
@@ -35,6 +40,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
   displayMode,
   onDisplayModeChange,
   showControls = true,
+  highlightDifferences,
 }) => {
   const { layoutedNodes, isLayouting } = useLayout(
     analysis.result_data.nodes,
@@ -49,6 +55,46 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
     if (!analysis.result_data.edges) return [];
 
     const metricName = analysis.metric_name;
+
+    // セグメント比較の場合は、highlightDifferencesが優先される
+    if (highlightDifferences && highlightDifferences.length > 0) {
+      return analysis.result_data.edges.map((edge) => {
+        const diff = highlightDifferences.find(
+          (d) => d.source === edge.source && d.target === edge.target,
+        );
+
+        const waitingTime = edge.data.avg_waiting_time_hours?.toFixed(1) || "0.0";
+        const baseLabel = `${edge.data.frequency} 件 (${waitingTime}h)`;
+
+        if (diff) {
+          // 主要な差分テーブルと同じ配色
+          const strokeColor = diff.diff_rate > 0 ? "#38a169" : "#e53e3e";
+          // 差分の大きさに応じて太さを調整（10% → 太さ3、20% → 太さ5、30% → 太さ7）
+          const diffStrokeWidth = Math.max(2, Math.min(8, 2 + (Math.abs(diff.diff_rate) / 10) * 2));
+
+          return {
+            ...edge,
+            label: baseLabel,
+            style: {
+              stroke: strokeColor,
+              strokeWidth: diffStrokeWidth,
+            },
+          };
+        }
+
+        // 差分に含まれないエッジはデフォルトのグレー
+        return {
+          ...edge,
+          label: baseLabel,
+          style: {
+            stroke: "#ccc",
+            strokeWidth: 2,
+          },
+        };
+      });
+    }
+
+    // 以下はパス別成果分析の場合
     const allStats: OutcomeStats[] = analysis.result_data.edges
       .map((e) => e.data.outcome_stats?.[metricName])
       .filter((s): s is OutcomeStats => s !== undefined);
@@ -78,16 +124,6 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
       const value = outcomeStats[displayMode];
       const normalized = (value - minValue) / range;
 
-      // 値に応じてエッジの色と太さを設定
-      let strokeColor = "#718096"; // デフォルト: グレー
-      if (normalized > 0.75) {
-        strokeColor = "#38a169"; // 高成果: 緑
-      } else if (normalized < 0.25) {
-        strokeColor = "#e53e3e"; // 低成果: 赤
-      }
-
-      const strokeWidth = Math.max(2, normalized * 8);
-
       // メトリック単位に応じたラベル表示
       const unit = analysis.result_data.edges[0]?.data.outcome_stats?.[
         metricName
@@ -96,6 +132,16 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         : "";
       const formattedValue = formatMetricValue(value, metricName);
       const label = `${formattedValue}${unit} (${edge.data.frequency}件)`;
+
+      // 成果値ベースの色分け
+      let strokeColor = "#718096"; // デフォルト: グレー
+      if (normalized > 0.75) {
+        strokeColor = "#38a169"; // 高成果: 緑
+      } else if (normalized < 0.25) {
+        strokeColor = "#e53e3e"; // 低成果: 赤
+      }
+
+      const strokeWidth = Math.max(2, normalized * 8);
 
       return {
         ...edge,
@@ -106,7 +152,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         },
       };
     });
-  }, [analysis, displayMode]);
+  }, [analysis, displayMode, highlightDifferences]);
 
   React.useEffect(() => {
     if (layoutedNodes && layoutedNodes.length > 0) {

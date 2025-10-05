@@ -9,6 +9,32 @@ from src.models.analysis_result import (
     AnalysisListItem,
 )
 
+# 共通エンドポイント（プレフィックスなし）
+common_router = APIRouter(
+    tags=["共通"],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@common_router.get("/process-types", response_model=List[str])
+def get_process_types(db: Session = Depends(get_db)):
+    """Get list of available process types from event log."""
+    from sqlalchemy import text
+
+    # fct_event_logから取得（実データに基づく）
+    query = text(
+        """
+        SELECT DISTINCT process_type
+        FROM public.fct_event_log
+        WHERE process_type IS NOT NULL
+        ORDER BY process_type
+    """
+    )
+    result = db.execute(query).fetchall()
+    return [r[0] for r in result]
+
+
+# プロセス分析エンドポイント
 router = APIRouter(
     prefix="/process",
     tags=["プロセス分析"],
@@ -29,24 +55,6 @@ def get_analyses(
 
     analyses = query.order_by(AnalysisResultORM.created_at.desc()).all()
     return analyses
-
-
-@router.get("/process-types", response_model=List[str])
-def get_process_types(db: Session = Depends(get_db)):
-    """Get list of available process types from event log."""
-    from sqlalchemy import text
-
-    # fct_event_logから取得（実データに基づく）
-    query = text(
-        """
-        SELECT DISTINCT process_type
-        FROM public.fct_event_log
-        WHERE process_type IS NOT NULL
-        ORDER BY process_type
-    """
-    )
-    result = db.execute(query).fetchall()
-    return [r[0] for r in result]
 
 
 @router.get("/analyses/{analysis_id}", response_model=Dict[str, Any])

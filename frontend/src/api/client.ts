@@ -31,7 +31,7 @@ export const getAnalyses = async (
 };
 
 export const getProcessTypes = async (): Promise<string[]> => {
-  const response = await apiClient.get("/process/process-types");
+  const response = await apiClient.get("/process-types");
   return response.data;
 };
 
