@@ -55,7 +55,7 @@ test.describe("Process Analysis", () => {
     await page.click('button:has-text("分析を実行")');
 
     // Wait for analysis to complete and redirect
-    await expect(page).toHaveURL(/\/analysis\/[a-f0-9-]+/, { timeout: 30000 });
+    await expect(page).toHaveURL(/\/process\/[a-f0-9-]+/, { timeout: 30000 });
 
     // Verify process map is displayed
     await expect(page.locator("[data-id]").first()).toBeVisible({
@@ -77,7 +77,7 @@ test.describe("Process Analysis", () => {
       timeout: 10000,
     });
     await page.click('button:has-text("分析を実行")');
-    await expect(page).toHaveURL(/\/analysis\/[a-f0-9-]+/, { timeout: 30000 });
+    await expect(page).toHaveURL(/\/process\/[a-f0-9-]+/, { timeout: 30000 });
 
     // Verify process map elements
     const nodes = page.locator("[data-id]");
@@ -105,7 +105,7 @@ test.describe("Process Analysis", () => {
       timeout: 10000,
     });
     await page.click('button:has-text("分析を実行")');
-    await expect(page).toHaveURL(/\/analysis\/[a-f0-9-]+/, { timeout: 30000 });
+    await expect(page).toHaveURL(/\/process\/[a-f0-9-]+/, { timeout: 30000 });
 
     // Click back button
     await page.click('button:has-text("← 一覧に戻る")');

@@ -16,3 +16,13 @@ SELECT
     event_time::timestamp as timestamp,
     assigned_to as resource
 FROM {{ ref('raw_employee_onboarding') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_process_events_2024') }}

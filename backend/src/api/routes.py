@@ -10,6 +10,7 @@ from src.models.analysis_result import (
 )
 
 router = APIRouter(
+    prefix="/process",
     tags=["プロセス分析"],
     responses={404: {"description": "Not found"}},
 )

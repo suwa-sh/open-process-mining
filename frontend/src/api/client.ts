@@ -26,17 +26,17 @@ export const getAnalyses = async (
   processType?: string,
 ): Promise<Analysis[]> => {
   const params = processType ? { process_type: processType } : {};
-  const response = await apiClient.get("/analyses", { params });
+  const response = await apiClient.get("/process/analyses", { params });
   return response.data;
 };
 
 export const getProcessTypes = async (): Promise<string[]> => {
-  const response = await apiClient.get("/process-types");
+  const response = await apiClient.get("/process/process-types");
   return response.data;
 };
 
 export const getAnalysisById = async (id: string): Promise<AnalysisResult> => {
-  const response = await apiClient.get(`/analyses/${id}`);
+  const response = await apiClient.get(`/process/analyses/${id}`);
   return response.data;
 };
 
@@ -45,7 +45,7 @@ export const compareAnalyses = async (
   afterId: string,
 ): Promise<AnalysisResult> => {
   const response = await apiClient.get(
-    `/compare?before=${beforeId}&after=${afterId}`,
+    `/process/compare?before=${beforeId}&after=${afterId}`,
   );
   return response.data;
 };

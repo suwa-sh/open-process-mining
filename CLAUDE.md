@@ -32,11 +32,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **APIサーバー (`main.py` - FastAPI)**:
 
-プロセス分析API:
+プロセス分析API (`/process`):
 
-- `GET /analyses`: 分析結果の一覧を提供（`?process_type=xxx`でフィルタ可能）
-- `GET /analyses/{analysis_id}`: 特定の分析結果のJSONデータを提供
-- `GET /compare`: 2つの分析結果の差分を計算
+- `GET /process/analyses`: 分析結果の一覧を提供（`?process_type=xxx`でフィルタ可能）
+- `GET /process/analyses/{analysis_id}`: 特定の分析結果のJSONデータを提供
+- `GET /process/compare`: 2つの分析結果の差分を計算
 
 組織分析API (`/organization`):
 
@@ -339,13 +339,13 @@ npm run test:ui  # UIモード（対話的）
 # コンテナ内からのAPI確認 (curlが無いためPythonを使用)
 docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/health').json())"
 
-docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/analyses').json())"
+docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/process/analyses').json())"
 
 # ホストマシンからのAPI確認 (curlが使える場合)
 curl http://localhost:8000/health
-curl http://localhost:8000/analyses
-curl http://localhost:8000/analyses/{analysis_id}
-curl "http://localhost:8000/compare?before={id1}&after={id2}"
+curl http://localhost:8000/process/analyses
+curl http://localhost:8000/process/analyses/{analysis_id}
+curl "http://localhost:8000/process/compare?before={id1}&after={id2}"
 
 # 組織分析API
 curl "http://localhost:8000/organization/handover?process_type=order-delivery&aggregation_level=employee"
@@ -364,7 +364,7 @@ curl http://localhost:8000/organization/analyses
 **主要画面**:
 
 - `/`: プロセス分析一覧
-- `/analysis/{id}`: プロセスマップ詳細
+- `/process/{id}`: プロセスマップ詳細
 - `/organization`: 組織分析一覧
 - `/organization/{id}`: 組織分析詳細
 - `/outcome`: 成果分析一覧

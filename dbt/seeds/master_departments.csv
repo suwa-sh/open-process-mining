@@ -7,3 +7,7 @@ DEPT-HR,人事部,,管理
 DEPT-MGMT,経営管理部,,管理
 DEPT-ADMIN,総務部,,管理
 DEPT-SYS,システム部,,システム
+DEPT-IT,IT部,,システム
+DEPT-FINANCE,経理部,,管理
+DEPT-DEV,開発部,,開発
+DEPT-SUPPORT,サポート部,,サポート

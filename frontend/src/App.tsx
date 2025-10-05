@@ -18,7 +18,7 @@ const AnalysisListPage: React.FC = () => {
   const navigate = useNavigate();
 
   const handleSelect = (analysisId: string) => {
-    navigate(`/analysis/${analysisId}`);
+    navigate(`/process/${analysisId}`);
   };
 
   return <AnalysisList onSelect={handleSelect} />;
@@ -74,7 +74,7 @@ const App: React.FC = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<AnalysisListPage />} />
-          <Route path="/analysis/:analysisId" element={<ProcessMapPage />} />
+          <Route path="/process/:analysisId" element={<ProcessMapPage />} />
           <Route
             path="/organization"
             element={<OrganizationAnalysisListPage />}

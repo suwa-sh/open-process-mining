@@ -84,7 +84,7 @@ cd /app/dbt
 # dbt依存関係のインストール
 dbt deps
 
-# サンプルデータをロード (46レコード、日本語プロセス名)
+# サンプルデータをロード（2024年1年分、620ケース、3,907イベント）
 dbt seed
 
 # イベントログテーブルを生成
@@ -94,21 +94,14 @@ dbt run
 dbt test
 ```
 
-5. **分析の実行**
-
-```bash
-# バックエンドコンテナ内で実行（日本語の分析名を指定）
-PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から配送_2025-10"
-```
-
-6. **Web UIにアクセス**
+5. **Web UIにアクセス**
 
 ブラウザで <http://localhost:5173> を開く
 
 ### 主要な画面
 
 - **プロセス分析一覧** (`/`): 作成したプロセス分析の一覧を表示
-- **プロセスマップ** (`/analysis/{id}`): DFGベースのプロセスフロー可視化
+- **プロセスマップ** (`/process/{id}`): DFGベースのプロセスフロー可視化
 - **組織分析一覧** (`/organization`): 組織分析結果の一覧を表示
 - **組織分析詳細** (`/organization/{id}`): ハンドオーバー・作業負荷・パフォーマンス分析
 - **成果分析一覧** (`/outcome`): 成果分析結果の一覧を表示
@@ -165,20 +158,89 @@ PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から配
 
 ### サンプルデータ
 
-#### 受注から配送プロセス（10件の注文、46イベント）
+プロジェクトには2024年1年分の6種類のビジネスプロセスデータが含まれています（合計620ケース、3,907イベント）。
 
+#### 1. ITSM（IT Service Management）- 150件のインシデント
+
+**典型的なフロー:**
+- **インシデント報告** → サポート割当 → 初期調査 → 解決策適用 → 検証 → **クローズ**（ハッピーパス）
+- 初期調査 → **エスカレーション** → 解決策適用（複雑なケース）
+- 検証 → **再オープン** → 解決策適用 → 検証 → クローズ（問題再発）
+
+**成果指標:**
+- `resolution_time_hours`: 解決時間（時間）
+- `priority_weight`: 優先度ウェイト
+
+#### 2. Billing（請求）- 180件の請求書
+
+**典型的なフロー:**
+- **請求書作成** → 承認申請 → 承認完了 → 送付 → **入金確認**（ハッピーパス）
+- 承認申請 → **差戻** → 修正 → 再申請 → 承認完了（承認プロセス）
+
+**成果指標:**
+- `cycle_time_days`: サイクルタイム（日）
+- `amount`: 請求金額（JPY）
+
+#### 3. Employee Onboarding（入社手続）- 60件の応募者
+
+**典型的なフロー:**
+- **応募受付** → 書類選考 → 一次面接 → 最終面接 → 内定通知 → 入社手続 → **オリエンテーション**（ハッピーパス）
+- 書類選考 → **不合格通知**（50%）
+- 一次面接 → **不合格通知**（30%）
+- 最終面接 → **不合格通知**（20%）
+
+**成果指標:**
+- `time_to_hire_days`: 採用リードタイム（日）
+- `satisfaction_score`: 満足度スコア（1-5）
+
+#### 4. Invoice Approval（請求書承認）- 200件の請求書
+
+**典型的なフロー:**
+- **請求書受領** → 検証割当 → 検証完了 → 承認 → 支払予定登録 → **支払実行**（ハッピーパス）
+- 検証割当 → **エラー検出** → ベンダー問合せ → 修正受領 → 検証完了（エラー処理）
+
+**成果指標:**
+- `processing_days`: 処理日数（日）
+- `amount`: 金額（JPY）
+
+#### 5. System Development（システム開発）- 30件のプロジェクト
+
+**典型的なフロー:**
+- **要件定義** → 設計 → 設計承認 → 実装 → コードレビュー承認 → テスト → **デプロイ**（ハッピーパス）
+- 設計 → **設計レビュー指摘** → 設計修正 → 設計承認（レビューフィードバック）
+- コードレビュー承認 → **バグ発見** → バグ修正 → 再テスト → デプロイ（品質改善）
+
+**成果指標:**
+- `lead_time_days`: リードタイム（日）
+- `story_points`: ストーリーポイント
+- `defect_count`: 欠陥数
+
+#### 6. Order Delivery（受注配送）- 10件の注文（従来データ）
+
+**典型的なフロー:**
 - **受注登録** → 入金確認 → 出荷完了 → **配送完了**（ハッピーパス）
 - 入金エラー → 入金確認（リトライ）
-- 入金確認 → 品質検査 → 出荷完了
-- 出荷完了 → **配送失敗** → **再配送手配** → 配送完了（問題パス）
-- 入金エラー → 受注キャンセル
+- 出荷完了 → **配送失敗** → 再配送手配 → 配送完了（問題パス）
 
-#### 従業員採用プロセス（5件の応募、27イベント）
+**成果指標:**
+- `revenue`: 売上（JPY）
+- `profit_margin`: 利益率（%）
+- `quantity`: 数量
 
-- **応募受付** → 書類審査 → 一次面接 → 二次面接 → 内定通知 → 入社手続き → **オンボーディング完了**（ハッピーパス）
-- 書類審査 → **書類不合格**
-- 一次面接 → **一次面接不合格**
-- 内定通知 → **内定辞退**
+### サンプルデータ生成
+
+新しいサンプルデータを生成する場合:
+
+```bash
+# データ生成スクリプトを実行
+python generate_sample_data.py
+
+# 生成されたデータをロード
+docker compose exec backend bash
+cd /app/dbt
+dbt seed
+dbt run
+```
 
 ## 開発ワークフロー
 
@@ -199,11 +261,23 @@ dbt test
 #### 分析の実行
 
 ```bash
-# 受注から配送プロセスの分析
-PYTHONPATH=/app python src/analysis/run_analysis.py --name "受注から配送_2025-10" --process-type "order-delivery"
+# ITSM（インシデント管理）の分析
+PYTHONPATH=/app python src/analysis/run_analysis.py --name "ITSM分析_2024" --process-type "itsm"
 
-# 従業員採用プロセスの分析
-PYTHONPATH=/app python src/analysis/run_analysis.py --name "従業員採用_2025-10" --process-type "employee-onboarding"
+# 請求プロセスの分析
+PYTHONPATH=/app python src/analysis/run_analysis.py --name "請求プロセス_2024" --process-type "billing"
+
+# 入社手続プロセスの分析
+PYTHONPATH=/app python src/analysis/run_analysis.py --name "入社手続_2024" --process-type "employee-onboarding"
+
+# 請求書承認プロセスの分析
+PYTHONPATH=/app python src/analysis/run_analysis.py --name "請求書承認_2024" --process-type "invoice-approval"
+
+# システム開発プロセスの分析
+PYTHONPATH=/app python src/analysis/run_analysis.py --name "システム開発_2024" --process-type "system-development"
+
+# 受注配送プロセスの分析（従来データ）
+PYTHONPATH=/app python src/analysis/run_analysis.py --name "受注配送_2025-10" --process-type "order-delivery"
 ```
 
 ### バックエンド開発者向け
@@ -261,32 +335,32 @@ pytest tests/
 # ヘルスチェック
 curl http://localhost:8000/health
 
-# 分析結果一覧を取得
-curl http://localhost:8000/analyses
+# プロセス分析結果一覧を取得
+curl http://localhost:8000/process/analyses
 
 # 特定の分析結果を取得
-curl http://localhost:8000/analyses/{analysis_id}
+curl http://localhost:8000/process/analyses/{analysis_id}
 
 # 2つの分析を比較
-curl "http://localhost:8000/compare?before={id1}&after={id2}"
+curl "http://localhost:8000/process/compare?before={id1}&after={id2}"
 ```
 
 #### APIエンドポイント
 
 **基本API**
 
-| エンドポイント   | メソッド | 説明                         |
-| ---------------- | -------- | ---------------------------- |
-| `/health`        | GET      | ヘルスチェック               |
-| `/process-types` | GET      | 利用可能なプロセスタイプ一覧 |
+| エンドポイント              | メソッド | 説明                         |
+| --------------------------- | -------- | ---------------------------- |
+| `/health`                   | GET      | ヘルスチェック               |
+| `/process/process-types`    | GET      | 利用可能なプロセスタイプ一覧 |
 
 **プロセス分析API**
 
-| エンドポイント            | メソッド | 説明                                                   |
-| ------------------------- | -------- | ------------------------------------------------------ |
-| `/analyses`               | GET      | 分析結果の一覧取得 (`?process_type=xxx`でフィルタ可能) |
-| `/analyses/{analysis_id}` | GET      | 特定の分析結果を取得                                   |
-| `/compare`                | GET      | 2つの分析結果を比較                                    |
+| エンドポイント                   | メソッド | 説明                                                   |
+| -------------------------------- | -------- | ------------------------------------------------------ |
+| `/process/analyses`              | GET      | 分析結果の一覧取得 (`?process_type=xxx`でフィルタ可能) |
+| `/process/analyses/{analysis_id}`| GET      | 特定の分析結果を取得                                   |
+| `/process/compare`               | GET      | 2つの分析結果を比較                                    |
 
 **組織分析API（保存型）**
 
