@@ -1,21 +1,13 @@
 -- Union all process event sources into a standardized format
-SELECT
-    process_type,
-    order_id as case_id,
-    status as activity,
-    event_time::timestamp as timestamp,
-    employee_id as resource
-FROM {{ ref('raw_order_events') }}
-
-UNION ALL
+-- All data now comes from 2024 source systems (ETL simulation)
 
 SELECT
     process_type,
-    employee_id as case_id,
-    status as activity,
-    event_time::timestamp as timestamp,
-    assigned_to as resource
-FROM {{ ref('raw_employee_onboarding') }}
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_order_delivery_2024') }}
 
 UNION ALL
 
@@ -25,4 +17,54 @@ SELECT
     activity,
     timestamp,
     resource
-FROM {{ ref('stg_process_events_2024') }}
+FROM {{ ref('stg_employee_onboarding_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_itsm_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_billing_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_employee_onboarding_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_invoice_approval_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    resource
+FROM {{ ref('stg_system_development_2024') }}

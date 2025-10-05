@@ -221,7 +221,28 @@ docker compose logs backend -f
 docker compose logs frontend -f
 ```
 
-### データ準備 (dbt)
+### データ準備
+
+#### 1. サンプルデータ生成（初回のみ、またはデータ再生成時）
+
+```bash
+# リポジトリルートからスクリプトを実行
+python scripts/generate_sample_data.py
+
+# 6つのプロセスタイプ、合計約4,200イベント + 1,350件の成果データを生成
+# - order-delivery: 50件の注文、約356イベント
+# - employee-onboarding: 40人の候補者、約165イベント
+# - itsm: 150件のインシデント、約981イベント
+# - billing: 180件の請求、約1,011イベント
+# - invoice-approval: 200件の請求書、約1,290イベント
+# - system-development: 30プロジェクト、約262イベント
+```
+
+**注**: `scripts/generate_sample_data.py` はETLプロセスをシミュレートし、
+各ソースシステム固有のスキーマでCSVファイルを `dbt/seeds/` に出力します。
+詳細は `scripts/README.md` を参照してください。
+
+#### 2. dbtでデータパイプライン実行
 
 ```bash
 # バックエンドコンテナに入る
@@ -233,12 +254,12 @@ cd /app/dbt
 # 依存パッケージのインストール
 dbt deps
 
-# サンプルデータのロード
-# - order-delivery: 10件の注文、46イベント
-# - employee-onboarding: 5件の応募、27イベント
+# サンプルデータのロード（seedファイルをDBにロード）
 dbt seed
 
-# イベントログテーブルの生成 (public.fct_event_log)
+# ステージングモデル→マートモデルの実行
+# - ステージング: ソース固有スキーマ → 標準イベントログ形式
+# - マート: fct_event_log（統合イベントログ）、fct_case_outcomes（成果データ）
 dbt run
 
 # データテストの実行
@@ -263,17 +284,17 @@ PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "従業員採用
 プロジェクトでは[qlty](https://qlty.sh)を使用して、複数のlinterとformatterを統合管理しています。
 
 ```bash
-# すべてのlinter/formatterを実行
-qlty check
+# フォーマット実行
+make fmt
 
-# 自動修正可能な問題を修正（フォーマット適用）
-qlty fmt
+# すべてのlinterを実行（qlty check + sqlfluff）
+make lint
 
-# 特定のファイルのみチェック
-qlty check backend/src/main.py
-
-# 高レベルの問題のみ報告（CI/CDで使用）
-qlty check --fail-level high
+# 個別に実行する場合
+qlty check                          # すべてのlinter/formatterを実行
+qlty fmt                            # 自動修正可能な問題を修正
+qlty check backend/src/main.py     # 特定のファイルのみチェック
+qlty check --fail-level high       # 高レベルの問題のみ報告（CI/CD用）
 ```
 
 **有効化されているツール:**
@@ -283,7 +304,7 @@ qlty check --fail-level high
 - **Dockerfile**: hadolint (linter), dockerfmt (formatter), checkov (security scanner)
 - **YAML**: yamllint
 - **Markdown**: markdownlint
-- **SQL**: sqlfluff（別途実行、下記参照）
+- **SQL**: sqlfluff（`make lint`に含まれる）
 
 **設定ファイル:**
 
@@ -291,9 +312,7 @@ qlty check --fail-level high
 - [.sqlfluff](.sqlfluff): sqlfluff設定（Jinja2テンプレート、PostgreSQL dialect）
 - [backend/pyproject.toml](backend/pyproject.toml): bandit設定（テストコード除外）
 
-**SQLファイルのlint:**
-
-sqlfluffはqltyのプラグインに問題があるため、別途実行します：
+**SQLファイルのlint（個別実行する場合）:**
 
 ```bash
 # qltyキャッシュからsqlfluffを直接実行
@@ -318,19 +337,36 @@ $SQLFLUFF fix backend/sql/init.sql --dialect postgres
 ### テストの実行
 
 ```bash
-# バックエンドテスト (バックエンドコンテナ内)
-cd /app
-pytest tests/
+# すべてのテスト（backend + E2E）
+make test-all
 
-# フロントエンドテスト (フロントエンドコンテナ内)
-docker compose exec frontend npm run test
+# バックエンドテストのみ
+make test
 
-# E2Eテスト（Playwright）
+# E2Eテストのみ
+make test-e2e
+
+# 個別に実行する場合
+docker compose exec backend pytest tests/   # バックエンドテスト
+docker compose exec frontend npm run test   # フロントエンドテスト
+cd e2e && npm test                           # E2Eテスト（Playwright）
+```
+
+**E2Eテスト初回セットアップ:**
+
+```bash
 cd e2e
-npm install  # 初回のみ
-npx playwright install chromium  # 初回のみ
-npm test  # ヘッドレスモード
-npm run test:ui  # UIモード（対話的）
+npm install  # 依存関係のインストール
+npx playwright install chromium  # ブラウザのインストール
+```
+
+**E2Eテストの実行モード:**
+
+```bash
+npm test          # ヘッドレスモード（CI向け）
+npm run test:ui   # UIモード（対話的デバッグ）
+npm run test:headed   # ブラウザ表示モード
+npm run test:debug    # デバッグモード（ステップ実行）
 ```
 
 ### APIの動作確認
@@ -579,6 +615,26 @@ useEffect(() => {
 - PostgreSQLコンテナが起動しているか確認: `docker compose ps`
 - 環境変数が正しく設定されているか確認: `.env`ファイル
 - ヘルスチェック確認: `docker compose ps postgres`
+
+### データベースの完全リセット
+
+データベースを完全にクリアして最初から作り直す場合：
+
+```bash
+# コンテナとボリュームを完全削除
+docker compose down -v
+
+# コンテナを再起動（DBが初期化される）
+docker compose up -d
+
+# サンプルデータを再生成
+python scripts/generate_sample_data.py
+
+# dbtでデータ投入
+docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
+```
+
+**注意**: `-v` フラグを付けると、PostgreSQLの全データ（Named Volume `postgres-data`）が削除されます。
 
 ### dbtエラー
 

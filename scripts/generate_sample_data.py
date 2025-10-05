@@ -1,4 +1,15 @@
-"""Generate 1 year of sample process mining data for various processes"""
+"""Generate 1 year of sample process mining data for various processes
+
+This script simulates ETL processes from various source systems, generating
+CSV files with source-specific schemas that are then transformed by dbt staging models.
+
+Usage:
+    python scripts/generate_sample_data.py
+
+Output:
+    - Raw event CSV files: dbt/seeds/raw_<process_type>_2024.csv
+    - Outcome CSV files: dbt/seeds/outcome_<process_type>_2024.csv
+"""
 
 import csv
 import random
@@ -8,8 +19,8 @@ from pathlib import Path
 # Set random seed for reproducibility
 random.seed(42)
 
-# Output directory
-OUTPUT_DIR = Path("dbt/seeds")
+# Output directory (relative to repository root)
+OUTPUT_DIR = Path(__file__).parent.parent / "dbt" / "seeds"
 
 # Date range: 2024-01-01 to 2024-12-31
 START_DATE = datetime(2024, 1, 1)
@@ -68,15 +79,11 @@ def generate_itsm_data():
 
         # 2. Assigned to support
         current_time = add_hours(current_time, random.uniform(0.1, 1))
-        events.append(
-            ("itsm", incident_id, "サポート割当", current_time, "EMP-014")
-        )
+        events.append(("itsm", incident_id, "サポート割当", current_time, "EMP-014"))
 
         # 3. Initial investigation
         current_time = add_hours(current_time, random.uniform(0.5, 3))
-        events.append(
-            ("itsm", incident_id, "初期調査", current_time, "EMP-013")
-        )
+        events.append(("itsm", incident_id, "初期調査", current_time, "EMP-013"))
 
         #  Escalation path (30% of cases)
         if random.random() < 0.3:
@@ -93,35 +100,23 @@ def generate_itsm_data():
 
         # 4. Resolution
         current_time = add_hours(current_time, random.uniform(2, 24))
-        events.append(
-            ("itsm", incident_id, "解決策適用", current_time, "EMP-013")
-        )
+        events.append(("itsm", incident_id, "解決策適用", current_time, "EMP-013"))
 
         # 5. Verification
         current_time = add_hours(current_time, random.uniform(0.5, 2))
-        events.append(
-            ("itsm", incident_id, "検証", current_time, "EMP-020")
-        )
+        events.append(("itsm", incident_id, "検証", current_time, "EMP-020"))
 
         # 6. Closed (10% reopen)
         if random.random() < 0.1:
             current_time = add_hours(current_time, random.uniform(1, 8))
-            events.append(
-                ("itsm", incident_id, "再オープン", current_time, "SYSTEM")
-            )
+            events.append(("itsm", incident_id, "再オープン", current_time, "SYSTEM"))
             current_time = add_hours(current_time, random.uniform(4, 16))
-            events.append(
-                ("itsm", incident_id, "解決策適用", current_time, "EMP-013")
-            )
+            events.append(("itsm", incident_id, "解決策適用", current_time, "EMP-013"))
             current_time = add_hours(current_time, random.uniform(0.5, 2))
-            events.append(
-                ("itsm", incident_id, "検証", current_time, "EMP-020")
-            )
+            events.append(("itsm", incident_id, "検証", current_time, "EMP-020"))
 
         current_time = add_hours(current_time, random.uniform(0.5, 4))
-        events.append(
-            ("itsm", incident_id, "クローズ", current_time, "SYSTEM")
-        )
+        events.append(("itsm", incident_id, "クローズ", current_time, "SYSTEM"))
 
         incidents.extend(events)
 
@@ -163,9 +158,7 @@ def generate_billing_data():
         current_time = start_time
 
         # 1. Invoice created
-        events.append(
-            ("billing", bill_id, "請求書作成", current_time, "EMP-015")
-        )
+        events.append(("billing", bill_id, "請求書作成", current_time, "EMP-015"))
 
         # 2. Approval required
         current_time = add_hours(current_time, random.uniform(4, 24))
@@ -182,34 +175,22 @@ def generate_billing_data():
         # 3. Manager approval (20% rejection)
         current_time = add_hours(current_time, random.uniform(8, 48))
         if random.random() < 0.2:
-            events.append(
-                ("billing", bill_id, "差戻", current_time, "EMP-016")
-            )
+            events.append(("billing", bill_id, "差戻", current_time, "EMP-016"))
             current_time = add_hours(current_time, random.uniform(4, 16))
-            events.append(
-                ("billing", bill_id, "修正", current_time, "EMP-015")
-            )
+            events.append(("billing", bill_id, "修正", current_time, "EMP-015"))
             current_time = add_hours(current_time, random.uniform(2, 8))
-            events.append(
-                ("billing", bill_id, "再申請", current_time, "EMP-015")
-            )
+            events.append(("billing", bill_id, "再申請", current_time, "EMP-015"))
             current_time = add_hours(current_time, random.uniform(8, 24))
 
-        events.append(
-            ("billing", bill_id, "承認完了", current_time, "EMP-016")
-        )
+        events.append(("billing", bill_id, "承認完了", current_time, "EMP-016"))
 
         # 4. Sent to customer
         current_time = add_hours(current_time, random.uniform(2, 8))
-        events.append(
-            ("billing", bill_id, "送付", current_time, "EMP-015")
-        )
+        events.append(("billing", bill_id, "送付", current_time, "EMP-015"))
 
         # 5. Payment received
         current_time = add_days(current_time, random.randint(10, 60))
-        events.append(
-            ("billing", bill_id, "入金確認", current_time, "SYSTEM")
-        )
+        events.append(("billing", bill_id, "入金確認", current_time, "SYSTEM"))
 
         bills.extend(events)
 
@@ -238,175 +219,7 @@ def generate_billing_data():
     return bills, outcomes
 
 
-# 3. Onboarding Process (already exists, but generate more data)
-def generate_onboarding_data():
-    """Generate employee onboarding process data"""
-    onboardings = []
-    outcomes = []
-
-    for i in range(1, 61):  # 60 new employees over the year
-        case_id = f"ON-{i:04d}"
-        start_time = random_date(START_DATE, END_DATE)
-
-        events = []
-        current_time = start_time
-
-        # 1. Application received
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "応募受付",
-                current_time,
-                "SYSTEM",
-            )
-        )
-
-        # 2. Resume screening
-        current_time = add_days(current_time, random.randint(1, 3))
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "書類選考",
-                current_time,
-                "EMP-007",
-            )
-        )
-
-        # 50% pass screening
-        if random.random() > 0.5:
-            current_time = add_days(current_time, 1)
-            events.append(
-                (
-                    "employee-onboarding",
-                    case_id,
-                    "不合格通知",
-                    current_time,
-                    "SYSTEM",
-                )
-            )
-            onboardings.extend(events)
-            continue
-
-        # 3. First interview
-        current_time = add_days(current_time, random.randint(3, 7))
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "一次面接",
-                current_time,
-                "EMP-008",
-            )
-        )
-
-        # 70% pass first interview
-        if random.random() > 0.7:
-            current_time = add_days(current_time, 1)
-            events.append(
-                (
-                    "employee-onboarding",
-                    case_id,
-                    "不合格通知",
-                    current_time,
-                    "SYSTEM",
-                )
-            )
-            onboardings.extend(events)
-            continue
-
-        # 4. Second interview
-        current_time = add_days(current_time, random.randint(5, 10))
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "最終面接",
-                current_time,
-                "EMP-009",
-            )
-        )
-
-        # 80% pass final interview
-        if random.random() > 0.8:
-            current_time = add_days(current_time, 1)
-            events.append(
-                (
-                    "employee-onboarding",
-                    case_id,
-                    "不合格通知",
-                    current_time,
-                    "SYSTEM",
-                )
-            )
-            onboardings.extend(events)
-            continue
-
-        # 5. Offer
-        current_time = add_days(current_time, random.randint(2, 5))
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "内定通知",
-                current_time,
-                "EMP-007",
-            )
-        )
-
-        # 6. Onboarding
-        current_time = add_days(current_time, random.randint(14, 30))
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "入社手続",
-                current_time,
-                "EMP-010",
-            )
-        )
-
-        # 7. Orientation
-        current_time = add_days(current_time, random.randint(1, 3))
-        events.append(
-            (
-                "employee-onboarding",
-                case_id,
-                "オリエンテーション",
-                current_time,
-                "EMP-012",
-            )
-        )
-
-        onboardings.extend(events)
-
-        # Outcome: time to hire and satisfaction score
-        time_to_hire = (current_time - start_time).days
-        satisfaction = round(random.uniform(3.0, 5.0), 1)
-        outcomes.append(
-            {
-                "process_type": "employee-onboarding",
-                "case_id": case_id,
-                "metric_name": "time_to_hire_days",
-                "metric_value": time_to_hire,
-                "metric_unit": "days",
-            }
-        )
-        outcomes.append(
-            {
-                "process_type": "employee-onboarding",
-                "case_id": case_id,
-                "metric_name": "satisfaction_score",
-                "metric_value": satisfaction,
-                "metric_unit": "score",
-            }
-        )
-
-    return onboardings, outcomes
-
-
-# 4. Invoice Approval Process
+# 3. Invoice Approval Process
 def generate_invoice_approval_data():
     """Generate invoice approval process data"""
     invoices = []
@@ -756,61 +569,36 @@ def generate_development_data():
     return projects, outcomes
 
 
-# Generate all data
-def main():
-    print("Generating sample data for 2024...")
+def write_process_data(process_name, events, outcomes, event_schema):
+    """Write events and outcomes for a single process type to separate CSV files
 
-    all_events = []
-    all_outcomes = []
-
-    # ITSM
-    print("- ITSM (150 incidents)")
-    itsm_events, itsm_outcomes = generate_itsm_data()
-    all_events.extend(itsm_events)
-    all_outcomes.extend(itsm_outcomes)
-
-    # Billing
-    print("- Billing (180 bills)")
-    billing_events, billing_outcomes = generate_billing_data()
-    all_events.extend(billing_events)
-    all_outcomes.extend(billing_outcomes)
-
-    # Onboarding
-    print("- Employee Onboarding (60 candidates)")
-    onboarding_events, onboarding_outcomes = generate_onboarding_data()
-    all_events.extend(onboarding_events)
-    all_outcomes.extend(onboarding_outcomes)
-
-    # Invoice Approval
-    print("- Invoice Approval (200 invoices)")
-    invoice_events, invoice_outcomes = generate_invoice_approval_data()
-    all_events.extend(invoice_events)
-    all_outcomes.extend(invoice_outcomes)
-
-    # System Development
-    print("- System Development (30 projects)")
-    dev_events, dev_outcomes = generate_development_data()
-    all_events.extend(dev_events)
-    all_outcomes.extend(dev_outcomes)
-
-    # Write events CSV
-    events_file = OUTPUT_DIR / "raw_process_events_2024.csv"
+    Args:
+        process_name: Process type name (e.g., 'itsm', 'billing')
+        events: List of event tuples
+        outcomes: List of outcome dicts
+        event_schema: Dict mapping column names to their position in event tuple
+                     e.g., {'incident_id': 1, 'status': 2, 'reported_at': 3, 'assigned_to': 4}
+    """
+    # Write events CSV with source-system specific columns
+    events_file = OUTPUT_DIR / f"raw_{process_name}_2024.csv"
     with open(events_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["process_type", "case_id", "activity", "event_time", "employee_id"])
-        for event in all_events:
-            writer.writerow([
-                event[0],
-                event[1],
-                event[2],
-                event[3].strftime("%Y-%m-%d %H:%M:%S"),
-                event[4],
-            ])
+        # Write header from schema
+        writer.writerow(event_schema.keys())
+        for event in events:
+            row = []
+            for col_idx in event_schema.values():
+                value = event[col_idx]
+                # Format datetime if needed
+                if isinstance(value, datetime):
+                    value = value.strftime("%Y-%m-%d %H:%M:%S")
+                row.append(value)
+            writer.writerow(row)
 
-    print(f"\n✓ Generated {len(all_events)} events -> {events_file}")
+    print(f"  ✓ {len(events)} events -> {events_file}")
 
     # Write outcomes CSV
-    outcomes_file = OUTPUT_DIR / "outcome_processes_2024.csv"
+    outcomes_file = OUTPUT_DIR / f"outcome_{process_name}_2024.csv"
     with open(outcomes_file, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(
             f,
@@ -823,10 +611,354 @@ def main():
             ],
         )
         writer.writeheader()
-        writer.writerows(all_outcomes)
+        writer.writerows(outcomes)
 
-    print(f"✓ Generated {len(all_outcomes)} outcome records -> {outcomes_file}")
-    print("\nDone!")
+    print(f"  ✓ {len(outcomes)} outcome records -> {outcomes_file}")
+
+
+# 6. Order Delivery Process
+def generate_order_delivery_data():
+    """Generate order delivery process data"""
+    orders = []
+    outcomes = []
+
+    for i in range(1, 51):  # 50 orders
+        order_id = f"ORD-{i:04d}"
+        start_time = random_date(START_DATE, END_DATE)
+
+        events = []
+        current_time = start_time
+
+        # 1. Order registration
+        events.append(("order-delivery", order_id, "受注登録", current_time, "EMP-001"))
+
+        # 2. Payment verification (90% success, 10% payment error)
+        current_time = add_hours(current_time, random.uniform(0.5, 2))
+        if random.random() < 0.1:
+            events.append(
+                ("order-delivery", order_id, "入金エラー", current_time, "SYSTEM")
+            )
+            current_time = add_hours(current_time, random.uniform(4, 24))
+
+        events.append(("order-delivery", order_id, "入金確認", current_time, "SYSTEM"))
+
+        # 3. Inventory check (95% in stock, 5% out of stock)
+        current_time = add_hours(current_time, random.uniform(0.2, 1))
+        if random.random() < 0.05:
+            events.append(
+                ("order-delivery", order_id, "在庫不足", current_time, "EMP-003")
+            )
+            # Wait for restocking
+            current_time = add_days(current_time, random.randint(3, 7))
+
+        events.append(("order-delivery", order_id, "在庫確認", current_time, "EMP-003"))
+
+        # 4. Picking
+        current_time = add_hours(current_time, random.uniform(1, 4))
+        events.append(
+            ("order-delivery", order_id, "ピッキング", current_time, "EMP-003")
+        )
+
+        # 5. Packing
+        current_time = add_hours(current_time, random.uniform(0.5, 2))
+        events.append(("order-delivery", order_id, "梱包", current_time, "EMP-003"))
+
+        # 6. Shipment
+        current_time = add_hours(current_time, random.uniform(0.5, 1))
+        events.append(("order-delivery", order_id, "出荷完了", current_time, "EMP-004"))
+
+        # 7. Delivery
+        current_time = add_days(current_time, random.randint(1, 3))
+        events.append(("order-delivery", order_id, "配送完了", current_time, "EMP-005"))
+
+        orders.extend(events)
+
+        # Outcomes: revenue, profit_margin, quantity
+        revenue = random.randint(50000, 2000000)
+        profit_margin = random.uniform(0.1, 0.35)
+        quantity = random.randint(1, 100)
+
+        outcomes.extend(
+            [
+                {
+                    "process_type": "order-delivery",
+                    "case_id": order_id,
+                    "metric_name": "revenue",
+                    "metric_value": revenue,
+                    "metric_unit": "JPY",
+                },
+                {
+                    "process_type": "order-delivery",
+                    "case_id": order_id,
+                    "metric_name": "profit_margin",
+                    "metric_value": round(profit_margin, 3),
+                    "metric_unit": "percent",
+                },
+                {
+                    "process_type": "order-delivery",
+                    "case_id": order_id,
+                    "metric_name": "quantity",
+                    "metric_value": quantity,
+                    "metric_unit": "count",
+                },
+            ]
+        )
+
+    return orders, outcomes
+
+
+# 7. Employee Onboarding Process
+def generate_employee_onboarding_data():
+    """Generate employee onboarding/recruitment process data"""
+    candidates = []
+    outcomes = []
+
+    for i in range(1, 41):  # 40 candidates
+        candidate_id = f"CAND-{i:04d}"
+        start_time = random_date(START_DATE, END_DATE)
+
+        events = []
+        current_time = start_time
+
+        # 1. Application received
+        events.append(
+            ("employee-onboarding", candidate_id, "応募受付", current_time, "SYSTEM")
+        )
+
+        # 2. Document screening
+        current_time = add_days(current_time, 1)
+        events.append(
+            ("employee-onboarding", candidate_id, "書類選考", current_time, "EMP-007")
+        )
+
+        # 60% pass document screening
+        if random.random() > 0.6:
+            current_time = add_days(current_time, 1)
+            events.append(
+                (
+                    "employee-onboarding",
+                    candidate_id,
+                    "不合格通知",
+                    current_time,
+                    "SYSTEM",
+                )
+            )
+            candidates.extend(events)
+
+            # Outcome for failed candidates
+            total_days = (current_time - start_time).days
+            outcomes.append(
+                {
+                    "process_type": "employee-onboarding",
+                    "case_id": candidate_id,
+                    "metric_name": "recruitment_days",
+                    "metric_value": total_days,
+                    "metric_unit": "days",
+                }
+            )
+            continue
+
+        # 3. First interview
+        current_time = add_days(current_time, random.randint(3, 7))
+        events.append(
+            ("employee-onboarding", candidate_id, "一次面接", current_time, "EMP-008")
+        )
+
+        # 70% pass first interview
+        if random.random() > 0.7:
+            current_time = add_days(current_time, 1)
+            events.append(
+                (
+                    "employee-onboarding",
+                    candidate_id,
+                    "不合格通知",
+                    current_time,
+                    "SYSTEM",
+                )
+            )
+            candidates.extend(events)
+
+            total_days = (current_time - start_time).days
+            outcomes.append(
+                {
+                    "process_type": "employee-onboarding",
+                    "case_id": candidate_id,
+                    "metric_name": "recruitment_days",
+                    "metric_value": total_days,
+                    "metric_unit": "days",
+                }
+            )
+            continue
+
+        # 4. Final interview
+        current_time = add_days(current_time, random.randint(5, 10))
+        events.append(
+            ("employee-onboarding", candidate_id, "最終面接", current_time, "EMP-009")
+        )
+
+        # 50% pass final interview
+        if random.random() > 0.5:
+            current_time = add_days(current_time, random.randint(1, 3))
+            events.append(
+                (
+                    "employee-onboarding",
+                    candidate_id,
+                    "不合格通知",
+                    current_time,
+                    "SYSTEM",
+                )
+            )
+            candidates.extend(events)
+
+            total_days = (current_time - start_time).days
+            outcomes.append(
+                {
+                    "process_type": "employee-onboarding",
+                    "case_id": candidate_id,
+                    "metric_name": "recruitment_days",
+                    "metric_value": total_days,
+                    "metric_unit": "days",
+                }
+            )
+            continue
+
+        # 5. Offer
+        current_time = add_days(current_time, random.randint(2, 5))
+        events.append(
+            ("employee-onboarding", candidate_id, "内定", current_time, "EMP-009")
+        )
+
+        # 6. Onboarding
+        current_time = add_days(current_time, random.randint(7, 21))
+        events.append(
+            ("employee-onboarding", candidate_id, "入社手続", current_time, "EMP-010")
+        )
+
+        candidates.extend(events)
+
+        # Outcomes for successful hires
+        total_days = (current_time - start_time).days
+        candidate_score = random.randint(60, 95)
+        recruitment_cost = random.randint(50000, 300000)
+
+        outcomes.extend(
+            [
+                {
+                    "process_type": "employee-onboarding",
+                    "case_id": candidate_id,
+                    "metric_name": "recruitment_days",
+                    "metric_value": total_days,
+                    "metric_unit": "days",
+                },
+                {
+                    "process_type": "employee-onboarding",
+                    "case_id": candidate_id,
+                    "metric_name": "candidate_score",
+                    "metric_value": candidate_score,
+                    "metric_unit": "score",
+                },
+                {
+                    "process_type": "employee-onboarding",
+                    "case_id": candidate_id,
+                    "metric_name": "recruitment_cost",
+                    "metric_value": recruitment_cost,
+                    "metric_unit": "JPY",
+                },
+            ]
+        )
+
+    return candidates, outcomes
+
+
+# Generate all data
+def main():
+    print("Generating sample data for 2024...")
+    print(
+        "Each process type will be saved to separate CSV files with source-specific schemas.\n"
+    )
+
+    # Order Delivery - Source system columns
+    print("- Order Delivery (50 orders)")
+    order_events, order_outcomes = generate_order_delivery_data()
+    order_schema = {
+        "order_id": 1,
+        "order_status": 2,
+        "status_changed_at": 3,
+        "employee_id": 4,
+    }
+    write_process_data("order_delivery", order_events, order_outcomes, order_schema)
+
+    # Employee Onboarding - Source system columns
+    print("\n- Employee Onboarding (40 candidates)")
+    onboarding_events, onboarding_outcomes = generate_employee_onboarding_data()
+    onboarding_schema = {
+        "candidate_id": 1,
+        "recruitment_status": 2,
+        "status_changed_at": 3,
+        "responsible_person": 4,
+    }
+    write_process_data(
+        "employee_onboarding", onboarding_events, onboarding_outcomes, onboarding_schema
+    )
+
+    # ITSM - Source system columns
+    print("\n- ITSM (150 incidents)")
+    itsm_events, itsm_outcomes = generate_itsm_data()
+    itsm_schema = {
+        "incident_id": 1,  # case_id in tuple
+        "status": 2,  # activity in tuple
+        "reported_at": 3,  # event_time in tuple
+        "assigned_to": 4,  # employee_id in tuple
+    }
+    write_process_data("itsm", itsm_events, itsm_outcomes, itsm_schema)
+
+    # Billing - Source system columns
+    print("\n- Billing (180 bills)")
+    billing_events, billing_outcomes = generate_billing_data()
+    billing_schema = {
+        "bill_id": 1,
+        "bill_status": 2,
+        "status_changed_at": 3,
+        "employee_id": 4,
+    }
+    write_process_data("billing", billing_events, billing_outcomes, billing_schema)
+
+    # Invoice Approval - Source system columns
+    print("\n- Invoice Approval (200 invoices)")
+    invoice_events, invoice_outcomes = generate_invoice_approval_data()
+    invoice_schema = {
+        "invoice_id": 1,
+        "approval_status": 2,
+        "status_time": 3,
+        "processor_id": 4,
+    }
+    write_process_data(
+        "invoice_approval", invoice_events, invoice_outcomes, invoice_schema
+    )
+
+    # System Development - Source system columns
+    print("\n- System Development (30 projects)")
+    dev_events, dev_outcomes = generate_development_data()
+    dev_schema = {
+        "project_id": 1,
+        "phase": 2,
+        "phase_changed_at": 3,
+        "developer_id": 4,
+    }
+    write_process_data("system_development", dev_events, dev_outcomes, dev_schema)
+
+    print("\nDone! Generated 6 process types with source-specific CSV schemas.")
+    print("\nSource schemas:")
+    print("  - Order Delivery: order_id, order_status, status_changed_at, employee_id")
+    print(
+        "  - Employee Onboarding: candidate_id, recruitment_status, status_changed_at, responsible_person"
+    )
+    print("  - ITSM: incident_id, status, reported_at, assigned_to")
+    print("  - Billing: bill_id, bill_status, status_changed_at, employee_id")
+    print(
+        "  - Invoice Approval: invoice_id, approval_status, status_time, processor_id"
+    )
+    print("  - System Development: project_id, phase, phase_changed_at, developer_id")
 
 
 if __name__ == "__main__":

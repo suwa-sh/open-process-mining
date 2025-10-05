@@ -92,7 +92,9 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
               <SimpleGrid columns={3} spacing={4}>
                 <Stat>
                   <StatLabel>ケース数</StatLabel>
-                  <StatNumber>{high_segment.case_count.toLocaleString()}</StatNumber>
+                  <StatNumber>
+                    {high_segment.case_count.toLocaleString()}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>平均値</StatLabel>
@@ -136,7 +138,9 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
               <SimpleGrid columns={3} spacing={4}>
                 <Stat>
                   <StatLabel>ケース数</StatLabel>
-                  <StatNumber>{low_segment.case_count.toLocaleString()}</StatNumber>
+                  <StatNumber>
+                    {low_segment.case_count.toLocaleString()}
+                  </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>平均値</StatLabel>

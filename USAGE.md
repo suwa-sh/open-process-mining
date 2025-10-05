@@ -1,676 +1,340 @@
 # 利用ガイド - 自組織でのプロセスマイニング実施方法
 
+> 📘 このドキュメントは**自組織でプロセスマイニングを実施したい方**向けです
+> 💡 開発者向けの情報（技術スタック、API、テスト）は [README.md](README.md) と [CLAUDE.md](CLAUDE.md) を参照
+
 このドキュメントでは、open-process-miningを使って自組織のプロセスデータを分析する手順を説明します。
 
 ## 目次
 
-1. [前提知識](#前提知識)
-2. [環境構築とデプロイメント](#環境構築とデプロイメント)
-3. [データ準備の全体フロー](#データ準備の全体フロー)
-4. [ステップ1: イベントログデータの準備](#ステップ1-イベントログデータの準備)
-5. [ステップ2: 組織マスターデータの準備](#ステップ2-組織マスターデータの準備)
-6. [ステップ3: 成果データの準備（オプション）](#ステップ3-成果データの準備オプション)
-7. [ステップ4: dbtでのデータ投入](#ステップ4-dbtでのデータ投入)
-8. [ステップ5: Web UIでの分析実施](#ステップ5-web-uiでの分析実施)
-9. [バックアップとリストア](#バックアップとリストア)
-10. [トラブルシューティング](#トラブルシューティング)
+1. [ゼロから分析結果を確認するまでの手順](#ゼロから分析結果を確認するまでの手順)
+2. [自組織データに合わせたカスタマイズポイント](#自組織データに合わせたカスタマイズポイント)
+3. [実際の導入例](#実際の導入例)
+4. [よくある質問](#よくある質問)
 
-## 前提知識
+## 🚀 ゼロから分析結果を確認するまでの手順
 
-### プロセスマイニングとは
-
-プロセスマイニングは、業務システムのログデータから実際のプロセスフローを可視化・分析する手法です。以下の3つの分析が可能です：
-
-- **プロセス分析**: 業務の流れ（受注→入金→出荷など）を可視化
-- **組織分析**: 担当者・部署間の連携や作業負荷を分析
-- **成果分析**: プロセスパスと成果（売上、利益率など）の関係を分析
-
-### 必要なデータ
-
-プロセスマイニングには最低限、以下の情報が必要です：
-
-| 項目                   | 説明                       | 例                  |
-| ---------------------- | -------------------------- | ------------------- |
-| **ケースID**           | 一連のプロセスを識別するID | 注文番号、応募者ID  |
-| **アクティビティ**     | 実施された作業の名称       | 受注登録、入金確認  |
-| **タイムスタンプ**     | イベント発生日時           | 2025-10-01 09:02:00 |
-| **リソース（担当者）** | 作業を実施した人・システム | EMP-001, SYSTEM     |
-
-## 環境構築とデプロイメント
-
-### 前提条件
-
-- Docker 20.10以上
-- Docker Compose V2
-- 最低4GB以上のメモリ
-- 最低10GB以上のディスク空き容量
-
-### デプロイ手順
-
-#### 方法1: GitHub Container Registry (GHCR) のイメージを使用（推奨）
-
-本番環境では、ビルド済みのDockerイメージを使用することを推奨します。
-
-**1. 環境変数の設定**
+### ステップ1: 環境構築（5分）
 
 ```bash
-# リポジトリをクローン（設定ファイルのみ取得）
+# リポジトリをクローン
 git clone https://github.com/suwa-sh/open-process-mining.git
 cd open-process-mining
 
-# 環境変数ファイルを作成
+# 環境変数を設定
 cp .env.example .env
-# .envを編集して本番環境用のパスワード等を設定
-```
 
-**2. 本番用Docker Composeで起動**
-
-```bash
-# GHCRのイメージを使用
-docker compose -f docker-compose.prod.yml up -d
-
-# ヘルスチェック確認
-docker compose -f docker-compose.prod.yml ps
-```
-
-**3. データベース初期化（初回のみ）**
-
-```bash
-# バックエンドコンテナに入る
-docker compose -f docker-compose.prod.yml exec backend bash
-
-# dbt設定
-cd /app/dbt
-dbt deps
-dbt seed  # サンプルデータ（オプション）
-dbt run
-
-exit
-```
-
-**メリット**:
-
-- ビルド時間不要（イメージはビルド済み）
-- マルチアーキテクチャ対応（amd64/arm64）
-- 最新の安定版を自動取得
-
-#### 方法2: ソースからビルド（開発環境向け）
-
-**1. リポジトリのクローン**
-
-```bash
-git clone https://github.com/suwa-sh/open-process-mining.git
-cd open-process-mining
-```
-
-#### 2. 環境変数の設定
-
-`.env.example` をコピーして `.env` ファイルを作成し、必要に応じて編集します。
-
-```bash
-cp .env.example .env
-```
-
-**環境変数一覧**:
-
-| 変数名              | デフォルト値            | 説明                                               | 必須 |
-| ------------------- | ----------------------- | -------------------------------------------------- | ---- |
-| `POSTGRES_USER`     | `process_mining`        | PostgreSQLのユーザー名                             | ✅   |
-| `POSTGRES_PASSWORD` | `secure_password`       | PostgreSQLのパスワード（**本番環境では必ず変更**） | ✅   |
-| `POSTGRES_DB`       | `process_mining_db`     | データベース名                                     | ✅   |
-| `POSTGRES_PORT`     | `5432`                  | PostgreSQLのポート                                 | ✅   |
-| `API_HOST`          | `0.0.0.0`               | バックエンドAPIのホスト                            | ✅   |
-| `API_PORT`          | `8000`                  | バックエンドAPIのポート                            | ✅   |
-| `VITE_API_BASE_URL` | `http://localhost:8000` | フロントエンドからのAPI接続URL                     | ✅   |
-
-**本番環境での設定例**:
-
-```env
-# 本番環境では強力なパスワードを設定
-POSTGRES_PASSWORD=your_strong_password_here
-
-# 本番環境のAPI URL（例: https://api.example.com）
-VITE_API_BASE_URL=https://your-api-domain.com
-```
-
-#### 3. コンテナの起動
-
-```bash
-# コンテナをビルドして起動
+# Dockerコンテナを起動
 docker compose up -d
 
-# ログを確認（全サービス）
-docker compose logs -f
-
-# 特定のサービスのログを確認
-docker compose logs backend -f
-```
-
-#### 4. ヘルスチェック確認
-
-```bash
-# コンテナの状態とヘルスチェックを確認
+# 全サービスが起動するまで待機（30秒程度）
 docker compose ps
-
-# 全サービスが (healthy) と表示されることを確認
-# NAME                      STATUS
-# process-mining-backend    Up (healthy)
-# process-mining-db         Up (healthy)
-# process-mining-frontend   Up (healthy)
 ```
 
-#### 5. 初回セットアップ
+### ステップ2: サンプルデータで動作確認（10分）
 
 ```bash
+# サンプルデータを生成（6プロセス、620ケース、3,907イベント）
+python scripts/generate_sample_data.py
+
 # バックエンドコンテナに入る
 docker compose exec backend bash
 
-# dbtディレクトリに移動
+# dbtでデータ投入
 cd /app/dbt
-
-# dbt依存関係のインストール
 dbt deps
-
-# サンプルデータのロード（オプション）
 dbt seed
-
-# イベントログテーブルの生成
 dbt run
-
-# データテストの実行
 dbt test
 
-# コンテナから退出
 exit
 ```
 
-#### 6. アクセス確認
+### ステップ3: Web UIで確認（2分）
 
-- **フロントエンド**: <http://localhost:5173>
-- **バックエンドAPI**: <http://localhost:8000>
-- **APIドキュメント**: <http://localhost:8000/docs>
+ブラウザで <http://localhost:5173> を開く
 
-### 本番環境へのデプロイ
+**初期状態**: 分析結果が0件表示される
 
-#### セキュリティ設定
+### ステップ4: 分析を実行（3分）
 
-1. **CORSの設定**: `backend/src/main.py` の `allow_origins` を本番ドメインに限定
+Web UI上で「新規作成」ボタンから分析を作成：
 
-```python
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["https://your-frontend-domain.com"],  # 本番ドメインを指定
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
+**1. プロセス分析**:
 
-2. **PostgreSQLのポート**: 外部からのアクセスを制限する場合、`docker-compose.yml` のポート設定を削除
+- プロセスタイプ: `order-delivery`（受注配送）
+- 分析名: 「受注配送プロセス_2024」
+- 「作成」ボタンをクリック
+- → プロセスマップが表示される
 
-```yaml
-# 開発環境
-ports:
-  - "5432:5432" # ホストマシンからアクセス可能
+**2. 組織分析**:
 
-# 本番環境（推奨）
-# ports設定を削除またはコメントアウト
-# Dockerネットワーク内でのみアクセス可能
-```
+- 組織分析タブに移動
+- 「新規作成」ボタン
+- プロセスタイプ: `employee-onboarding`（入社手続）
+- 集計レベル: 「社員別」
+- → ハンドオーバー図、作業負荷、パフォーマンスチャートが表示される
 
-3. **環境変数の管理**: `.env` ファイルを安全に管理し、Gitにコミットしない（`.gitignore` に追加済み）
+**3. 成果分析**:
 
-#### データ永続化
+- 成果分析タブに移動
+- 「新規作成」ボタン
+- プロセスタイプ: `billing`（請求）
+- メトリック: `amount`（請求金額）
+- 分析タイプ: 「パス別成果」
+- → 高収益パスが青線で強調表示される
 
-PostgreSQLデータは `.data/postgres/` ディレクトリに永続化されます。
+---
 
-```bash
-# データディレクトリの確認
-ls -la .data/postgres/
+## 🔧 自組織データに合わせたカスタマイズポイント
 
-# バックアップ前にコンテナを停止（推奨）
-docker compose stop postgres
-```
+### カスタマイズポイント1: イベントログデータの準備（最重要）
 
-### アップデート手順
-
-```bash
-# 最新のコードを取得
-git pull origin main
-
-# コンテナを再ビルドして起動
-docker compose up -d --build
-
-# ヘルスチェック確認
-docker compose ps
-```
-
-## データ準備の全体フロー
-
-```
-┌─────────────────────┐
-│ ソースシステム       │  例: 基幹システム、CRM、SFA
-│ (DB, ログ, CSV)     │
-└──────────┬──────────┘
-           │
-           │ 1. データ抽出・整形
-           ↓
-┌─────────────────────┐
-│ CSVファイル準備      │  dbt/seeds/ に配置
-│ - イベントログ       │  - raw_*.csv
-│ - 組織マスター       │  - master_*.csv
-│ - 成果データ         │  - outcome_*.csv
-└──────────┬──────────┘
-           │
-           │ 2. dbt seed & run
-           ↓
-┌─────────────────────┐
-│ PostgreSQL DB       │  自動的にテーブル作成
-│ - fct_event_log     │
-│ - master_employees  │
-│ - fct_case_outcomes │
-└──────────┬──────────┘
-           │
-           │ 3. Web UIで分析実施
-           ↓
-┌─────────────────────┐
-│ 分析結果の保存       │
-│ - プロセスマップ     │
-│ - 組織分析          │
-│ - 成果分析          │
-└─────────────────────┘
-```
-
-## ステップ1: イベントログデータの準備
-
-### 1.1 データ形式
-
-イベントログは、以下の5つのカラムを含むCSVファイルとして準備してください。
-
-**ファイル名**: `dbt/seeds/raw_<プロセス名>.csv`
-**例**: `dbt/seeds/raw_order_events.csv`
+**場所**: `dbt/seeds/raw_<your_process>_2024.csv`
 
 **必須カラム**:
 
-| カラム名       | データ型       | 必須 | 説明                             | 例                                      |
-| -------------- | -------------- | ---- | -------------------------------- | --------------------------------------- |
-| `process_type` | 文字列         | ✅   | プロセスを識別する一意な名前     | `order-delivery`, `employee-onboarding` |
-| `case_id`      | 文字列         | ✅   | ケースを識別するID               | `PO-001`, `CAND-001`                    |
-| `status`       | 文字列         | ✅   | アクティビティ名（業務ステップ） | `受注登録`, `入金確認`                  |
-| `event_time`   | タイムスタンプ | ✅   | イベント発生日時                 | `2025-10-01 09:02:00`                   |
-| `employee_id`  | 文字列         | ✅   | 担当者ID（組織分析で使用）       | `EMP-001`, `SYSTEM`                     |
-
-### 1.2 サンプルデータ
-
 ```csv
-process_type,case_id,status,event_time,employee_id
-order-delivery,PO-001,受注登録,2025-10-01 09:02:00,EMP-001
-order-delivery,PO-001,入金確認,2025-10-01 09:05:00,SYSTEM
-order-delivery,PO-001,出荷完了,2025-10-02 14:30:00,EMP-004
-order-delivery,PO-001,配送完了,2025-10-04 11:00:00,EMP-005
-order-delivery,PO-002,受注登録,2025-10-01 10:15:00,EMP-002
-order-delivery,PO-002,入金エラー,2025-10-01 10:20:00,SYSTEM
-order-delivery,PO-002,入金確認,2025-10-01 14:30:00,EMP-001
+case_id,activity,timestamp,employee_id
+ORD-001,受注登録,2024-01-15 09:00:00,EMP-001
+ORD-001,入金確認,2024-01-15 14:30:00,EMP-002
+ORD-001,出荷完了,2024-01-16 10:15:00,EMP-003
 ```
 
-### 1.3 データ抽出のヒント
+**カスタマイズ方法**:
 
-#### SQLデータベースから抽出する場合
+1. 自社システムからエクスポート（例: 販売管理システム、CRM、ERP）
+2. 上記フォーマットに変換
+3. `dbt/seeds/`に配置
+
+**データ抽出例（受注プロセス）**:
+
+- **ケースID**: 注文番号（ORDER_ID）
+- **アクティビティ**: ステータス変更（ORDER_STATUS）
+- **タイムスタンプ**: ステータス更新日時（UPDATED_AT）
+- **担当者**: 担当者ID（EMPLOYEE_ID）
+
+### カスタマイズポイント2: dbt stagingモデルの作成
+
+**場所**: `dbt/models/staging/stg_<your_process>_2024.sql`
+
+**作成例**（営業プロセスの場合）:
 
 ```sql
--- 基本的なイベントログ抽出クエリの例
+-- 営業プロセスのステージングモデル
 SELECT
-  'your-process-type' as process_type,
-  order_id as case_id,
-  status_name as status,
-  updated_at as event_time,
-  updated_by as employee_id
-FROM order_status_history
-WHERE updated_at >= '2025-01-01'
-ORDER BY order_id, updated_at;
+    'sales-process' as process_type,
+    opportunity_id as case_id,
+    stage_name as activity,
+    stage_changed_at::timestamp as timestamp,
+    owner_id as resource
+FROM {{ ref('raw_sales_2024') }}
+WHERE opportunity_id IS NOT NULL
+    AND stage_name IS NOT NULL
+    AND stage_changed_at IS NOT NULL
 ```
 
-#### データ抽出時の注意点
+**カスタマイズ方法**:
 
-1. **タイムスタンプの形式**: `YYYY-MM-DD HH:MM:SS` 形式で出力
-2. **文字エンコーディング**: UTF-8で保存
-3. **カンマ・改行を含むデータ**: ダブルクォートで囲む
-4. **NULL値の扱い**: 空文字または適切なデフォルト値に置き換え
+1. `stg_order_delivery_2024.sql`をコピー
+2. process_type、カラム名を変更
+3. `stg_all_events.sql`に UNION ALL で追加
 
-## ステップ2: 組織マスターデータの準備
+### カスタマイズポイント3: 組織マスターデータ（組織分析を使う場合）
 
-組織分析を実施する場合、社員と部署のマスターデータが必要です。
+**場所**:
 
-### 2.1 社員マスター
+- `dbt/seeds/master_employees.csv`
+- `dbt/seeds/master_departments.csv`
 
-**ファイル名**: `dbt/seeds/master_employees.csv`
-
-**必須カラム**:
-
-| カラム名        | データ型 | 必須 | 説明                         | 例           |
-| --------------- | -------- | ---- | ---------------------------- | ------------ |
-| `employee_id`   | 文字列   | ✅   | 社員ID（イベントログと一致） | `EMP-001`    |
-| `employee_name` | 文字列   | ✅   | 社員名                       | `Alice`      |
-| `department_id` | 文字列   | ✅   | 部署ID                       | `DEPT-SALES` |
-| `role`          | 文字列   | ✅   | 役割・職種                   | `営業担当`   |
-| `hire_date`     | 日付     | ❌   | 入社日（オプション）         | `2020-04-01` |
-
-**サンプル**:
+**master_employees.csv**:
 
 ```csv
-employee_id,employee_name,department_id,role,hire_date
-EMP-001,Alice,DEPT-SALES,営業担当,2020-04-01
-EMP-002,Bob,DEPT-SALES,営業担当,2021-06-15
-EMP-003,Carol,DEPT-SALES,営業リーダー,2019-01-10
-SYSTEM,システム自動処理,DEPT-IT,システム,
+employee_id,employee_name,role,department_id
+EMP-001,田中太郎,営業,DEPT-SALES
+EMP-002,佐藤花子,経理,DEPT-ACCOUNTING
 ```
 
-### 2.2 部署マスター
+**カスタマイズ方法**:
 
-**ファイル名**: `dbt/seeds/master_departments.csv`
+1. 人事システムからエクスポート
+2. 上記フォーマットに変換
+3. `dbt/seeds/`に配置
+4. `dbt seed`で投入
 
-**必須カラム**:
+### カスタマイズポイント4: 成果データ（成果分析を使う場合）
 
-| カラム名               | データ型 | 必須 | 説明                     | 例              |
-| ---------------------- | -------- | ---- | ------------------------ | --------------- |
-| `department_id`        | 文字列   | ✅   | 部署ID                   | `DEPT-SALES`    |
-| `department_name`      | 文字列   | ✅   | 部署名                   | `営業部`        |
-| `department_type`      | 文字列   | ❌   | 部署タイプ（オプション） | `販売部門`      |
-| `parent_department_id` | 文字列   | ❌   | 親部署ID（オプション）   | `DEPT-SALES-HQ` |
+**場所**: `dbt/seeds/outcome_<your_process>.csv`
 
-**サンプル**:
-
-```csv
-department_id,department_name,department_type,parent_department_id
-DEPT-SALES,営業部,販売部門,
-DEPT-WAREHOUSE,倉庫,業務部門,
-DEPT-DELIVERY,配送部,業務部門,
-DEPT-IT,情報システム部,管理部門,
-```
-
-## ステップ3: 成果データの準備（オプション）
-
-成果分析を実施する場合、ケース別の成果指標データが必要です。
-
-### 3.1 データ形式
-
-**ファイル名**: `dbt/seeds/outcome_<プロセス名>.csv`
-**例**: `dbt/seeds/outcome_order_delivery.csv`
-
-**必須カラム**:
-
-| カラム名       | データ型 | 必須 | 説明                                 | 例                         |
-| -------------- | -------- | ---- | ------------------------------------ | -------------------------- |
-| `process_type` | 文字列   | ✅   | プロセスタイプ（イベントログと一致） | `order-delivery`           |
-| `case_id`      | 文字列   | ✅   | ケースID（イベントログと一致）       | `PO-001`                   |
-| `metric_name`  | 文字列   | ✅   | メトリック名                         | `revenue`, `profit_margin` |
-| `metric_value` | 数値     | ✅   | メトリック値                         | `1200000`, `0.25`          |
-| `metric_unit`  | 文字列   | ✅   | 単位                                 | `JPY`, `percent`, `count`  |
-
-### 3.2 サンプルデータ
+**フォーマット**:
 
 ```csv
 process_type,case_id,metric_name,metric_value,metric_unit
-order-delivery,PO-001,revenue,1200000,JPY
-order-delivery,PO-001,profit_margin,0.25,percent
-order-delivery,PO-001,quantity,50,count
-order-delivery,PO-002,revenue,850000,JPY
-order-delivery,PO-002,profit_margin,0.18,percent
-order-delivery,PO-002,quantity,30,count
+order-delivery,ORD-001,revenue,150000,JPY
+order-delivery,ORD-001,profit_margin,25.5,percent
+order-delivery,ORD-002,revenue,280000,JPY
 ```
 
-### 3.3 よく使われるメトリック例
+**カスタマイズ方法**:
 
-| 業種・プロセス   | メトリック名            | 単位    | 説明             |
-| ---------------- | ----------------------- | ------- | ---------------- |
-| 受注プロセス     | `revenue`               | JPY     | 売上金額         |
-| 受注プロセス     | `profit_margin`         | percent | 利益率           |
-| 受注プロセス     | `customer_satisfaction` | score   | 顧客満足度       |
-| 採用プロセス     | `candidate_score`       | score   | 候補者評価スコア |
-| 採用プロセス     | `time_to_hire`          | days    | 採用期間（日数） |
-| サポートプロセス | `resolution_time`       | hours   | 解決時間         |
-| サポートプロセス | `customer_rating`       | score   | 顧客評価         |
+1. 成果指標を決定（売上、利益率、満足度など）
+2. ケースIDと紐付け
+3. `dbt/models/marts/fct_case_outcomes.sql`に追加
 
-## ステップ4: dbtでのデータ投入
+### カスタマイズポイント5: プロセスタイプの追加
 
-### 4.1 CSVファイルの配置
+**場所**: `backend/src/config.py`（存在しない場合は新規作成不要、データで自動認識）
 
-準備したCSVファイルを `dbt/seeds/` ディレクトリに配置します。
+**現在サポート済み**:
+
+- `order-delivery`: 受注配送
+- `employee-onboarding`: 入社手続
+- `itsm`: ITサポート
+- `billing`: 請求
+- `invoice-approval`: 請求書承認
+- `system-development`: システム開発
+
+**新規追加方法**:
+プロセスタイプは**データドリブン**なので、`fct_event_log`に新しい`process_type`を投入すれば自動的に認識されます。コード変更は不要です。
+
+---
+
+## 📊 実際の導入例
+
+### 例1: 社内の問い合わせ管理プロセス
+
+**データソース**: Redmine/JIRAチケット履歴
+
+**準備するデータ**:
+
+```csv
+case_id,activity,timestamp,employee_id
+TICKET-001,新規登録,2024-01-10 09:00:00,EMP-SUPPORT-01
+TICKET-001,担当者割当,2024-01-10 09:15:00,EMP-MANAGER-01
+TICKET-001,調査開始,2024-01-10 10:00:00,EMP-SUPPORT-01
+TICKET-001,解決,2024-01-11 15:30:00,EMP-SUPPORT-01
+TICKET-001,クローズ,2024-01-12 09:00:00,EMP-SUPPORT-01
+```
+
+**分析観点**:
+
+- **プロセス分析**: どのルートが多いか（新規→解決 vs 新規→エスカレーション→解決）
+- **組織分析**: どの担当者に作業が集中しているか
+- **成果分析**: 解決時間が短いパスはどれか
+
+### 例2: 採用プロセス
+
+**データソース**: ATS（採用管理システム）
+
+**準備するデータ**:
+
+```csv
+case_id,activity,timestamp,employee_id
+APPLICANT-001,応募受付,2024-01-05 10:00:00,EMP-HR-01
+APPLICANT-001,書類選考,2024-01-08 14:00:00,EMP-HR-02
+APPLICANT-001,一次面接,2024-01-15 15:00:00,EMP-MANAGER-01
+APPLICANT-001,最終面接,2024-01-22 16:00:00,EMP-CEO-01
+APPLICANT-001,内定通知,2024-01-25 10:00:00,EMP-HR-01
+```
+
+**成果データ**:
+
+```csv
+process_type,case_id,metric_name,metric_value,metric_unit
+recruitment,APPLICANT-001,time_to_hire_days,20,days
+recruitment,APPLICANT-001,satisfaction_score,4.5,score
+```
+
+**分析観点**:
+
+- **プロセス分析**: 不合格通知がどこで発生しているか
+- **組織分析**: 面接官の作業負荷
+- **成果分析**: 採用リードタイムが短いパスはどれか
+
+---
+
+## ⚡ よくある質問
+
+**Q1: データ量の目安は？**
+A: 最低30ケース以上推奨。1000ケース以上あれば統計的に有意な分析が可能。
+
+**Q2: タイムスタンプが秒単位でない場合は？**
+A: 日次データでもOK。`2024-01-15`のようにタイムスタンプを記録すれば動作します。
+
+**Q3: 複数システムのデータを統合したい場合は？**
+A: 各システムごとに`raw_<system>_2024.csv`を作成し、stagingモデルで統合します。
+
+**Q4: アクティビティ名は日本語でもいい？**
+A: はい、完全対応しています。「受注登録」「入金確認」など日本語推奨です。
+
+**Q5: リアルタイム分析は可能？**
+A: 現在はバッチ処理のみ。日次でdbt runを実行し、Web UIから新規分析を作成してください。
+
+**Q6: データベースをリセットしたい場合は？**
 
 ```bash
-dbt/seeds/
-├── raw_order_events.csv           # あなたのイベントログ
-├── master_employees.csv           # 社員マスター
-├── master_departments.csv         # 部署マスター
-└── outcome_order_delivery.csv     # 成果データ（オプション）
+# コンテナとボリュームを完全削除
+docker compose down -v
+
+# コンテナを再起動（DBが初期化される）
+docker compose up -d
+
+# サンプルデータを再生成
+python scripts/generate_sample_data.py
+
+# dbtでデータ投入
+docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
 ```
 
-### 4.2 dbt設定の確認
+**Q7: 本番環境へのデプロイ方法は？**
+A: 詳細は[README.md](README.md)の「デプロイ手順」セクションを参照してください。GitHub Container Registry (GHCR) のビルド済みイメージを使用することを推奨します。
 
-`dbt/dbt_project.yml` を確認し、新しいseedファイルが認識されているか確認します。
+**Q8: セキュリティ設定は？**
+A: `.env`ファイルでデータベースパスワードを変更してください。本番環境では必ず強力なパスワードを設定し、外部からのアクセスを制限してください。
 
-```yaml
-seeds:
-  open_process_mining:
-    +schema: public
-```
+---
 
-### 4.3 データ投入コマンド
+## 📚 関連ドキュメント
+
+- **[README.md](README.md)**: プロジェクト概要とクイックスタート
+- **[CLAUDE.md](CLAUDE.md)**: 開発者向けガイド（dbt、API、テスト実行方法）
+
+## 🆘 トラブルシューティング
+
+### コンテナが起動しない
 
 ```bash
-# バックエンドコンテナに入る
-docker compose exec backend bash
+# ログを確認
+docker compose logs
 
-# dbtディレクトリに移動
-cd /app/dbt
-
-# seedデータをロード
-dbt seed
-
-# イベントログテーブルを生成
-dbt run
-
-# データの整合性を確認
-dbt test
+# 特定のサービスのログを確認
+docker compose logs backend
+docker compose logs postgres
 ```
 
-### 4.4 データ確認
-
-PostgreSQLに接続してデータが正しく投入されたか確認します。
+### dbt seedでエラーが発生する
 
 ```bash
-# PostgreSQLに接続
-docker compose exec postgres psql -U process_mining -d process_mining_db
+# CSVファイルのフォーマットを確認
+# - UTF-8エンコーディングか
+# - カラム名が正しいか
+# - 必須カラムが全て存在するか
 
-# イベントログを確認
-SELECT process_type, COUNT(*) as event_count
-FROM public.fct_event_log
-GROUP BY process_type;
-
-# 終了
-\q
+# dbt接続確認
+docker compose exec backend bash -c "cd /app/dbt && dbt debug"
 ```
 
-## ステップ5: Web UIでの分析実施
-
-### 5.1 Web UIへのアクセス
-
-ブラウザで <http://localhost:5173> を開きます。
-
-### 5.2 プロセス分析の作成
-
-1. トップ画面の「新規分析を作成」ボタンをクリック
-2. 以下の項目を入力：
-   - **分析名**: わかりやすい名前（例: `受注プロセス_2025年10月`）
-   - **プロセスタイプ**: 準備したプロセスを選択
-   - **分析対象期間の基準**: 必要に応じて期間を絞り込み
-3. 「プレビュー」で対象データを確認
-4. 「分析を実行」をクリック
-
-### 5.3 組織分析の作成
-
-1. 画面上部の「🏢 組織分析」ボタンをクリック
-2. 「新規組織分析を作成」をクリック
-3. 以下の項目を入力：
-   - **分析名**: わかりやすい名前
-   - **プロセスタイプ**: 分析対象のプロセスを選択
-   - **分析対象期間の基準**: 必要に応じて期間を絞り込み
-4. 「分析を実行」をクリック
-5. 分析詳細画面で、社員別・部署別の集計レベルを切り替え可能
-
-### 5.4 成果分析の作成
-
-1. 画面上部の「📊 成果分析」ボタンをクリック
-2. 「新規分析を作成」をクリック
-3. 以下の項目を入力：
-   - **分析名**: わかりやすい名前
-   - **プロセスタイプ**: 分析対象のプロセスを選択
-   - **メトリック**: 分析したい成果指標を選択
-   - **分析タイプ**: パス別成果分析 or セグメント比較
-   - **分析対象期間**: 必要に応じて期間を絞り込み
-4. 「作成」をクリック
-
-## バックアップとリストア
-
-### データベースのバックアップ
-
-#### 方法1: pg_dump を使用（推奨）
+### Web UIに分析結果が表示されない
 
 ```bash
-# PostgreSQLコンテナ内でバックアップを作成
-docker compose exec postgres pg_dump -U process_mining process_mining_db > backup_$(date +%Y%m%d_%H%M%S).sql
+# バックエンドAPIが正常に動作しているか確認
+curl http://localhost:8000/health
 
-# 圧縮してバックアップ
-docker compose exec postgres pg_dump -U process_mining process_mining_db | gzip > backup_$(date +%Y%m%d_%H%M%S).sql.gz
+# データベースにイベントログが存在するか確認
+docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM fct_event_log;"
+
+# 分析結果が存在するか確認
+docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM analysis_results;"
 ```
 
-#### 方法2: データディレクトリのコピー
-
-```bash
-# コンテナを停止
-docker compose stop postgres
-
-# データディレクトリをコピー
-cp -r .data/postgres .data/postgres_backup_$(date +%Y%m%d)
-
-# コンテナを再起動
-docker compose start postgres
-```
-
-### データベースのリストア
-
-#### 方法1: SQL ファイルからリストア
-
-```bash
-# バックアップファイルをコンテナにコピー
-docker cp backup_20251005.sql process-mining-db:/tmp/
-
-# コンテナ内でリストア
-docker compose exec postgres psql -U process_mining -d process_mining_db -f /tmp/backup_20251005.sql
-
-# 圧縮ファイルからリストア
-gunzip -c backup_20251005.sql.gz | docker compose exec -T postgres psql -U process_mining -d process_mining_db
-```
-
-#### 方法2: データディレクトリからリストア
-
-```bash
-# コンテナを停止
-docker compose stop postgres
-
-# 現在のデータを削除
-rm -rf .data/postgres/*
-
-# バックアップからリストア
-cp -r .data/postgres_backup_20251005/* .data/postgres/
-
-# コンテナを再起動
-docker compose start postgres
-```
-
-### 自動バックアップの設定
-
-#### cronによる定期バックアップ（Linux/Mac）
-
-```bash
-# crontabを編集
-crontab -e
-
-# 毎日深夜2時にバックアップを実行（例）
-0 2 * * * cd /path/to/open-process-mining && docker compose exec -T postgres pg_dump -U process_mining process_mining_db | gzip > /backups/process_mining_$(date +\%Y\%m\%d).sql.gz
-```
-
-### バックアップのベストプラクティス
-
-1. **定期的なバックアップ**: 最低でも週1回、本番環境では日次バックアップを推奨
-2. **バックアップの検証**: 定期的にリストアテストを実施
-3. **世代管理**: 最低3世代のバックアップを保持
-4. **オフサイトバックアップ**: クラウドストレージ等への保存を推奨
-5. **バックアップ前の確認**: データの整合性を確認
-
-## トラブルシューティング
-
-### Q1: イベントログが表示されない
-
-**原因と対処法**:
-
-- `dbt run` を実行したか確認
-- `public.fct_event_log` テーブルにデータが存在するか確認
-
-  ```sql
-  SELECT COUNT(*) FROM public.fct_event_log;
-  ```
-
-- `process_type` の値が正しいか確認
-
-### Q2: 組織分析でエラーが出る
-
-**原因と対処法**:
-
-- `master_employees.csv` と `master_departments.csv` が配置されているか確認
-- イベントログの `employee_id` が社員マスターに存在するか確認
-
-  ```sql
-  SELECT DISTINCT e.employee_id
-  FROM public.fct_event_log e
-  LEFT JOIN public.master_employees m ON e.employee_id = m.employee_id
-  WHERE m.employee_id IS NULL;
-  ```
-
-### Q3: 成果分析でメトリックが表示されない
-
-**原因と対処法**:
-
-- `outcome_*.csv` ファイルが配置され、`dbt seed` が実行されているか確認
-- `public.fct_case_outcomes` テーブルにデータが存在するか確認
-
-  ```sql
-  SELECT process_type, metric_name, COUNT(*) as count
-  FROM public.fct_case_outcomes
-  GROUP BY process_type, metric_name;
-  ```
-
-### Q4: 日本語が文字化けする
-
-**原因と対処法**:
-
-- CSVファイルの文字エンコーディングがUTF-8であることを確認
-- Excelで保存した場合、UTF-8 BOM付きになっている可能性があるため、テキストエディタで確認
-
-### Q5: タイムスタンプの形式エラー
-
-**原因と対処法**:
-
-- `event_time` カラムが `YYYY-MM-DD HH:MM:SS` 形式であることを確認
-- 時刻部分が欠けている場合は `00:00:00` を補完
-
-## 次のステップ
-
-データ投入と分析作成が完了したら、以下の高度な機能も試してみてください：
-
-1. **パスフィルタリング**: 低頻度のパスを非表示にして重要なフローに集中
-2. **メトリクス切り替え**: 頻度と待機時間を切り替えてボトルネックを発見
-3. **比較分析**: 改善前後のプロセスを比較して効果を測定
-4. **セグメント比較**: 高成果パスと低成果パスの構造的な違いを分析
-
-詳細な機能説明は [README.md](README.md) を参照してください。
+問題が解決しない場合は、[GitHub Issues](https://github.com/suwa-sh/open-process-mining/issues)で報告してください。

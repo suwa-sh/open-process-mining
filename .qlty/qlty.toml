@@ -42,6 +42,7 @@ exclude_patterns = [
   "**/vendor/**",
   "**/tests/**",
   "**/test_*.py",
+  "scripts/generate_sample_data.py",  # Sample data generation script - bandit B311 is acceptable
 ]
 
 test_patterns = [

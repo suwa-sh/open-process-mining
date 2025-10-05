@@ -58,9 +58,5 @@ CREATE INDEX IF NOT EXISTS idx_org_handover_data ON organization_analysis_result
 CREATE INDEX IF NOT EXISTS idx_org_workload_data ON organization_analysis_results USING gin (workload_data);
 CREATE INDEX IF NOT EXISTS idx_org_performance_data ON organization_analysis_results USING gin (performance_data);
 
--- Create composite indexes for fct_event_log (assuming this table exists from dbt)
-CREATE INDEX IF NOT EXISTS idx_event_log_process_case ON fct_event_log (process_type, case_id);
-CREATE INDEX IF NOT EXISTS idx_event_log_process_timestamp ON fct_event_log (process_type, timestamp);
-
--- Create composite index for fct_case_outcomes (assuming this table exists from dbt)
-CREATE INDEX IF NOT EXISTS idx_case_outcomes_process_metric ON fct_case_outcomes (process_type, metric_name);
+-- Note: Indexes for dbt-managed tables (fct_event_log, fct_case_outcomes) should be created
+-- in dbt models or in a post-hook, not in init.sql, as these tables don't exist at init time.

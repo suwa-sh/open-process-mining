@@ -9,7 +9,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - .data/postgres/:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
@@ -71,3 +71,7 @@ services:
 networks:
   process-mining-network:
     driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local

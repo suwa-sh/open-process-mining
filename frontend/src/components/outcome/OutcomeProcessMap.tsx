@@ -25,7 +25,7 @@ import type {
 
 const nodeTypes = {
   actionNode: ActionNode,
-}
+};
 
 interface OutcomeProcessMapProps {
   analysis: OutcomeAnalysisDetail;
@@ -63,14 +63,18 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
           (d) => d.source === edge.source && d.target === edge.target,
         );
 
-        const waitingTime = edge.data.avg_waiting_time_hours?.toFixed(1) || "0.0";
+        const waitingTime =
+          edge.data.avg_waiting_time_hours?.toFixed(1) || "0.0";
         const baseLabel = `${edge.data.frequency} 件 (${waitingTime}h)`;
 
         if (diff) {
           // 主要な差分テーブルと同じ配色
           const strokeColor = diff.diff_rate > 0 ? "#38a169" : "#e53e3e";
           // 差分の大きさに応じて太さを調整（10% → 太さ3、20% → 太さ5、30% → 太さ7）
-          const diffStrokeWidth = Math.max(2, Math.min(8, 2 + (Math.abs(diff.diff_rate) / 10) * 2));
+          const diffStrokeWidth = Math.max(
+            2,
+            Math.min(8, 2 + (Math.abs(diff.diff_rate) / 10) * 2),
+          );
 
           return {
             ...edge,

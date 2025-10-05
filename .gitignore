@@ -40,7 +40,6 @@ Thumbs.db
 # Docker
 *.log
 
-
+# Project specific
 tmp/
-.data/
 .claude/settings.local.json
