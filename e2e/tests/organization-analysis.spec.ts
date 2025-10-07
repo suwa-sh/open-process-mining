@@ -41,7 +41,7 @@ test.describe("Organization Analysis", () => {
 
     // Select process type
     const processTypeSelect = page.locator("select").first();
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
 
     // Select date filter (all periods) - use label click instead of input
     await page.locator('label:has-text("すべての期間を含める")').click();
@@ -70,7 +70,7 @@ test.describe("Organization Analysis", () => {
       `E2E Agg Test ${Date.now()}`,
     );
     const processTypeSelect = page.locator("select").first();
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
     await page.locator('label:has-text("すべての期間を含める")').click();
     await page.click('button:has-text("分析を実行")');
     await expect(page).toHaveURL(/\/organization\/[a-f0-9-]+/, {
@@ -101,7 +101,7 @@ test.describe("Organization Analysis", () => {
       `E2E Nav Test ${Date.now()}`,
     );
     const processTypeSelect = page.locator("select").first();
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
     await page.locator('label:has-text("すべての期間を含める")').click();
     await page.click('button:has-text("分析を実行")');
     await expect(page).toHaveURL(/\/organization\/[a-f0-9-]+/, {

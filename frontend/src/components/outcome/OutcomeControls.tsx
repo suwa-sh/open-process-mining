@@ -12,6 +12,7 @@ import {
   VStack,
   Divider,
 } from "@chakra-ui/react";
+import { formatMetricValue } from "../../utils/formatMetricValue";
 
 interface OutcomeControlsProps {
   displayMode: "avg" | "median" | "total";
@@ -33,23 +34,6 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
   metricName,
   overallStats,
 }) => {
-  const formatMetricValue = (value: number): string => {
-    if (metricName === "revenue" || metricName === "hiring_cost") {
-      return `¥${Math.round(value).toLocaleString()}`;
-    }
-    if (metricName === "profit_margin") {
-      return `${(value * 100).toFixed(1)}%`;
-    }
-    if (
-      metricName === "quantity" ||
-      metricName === "time_to_hire" ||
-      metricName === "candidate_score"
-    ) {
-      return value.toFixed(1);
-    }
-    return value.toString();
-  };
-
   return (
     <Box p={4} bg="gray.50" borderRadius="md" shadow="md" minW="250px">
       <VStack spacing={4} align="stretch">
@@ -83,21 +67,27 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
                 <Text mt={2} fontWeight="semibold">
                   平均値:
                 </Text>
-                <Text ml={2}>{formatMetricValue(overallStats.avg)}</Text>
+                <Text ml={2}>
+                  {formatMetricValue(overallStats.avg, metricName)}
+                </Text>
                 <Text mt={2} fontWeight="semibold">
                   中央値:
                 </Text>
-                <Text ml={2}>{formatMetricValue(overallStats.median)}</Text>
+                <Text ml={2}>
+                  {formatMetricValue(overallStats.median, metricName)}
+                </Text>
                 <Text mt={2} fontWeight="semibold">
                   合計値:
                 </Text>
-                <Text ml={2}>{formatMetricValue(overallStats.total)}</Text>
+                <Text ml={2}>
+                  {formatMetricValue(overallStats.total, metricName)}
+                </Text>
                 <Text mt={2} fontWeight="semibold">
                   範囲:
                 </Text>
                 <Text ml={2}>
-                  {formatMetricValue(overallStats.min)} -{" "}
-                  {formatMetricValue(overallStats.max)}
+                  {formatMetricValue(overallStats.min, metricName)} -{" "}
+                  {formatMetricValue(overallStats.max, metricName)}
                 </Text>
               </VStack>
             </Box>

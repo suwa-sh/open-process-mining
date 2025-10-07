@@ -616,9 +616,9 @@ def write_process_data(process_name, events, outcomes, event_schema):
     print(f"  ✓ {len(outcomes)} outcome records -> {outcomes_file}")
 
 
-# 6. Order Delivery Process
-def generate_order_delivery_data():
-    """Generate order delivery process data"""
+# 6. Order to Cash Process
+def generate_order_to_cash_data():
+    """Generate order to cash process data"""
     orders = []
     outcomes = []
 
@@ -629,47 +629,91 @@ def generate_order_delivery_data():
         events = []
         current_time = start_time
 
-        # 1. Order registration
-        events.append(("order-delivery", order_id, "受注登録", current_time, "EMP-001"))
+        # 1. Quotation created
+        events.append(("order-to-cash", order_id, "見積作成", current_time, "EMP-001"))
 
-        # 2. Payment verification (90% success, 10% payment error)
-        current_time = add_hours(current_time, random.uniform(0.5, 2))
-        if random.random() < 0.1:
+        # 2. Order registration
+        current_time = add_days(current_time, random.randint(1, 5))
+        events.append(("order-to-cash", order_id, "受注登録", current_time, "EMP-001"))
+
+        # 3. Credit check (85% pass, 15% fail requiring prepayment)
+        current_time = add_hours(current_time, random.uniform(2, 8))
+        if random.random() < 0.15:
             events.append(
-                ("order-delivery", order_id, "入金エラー", current_time, "SYSTEM")
+                ("order-to-cash", order_id, "与信NG", current_time, "EMP-002")
             )
             current_time = add_hours(current_time, random.uniform(4, 24))
-
-        events.append(("order-delivery", order_id, "入金確認", current_time, "SYSTEM"))
-
-        # 3. Inventory check (95% in stock, 5% out of stock)
-        current_time = add_hours(current_time, random.uniform(0.2, 1))
-        if random.random() < 0.05:
             events.append(
-                ("order-delivery", order_id, "在庫不足", current_time, "EMP-003")
+                ("order-to-cash", order_id, "前払い要請", current_time, "EMP-002")
             )
-            # Wait for restocking
-            current_time = add_days(current_time, random.randint(3, 7))
+            current_time = add_days(current_time, random.randint(1, 7))
+            events.append(
+                ("order-to-cash", order_id, "前払い確認", current_time, "SYSTEM")
+            )
+        else:
+            events.append(
+                ("order-to-cash", order_id, "与信審査完了", current_time, "EMP-002")
+            )
 
-        events.append(("order-delivery", order_id, "在庫確認", current_time, "EMP-003"))
-
-        # 4. Picking
+        # 4. Shipment instruction
         current_time = add_hours(current_time, random.uniform(1, 4))
         events.append(
-            ("order-delivery", order_id, "ピッキング", current_time, "EMP-003")
+            ("order-to-cash", order_id, "出荷指示", current_time, "EMP-001")
         )
 
-        # 5. Packing
+        # 5. Inventory check (92% in stock, 8% out of stock)
         current_time = add_hours(current_time, random.uniform(0.5, 2))
-        events.append(("order-delivery", order_id, "梱包", current_time, "EMP-003"))
+        if random.random() < 0.08:
+            events.append(
+                ("order-to-cash", order_id, "在庫不足", current_time, "EMP-003")
+            )
+            # Wait for restocking
+            current_time = add_days(current_time, random.randint(3, 10))
+            events.append(
+                ("order-to-cash", order_id, "入荷待ち", current_time, "EMP-003")
+            )
 
-        # 6. Shipment
+        # 6. Picking
+        current_time = add_hours(current_time, random.uniform(1, 4))
+        events.append(
+            ("order-to-cash", order_id, "ピッキング", current_time, "EMP-003")
+        )
+
+        # 7. Packing
+        current_time = add_hours(current_time, random.uniform(0.5, 2))
+        events.append(("order-to-cash", order_id, "梱包", current_time, "EMP-003"))
+
+        # 8. Shipment
         current_time = add_hours(current_time, random.uniform(0.5, 1))
-        events.append(("order-delivery", order_id, "出荷完了", current_time, "EMP-004"))
+        events.append(("order-to-cash", order_id, "出荷完了", current_time, "EMP-004"))
 
-        # 7. Delivery
-        current_time = add_days(current_time, random.randint(1, 3))
-        events.append(("order-delivery", order_id, "配送完了", current_time, "EMP-005"))
+        # 9. Invoice issued
+        current_time = add_hours(current_time, random.uniform(2, 8))
+        events.append(
+            ("order-to-cash", order_id, "請求書発行", current_time, "EMP-001")
+        )
+
+        # 10. Payment received (10% have payment delays)
+        payment_days = random.randint(15, 45)
+        if random.random() < 0.1:
+            # Payment delayed
+            current_time = add_days(current_time, payment_days + random.randint(5, 15))
+            events.append(
+                ("order-to-cash", order_id, "入金遅延", current_time, "SYSTEM")
+            )
+            current_time = add_days(current_time, random.randint(1, 3))
+            events.append(("order-to-cash", order_id, "督促", current_time, "EMP-002"))
+            current_time = add_days(current_time, random.randint(2, 10))
+        else:
+            current_time = add_days(current_time, payment_days)
+
+        events.append(("order-to-cash", order_id, "入金確認", current_time, "SYSTEM"))
+
+        # 11. Account receivable cleared
+        current_time = add_hours(current_time, random.uniform(1, 8))
+        events.append(
+            ("order-to-cash", order_id, "売掛金消込", current_time, "EMP-002")
+        )
 
         orders.extend(events)
 
@@ -681,21 +725,21 @@ def generate_order_delivery_data():
         outcomes.extend(
             [
                 {
-                    "process_type": "order-delivery",
+                    "process_type": "order-to-cash",
                     "case_id": order_id,
                     "metric_name": "revenue",
                     "metric_value": revenue,
                     "metric_unit": "JPY",
                 },
                 {
-                    "process_type": "order-delivery",
+                    "process_type": "order-to-cash",
                     "case_id": order_id,
                     "metric_name": "profit_margin",
                     "metric_value": round(profit_margin, 3),
                     "metric_unit": "percent",
                 },
                 {
-                    "process_type": "order-delivery",
+                    "process_type": "order-to-cash",
                     "case_id": order_id,
                     "metric_name": "quantity",
                     "metric_value": quantity,
@@ -877,16 +921,16 @@ def main():
         "Each process type will be saved to separate CSV files with source-specific schemas.\n"
     )
 
-    # Order Delivery - Source system columns
-    print("- Order Delivery (50 orders)")
-    order_events, order_outcomes = generate_order_delivery_data()
+    # Order to Cash - Source system columns
+    print("- Order to Cash (50 orders)")
+    order_events, order_outcomes = generate_order_to_cash_data()
     order_schema = {
         "order_id": 1,
         "order_status": 2,
         "status_changed_at": 3,
         "employee_id": 4,
     }
-    write_process_data("order_delivery", order_events, order_outcomes, order_schema)
+    write_process_data("order_to_cash", order_events, order_outcomes, order_schema)
 
     # Employee Onboarding - Source system columns
     print("\n- Employee Onboarding (40 candidates)")
@@ -949,7 +993,7 @@ def main():
 
     print("\nDone! Generated 6 process types with source-specific CSV schemas.")
     print("\nSource schemas:")
-    print("  - Order Delivery: order_id, order_status, status_changed_at, employee_id")
+    print("  - Order to Cash: order_id, order_status, status_changed_at, employee_id")
     print(
         "  - Employee Onboarding: candidate_id, recruitment_status, status_changed_at, responsible_person"
     )

@@ -110,20 +110,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **重要**: dbtは`public`スキーマにテーブルを作成します。
 
-| 列名                 | データ型  | 説明                                                      |
-| -------------------- | --------- | --------------------------------------------------------- |
-| process_type         | varchar   | プロセスタイプ（例: order-delivery, employee-onboarding） |
-| case_id              | varchar   | ケースID（例: order_id）                                  |
-| activity             | varchar   | アクティビティ名（例: 受注登録、入金確認）                |
-| timestamp            | timestamp | イベント発生日時                                          |
-| resource             | varchar   | リソース（employee_idのエイリアス）                       |
-| employee_id          | varchar   | 社員ID（例: EMP-001）                                     |
-| employee_name        | varchar   | 社員名（例: Tanaka）                                      |
-| role                 | varchar   | 役割（例: Sales）                                         |
-| department_id        | varchar   | 部署ID（例: DEPT-HR）                                     |
-| department_name      | varchar   | 部署名（例: 人事部）                                      |
-| department_type      | varchar   | 部署タイプ（例: 管理部門）                                |
-| parent_department_id | varchar   | 親部署ID                                                  |
+| 列名                 | データ型  | 説明                                                     |
+| -------------------- | --------- | -------------------------------------------------------- |
+| process_type         | varchar   | プロセスタイプ（例: order-to-cash, employee-onboarding） |
+| case_id              | varchar   | ケースID（例: order_id）                                 |
+| activity             | varchar   | アクティビティ名（例: 受注登録、入金確認）               |
+| timestamp            | timestamp | イベント発生日時                                         |
+| resource             | varchar   | リソース（employee_idのエイリアス）                      |
+| employee_id          | varchar   | 社員ID（例: EMP-001）                                    |
+| employee_name        | varchar   | 社員名（例: Tanaka）                                     |
+| role                 | varchar   | 役割（例: Sales）                                        |
+| department_id        | varchar   | 部署ID（例: DEPT-HR）                                    |
+| department_name      | varchar   | 部署名（例: 人事部）                                     |
+| department_type      | varchar   | 部署タイプ（例: 管理部門）                               |
+| parent_department_id | varchar   | 親部署ID                                                 |
 
 ### Analysis Result Schema (`public.analysis_results`)
 
@@ -230,7 +230,7 @@ docker compose logs frontend -f
 python scripts/generate_sample_data.py
 
 # 6つのプロセスタイプ、合計約4,200イベント + 1,350件の成果データを生成
-# - order-delivery: 50件の注文、約356イベント
+# - order-to-cash: 50件の注文、約500-600イベント
 # - employee-onboarding: 40人の候補者、約165イベント
 # - itsm: 150件のインシデント、約981イベント
 # - billing: 180件の請求、約1,011イベント
@@ -273,7 +273,7 @@ dbt test
 # 重要: PYTHONPATH環境変数を設定してモジュールパスを解決
 
 # 受注から配送プロセスの分析
-PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から配送_2025-10" --process-type "order-delivery"
+PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "受注から入金_2025-10" --process-type "order-to-cash"
 
 # 従業員採用プロセスの分析
 PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "従業員採用_2025-10" --process-type "employee-onboarding"
@@ -337,20 +337,32 @@ $SQLFLUFF fix backend/sql/init.sql --dialect postgres
 ### テストの実行
 
 ```bash
-# すべてのテスト（backend + E2E）
+# すべてのテスト（backend + frontend + E2E）
 make test-all
 
 # バックエンドテストのみ
 make test
 
+# フロントエンドテストのみ
+make test-frontend
+
 # E2Eテストのみ
 make test-e2e
 
 # 個別に実行する場合
-docker compose exec backend pytest tests/   # バックエンドテスト
-docker compose exec frontend npm run test   # フロントエンドテスト
-cd e2e && npm test                           # E2Eテスト（Playwright）
+docker compose exec backend pytest tests/         # バックエンドテスト
+docker compose exec frontend npm test             # フロントエンドテスト
+docker compose exec frontend npm test -- --coverage  # カバレッジ付き
+cd e2e && npm test                                # E2Eテスト（Playwright）
 ```
+
+**フロントエンドユニットテスト:**
+
+- **テストフレームワーク**: Jest with @swc/jest (TypeScriptトランスパイル)
+- **テストファイル配置**: `frontend/src/**/*.test.ts(x)`
+- **テストパターン**: Given/When/Thenパターン
+- **メソッド名形式**: `テスト対象メソッド名_XXXの場合_YYYであること`
+- **カバレッジ**: `--coverage`オプションで取得可能
 
 **E2Eテスト初回セットアップ:**
 
@@ -369,6 +381,12 @@ npm run test:headed   # ブラウザ表示モード
 npm run test:debug    # デバッグモード（ステップ実行）
 ```
 
+**テストファイル構成:**
+
+- `backend/tests/`: バックエンドユニットテスト（pytest）
+- `frontend/src/**/*.test.ts(x)`: フロントエンドユニットテスト（Jest）
+- `e2e/tests/`: E2Eテスト（Playwright）
+
 ### APIの動作確認
 
 ```bash
@@ -384,8 +402,8 @@ curl http://localhost:8000/process/analyses/{analysis_id}
 curl "http://localhost:8000/process/compare?before={id1}&after={id2}"
 
 # 組織分析API
-curl "http://localhost:8000/organization/handover?process_type=order-delivery&aggregation_level=employee"
-curl "http://localhost:8000/organization/workload?process_type=order-delivery&aggregation_level=department"
+curl "http://localhost:8000/organization/handover?process_type=order-to-cash&aggregation_level=employee"
+curl "http://localhost:8000/organization/workload?process_type=order-to-cash&aggregation_level=department"
 curl http://localhost:8000/organization/analyses
 ```
 
@@ -602,7 +620,7 @@ useEffect(() => {
 ### ModuleNotFoundError (run_analysis.py)
 
 - `PYTHONPATH=/app`を設定してから実行
-- 例: `PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "test" --process-type "order-delivery"`
+- 例: `PYTHONPATH=/app python /app/src/analysis/run_analysis.py --name "test" --process-type "order-to-cash"`
 
 ### テーブルが見つからないエラー (fct_event_log)
 

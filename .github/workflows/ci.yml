@@ -82,6 +82,13 @@ jobs:
         working-directory: ./frontend
         run: npm test -- --coverage
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./frontend/coverage/coverage-final.json
+          flags: frontend
+          name: frontend-coverage
+
   lint:
     name: Lint and Format Check (qlty)
     runs-on: ubuntu-latest

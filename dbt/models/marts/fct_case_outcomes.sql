@@ -7,7 +7,7 @@ SELECT
     metric_name,
     metric_value::numeric,
     metric_unit
-FROM {{ ref('outcome_order_delivery_2024') }}
+FROM {{ ref('outcome_order_to_cash_2024') }}
 
 UNION ALL
 

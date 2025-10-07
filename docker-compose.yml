@@ -65,6 +65,8 @@ services:
       retries: 5
     volumes:
       - ./frontend/src:/app/src
+      - ./frontend/jest.config.cjs:/app/jest.config.cjs
+      - ./frontend/package.json:/app/package.json
     networks:
       - process-mining-network
 

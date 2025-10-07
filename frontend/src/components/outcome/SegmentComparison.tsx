@@ -29,6 +29,7 @@ import {
 } from "@chakra-ui/react";
 import { OutcomeAnalysisDetail } from "../../types/outcome";
 import OutcomeProcessMap from "./OutcomeProcessMap";
+import { formatMetricValue } from "../../utils/formatMetricValue";
 
 interface SegmentComparisonProps {
   analysis: OutcomeAnalysisDetail;
@@ -39,22 +40,6 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
   const { high_segment, low_segment, differences, summary } =
     analysis.result_data;
   const metricName = analysis.metric_name;
-
-  const formatMetricValue = (value: number): string => {
-    const roundedValue = Math.round(value * 100) / 100; // 小数点以下2桁で丸め
-    const formattedNumber = roundedValue.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-    if (metricName === "revenue" || metricName === "hiring_cost") {
-      return `¥${formattedNumber}`;
-    }
-    if (metricName === "profit_margin") {
-      return `${formattedNumber}%`;
-    }
-    return formattedNumber;
-  };
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -99,31 +84,46 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                 <Stat>
                   <StatLabel>平均値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(high_segment.outcome_stats.avg)}
+                    {formatMetricValue(
+                      high_segment.outcome_stats.avg,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>中央値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(high_segment.outcome_stats.median)}
+                    {formatMetricValue(
+                      high_segment.outcome_stats.median,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>合計値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(high_segment.outcome_stats.total)}
+                    {formatMetricValue(
+                      high_segment.outcome_stats.total,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最小値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(high_segment.outcome_stats.min)}
+                    {formatMetricValue(
+                      high_segment.outcome_stats.min,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最大値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(high_segment.outcome_stats.max)}
+                    {formatMetricValue(
+                      high_segment.outcome_stats.max,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
               </SimpleGrid>
@@ -145,31 +145,46 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
                 <Stat>
                   <StatLabel>平均値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(low_segment.outcome_stats.avg)}
+                    {formatMetricValue(
+                      low_segment.outcome_stats.avg,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>中央値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(low_segment.outcome_stats.median)}
+                    {formatMetricValue(
+                      low_segment.outcome_stats.median,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>合計値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(low_segment.outcome_stats.total)}
+                    {formatMetricValue(
+                      low_segment.outcome_stats.total,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最小値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(low_segment.outcome_stats.min)}
+                    {formatMetricValue(
+                      low_segment.outcome_stats.min,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
                 <Stat>
                   <StatLabel>最大値</StatLabel>
                   <StatNumber>
-                    {formatMetricValue(low_segment.outcome_stats.max)}
+                    {formatMetricValue(
+                      low_segment.outcome_stats.max,
+                      metricName,
+                    )}
                   </StatNumber>
                 </Stat>
               </SimpleGrid>
@@ -296,7 +311,9 @@ const SegmentComparison: React.FC<SegmentComparisonProps> = ({ analysis }) => {
               </HStack>
               <HStack>
                 <Text fontWeight="bold">閾値:</Text>
-                <Text>{formatMetricValue(summary.threshold_value)}</Text>
+                <Text>
+                  {formatMetricValue(summary.threshold_value, metricName)}
+                </Text>
               </HStack>
             </VStack>
           </CardBody>

@@ -24,16 +24,12 @@ models:
 
 seeds:
   open_process_mining:
-    raw_order_delivery:
+    raw_order_to_cash_2024:
       +schema: public
       +column_types:
         order_id: varchar
-        order_date: timestamp
-        customer_name: varchar
-        product: varchar
-        quantity: integer
-        amount: integer
-        status: varchar
+        order_status: varchar
+        status_changed_at: timestamp
         employee_id: varchar
 
     raw_employee_onboarding:
@@ -62,7 +58,7 @@ seeds:
         department_type: varchar
         parent_department_id: varchar
 
-    outcome_order_delivery:
+    outcome_order_to_cash_2024:
       +schema: public
       +column_types:
         process_type: varchar

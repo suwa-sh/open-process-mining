@@ -26,7 +26,7 @@ class TestGetAvailableMetrics:
         mock_db.execute.return_value = mock_result
 
         # Execute
-        metrics = get_available_metrics(mock_db, "order-delivery")
+        metrics = get_available_metrics(mock_db, "order-to-cash")
 
         # Verify
         assert len(metrics) == 3
@@ -91,7 +91,7 @@ class TestAnalyzePathOutcome:
         mock_read_sql.side_effect = read_sql_side_effect
 
         # Execute
-        result = analyze_path_outcome(mock_db, "order-delivery", "revenue", None)
+        result = analyze_path_outcome(mock_db, "order-to-cash", "revenue", None)
 
         # Verify structure
         assert "nodes" in result
@@ -125,7 +125,7 @@ class TestAnalyzePathOutcome:
             "date_to": "2025-01-31",
         }
         result = analyze_path_outcome(
-            mock_db, "order-delivery", "revenue", filter_config
+            mock_db, "order-to-cash", "revenue", filter_config
         )
 
         # Verify result structure
@@ -175,7 +175,7 @@ class TestAnalyzeSegmentComparison:
 
         # Execute
         result = analyze_segment_comparison(
-            mock_db, "order-delivery", "revenue", "top25", None, None
+            mock_db, "order-to-cash", "revenue", "top25", None, None
         )
 
         # Verify structure
@@ -207,7 +207,7 @@ class TestAnalyzeSegmentComparison:
 
         # Execute with threshold
         result = analyze_segment_comparison(
-            mock_db, "order-delivery", "revenue", "threshold", 1500.0, None
+            mock_db, "order-to-cash", "revenue", "threshold", 1500.0, None
         )
 
         # Verify structure

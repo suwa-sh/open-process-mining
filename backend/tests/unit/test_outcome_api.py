@@ -25,7 +25,7 @@ class TestOutcomeMetricsEndpoint:
         ]
 
         # Execute
-        response = client.get("/outcome/metrics?process_type=order-delivery")
+        response = client.get("/outcome/metrics?process_type=order-to-cash")
 
         # Verify
         assert response.status_code == 200
@@ -59,7 +59,7 @@ class TestOutcomeAnalysesEndpoint:
             {
                 "analysis_id": "test-id-1",
                 "analysis_name": "Test Analysis 1",
-                "process_type": "order-delivery",
+                "process_type": "order-to-cash",
                 "metric_name": "revenue",
                 "analysis_type": "path-outcome",
                 "created_at": "2025-10-05T00:00:00",
@@ -83,7 +83,7 @@ class TestOutcomeAnalysesEndpoint:
 
         # Execute
         response = client.get(
-            "/outcome/analyses?process_type=order-delivery&metric_name=revenue"
+            "/outcome/analyses?process_type=order-to-cash&metric_name=revenue"
         )
 
         # Verify
@@ -101,7 +101,7 @@ class TestOutcomeAnalysisByIdEndpoint:
         mock_get_analysis.return_value = {
             "analysis_id": "test-id-1",
             "analysis_name": "Test Analysis",
-            "process_type": "order-delivery",
+            "process_type": "order-to-cash",
             "metric_name": "revenue",
             "analysis_type": "path-outcome",
             "created_at": "2025-10-05T00:00:00",
@@ -148,7 +148,7 @@ class TestCreateOutcomeAnalysisEndpoint:
             "/outcome/analyze",
             json={
                 "analysis_name": "New Analysis",
-                "process_type": "order-delivery",
+                "process_type": "order-to-cash",
                 "metric_name": "revenue",
                 "analysis_type": "path-outcome",
             },
@@ -171,7 +171,7 @@ class TestCreateOutcomeAnalysisEndpoint:
             "/outcome/analyze",
             json={
                 "analysis_name": "Filtered Analysis",
-                "process_type": "order-delivery",
+                "process_type": "order-to-cash",
                 "metric_name": "revenue",
                 "analysis_type": "path-outcome",
                 "date_from": "2025-01-01",
@@ -190,7 +190,7 @@ class TestCreateOutcomeAnalysisEndpoint:
             "/outcome/analyze",
             json={
                 "analysis_name": "Invalid Analysis",
-                "process_type": "order-delivery",
+                "process_type": "order-to-cash",
             },
         )
 

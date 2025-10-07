@@ -41,7 +41,7 @@ test.describe("Process Analysis", () => {
 
     // Select process type (should have options from sample data)
     const processTypeSelect = page.locator("select").first();
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
 
     // Select date filter option (all periods) - use label click
     await page.locator('label:has-text("すべての期間を含める")').click();
@@ -71,7 +71,7 @@ test.describe("Process Analysis", () => {
       `E2E Map Test ${Date.now()}`,
     );
     const processTypeSelect = page.locator("select").first();
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
     await page.locator('label:has-text("すべての期間を含める")').click();
     await expect(page.locator("text=対象ケース数")).toBeVisible({
       timeout: 10000,
@@ -99,7 +99,7 @@ test.describe("Process Analysis", () => {
       `E2E Nav Test ${Date.now()}`,
     );
     const processTypeSelect = page.locator("select").first();
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
     await page.locator('label:has-text("すべての期間を含める")').click();
     await expect(page.locator("text=対象ケース数")).toBeVisible({
       timeout: 10000,

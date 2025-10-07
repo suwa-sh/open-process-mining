@@ -27,6 +27,7 @@ import {
 import { useOutcomeStore } from "../../stores/outcomeStore";
 import OutcomeProcessMap from "./OutcomeProcessMap";
 import SegmentComparison from "./SegmentComparison";
+import { formatMetricValue } from "../../utils/formatMetricValue";
 
 const OutcomeAnalysisDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -82,22 +83,6 @@ const OutcomeAnalysisDetail: React.FC = () => {
 
   const overallStats = currentAnalysis.result_data.summary.overall_stats;
   const metricName = currentAnalysis.metric_name;
-
-  const formatMetricValue = (value: number): string => {
-    const roundedValue = Math.round(value * 100) / 100; // 小数点以下2桁で丸め
-    const formattedNumber = roundedValue.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-
-    if (metricName === "revenue" || metricName === "hiring_cost") {
-      return `¥${formattedNumber}`;
-    }
-    if (metricName === "profit_margin") {
-      return `${formattedNumber}%`;
-    }
-    return formattedNumber;
-  };
 
   return (
     <Container maxW="container.xl" py={8}>
@@ -164,7 +149,7 @@ const OutcomeAnalysisDetail: React.FC = () => {
                           {path.source} → {path.target}
                         </Text>
                         <Text fontWeight="bold" color="green.700">
-                          {formatMetricValue(path.avg_outcome)}
+                          {formatMetricValue(path.avg_outcome, metricName)}
                         </Text>
                       </HStack>
                     </Box>

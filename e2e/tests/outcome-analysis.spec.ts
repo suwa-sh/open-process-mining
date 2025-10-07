@@ -47,7 +47,7 @@ test.describe("Outcome Analysis", () => {
       .locator('label:has-text("プロセスタイプ")')
       .locator("..")
       .locator("select");
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
 
     // Wait for metrics to load (wait for select to have options)
     const metricSelect = page
@@ -75,7 +75,7 @@ test.describe("Outcome Analysis", () => {
     await expect(page).toHaveURL(/\/outcome\/[a-f0-9-]+/, { timeout: 30000 });
 
     // Verify analysis detail page (check for process type and back button)
-    await expect(page.locator("text=プロセス: order-delivery")).toBeVisible({
+    await expect(page.locator("text=プロセス: order-to-cash")).toBeVisible({
       timeout: 10000,
     });
     await expect(
@@ -102,7 +102,7 @@ test.describe("Outcome Analysis", () => {
       .locator('label:has-text("プロセスタイプ")')
       .locator("..")
       .locator("select");
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
 
     // Wait for metrics to load
     const metricSelect = page
@@ -132,7 +132,7 @@ test.describe("Outcome Analysis", () => {
     await page.waitForTimeout(2000);
 
     // Verify segment comparison page
-    await expect(page.locator("text=プロセス: order-delivery")).toBeVisible({
+    await expect(page.locator("text=プロセス: order-to-cash")).toBeVisible({
       timeout: 10000,
     });
     await expect(page.locator('h2:has-text("高成果群")').first()).toBeVisible();
@@ -150,7 +150,7 @@ test.describe("Outcome Analysis", () => {
       .locator('label:has-text("プロセスタイプ")')
       .locator("..")
       .locator("select");
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
     const metricSelect = page
       .locator('label:has-text("メトリック")')
       .locator("..")
@@ -162,7 +162,7 @@ test.describe("Outcome Analysis", () => {
     await expect(page).toHaveURL(/\/outcome\/[a-f0-9-]+/, { timeout: 30000 });
 
     // Wait for initial load
-    await expect(page.locator("text=プロセス: order-delivery")).toBeVisible({
+    await expect(page.locator("text=プロセス: order-to-cash")).toBeVisible({
       timeout: 10000,
     });
 
@@ -191,7 +191,7 @@ test.describe("Outcome Analysis", () => {
       .locator('label:has-text("プロセスタイプ")')
       .locator("..")
       .locator("select");
-    await processTypeSelect.selectOption("order-delivery");
+    await processTypeSelect.selectOption("order-to-cash");
     const metricSelect = page
       .locator('label:has-text("メトリック")')
       .locator("..")

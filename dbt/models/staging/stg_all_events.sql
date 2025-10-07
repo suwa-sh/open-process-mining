@@ -7,7 +7,7 @@ SELECT
     activity,
     timestamp,
     resource
-FROM {{ ref('stg_order_delivery_2024') }}
+FROM {{ ref('stg_order_to_cash_2024') }}
 
 UNION ALL
 

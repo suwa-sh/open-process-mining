@@ -26,6 +26,7 @@ dbt/dbt_modules/
 node_modules/
 dist/
 .vite/
+coverage/
 
 # IDE
 .vscode/
