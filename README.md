@@ -64,12 +64,12 @@ graph TB
     DBT -->|Transform & Load| DB
 ```
 
-| 名前          | 説明                                                                                |
-| ------------- | ----------------------------------------------------------------------------------- |
-| Frontend      | React + TypeScript製のSPA。プロセスマップ、組織分析、成果分析を可視化               |
-| Backend API   | FastAPI製のREST API。分析結果の作成・取得、組織分析、成果分析のエンドポイントを提供 |
-| Database      | PostgreSQL。イベントログ、分析結果、マスターデータを格納                            |
-| Data Pipeline | dbt Core。ソースシステムから収集したデータをイベントログテーブルに変換するデータパイプライン<br/>※サンプルとして、収集後の想定データをCSVで取り込むようにしています。               |
+| 名前          | 説明                                                                                                                                                                  |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend      | React + TypeScript製のSPA。プロセスマップ、組織分析、成果分析を可視化                                                                                                 |
+| Backend API   | FastAPI製のREST API。分析結果の作成・取得、組織分析、成果分析のエンドポイントを提供                                                                                   |
+| Database      | PostgreSQL。イベントログ、分析結果、マスターデータを格納                                                                                                              |
+| Data Pipeline | dbt Core。ソースシステムから収集したデータをイベントログテーブルに変換するデータパイプライン<br/>※サンプルとして、収集後の想定データをCSVで取り込むようにしています。 |
 
 ### 技術スタック
 
@@ -248,6 +248,7 @@ FastAPIが自動生成するOpenAPI（Swagger UI）ドキュメントで全エ�
 - **OpenAPI JSON**: <http://localhost:8000/openapi.json>
 
 **主要API**:
+
 - `/health`: ヘルスチェック
 - `/process/*`: プロセス分析API
 - `/organization/*`: 組織分析API
@@ -328,15 +329,15 @@ npx playwright install chromium
 
 ### 主要テーブル
 
-| テーブル | 説明 |
-|---------|------|
-| `fct_event_log` | プロセスマイニング用イベントログ（組織情報含む） |
-| `fct_case_outcomes` | ケース別成果データ（メトリック値） |
-| `analysis_results` | プロセス分析結果（JSON形式） |
-| `organization_analysis_results` | 組織分析結果（JSON形式） |
-| `outcome_analysis_results` | 成果分析結果（JSON形式） |
-| `master_employees` | 社員マスター |
-| `master_departments` | 部署マスター |
+| テーブル                        | 説明                                             |
+| ------------------------------- | ------------------------------------------------ |
+| `fct_event_log`                 | プロセスマイニング用イベントログ（組織情報含む） |
+| `fct_case_outcomes`             | ケース別成果データ（メトリック値）               |
+| `process_analysis_results`      | プロセス分析結果（JSON形式）                     |
+| `organization_analysis_results` | 組織分析結果（JSON形式）                         |
+| `outcome_analysis_results`      | 成果分析結果（JSON形式）                         |
+| `master_employees`              | 社員マスター                                     |
+| `master_departments`            | 部署マスター                                     |
 
 詳細なスキーマ情報とデータベース操作は [USAGE.md](USAGE.md) を参照してください。
 
@@ -363,7 +364,7 @@ docker compose exec postgres psql -U process_mining -d process_mining_db
 SELECT process_type, COUNT(*) FROM fct_event_log GROUP BY process_type;
 
 -- 分析結果一覧
-SELECT analysis_id, analysis_name, created_at FROM analysis_results;
+SELECT analysis_id, analysis_name, created_at FROM process_analysis_results;
 ```
 
 ## ドキュメント

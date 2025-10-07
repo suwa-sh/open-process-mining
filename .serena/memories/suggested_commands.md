@@ -80,7 +80,7 @@ docker compose exec -T postgres psql -U process_mining -d process_mining_db -c \
 
 # View analysis results
 docker compose exec -T postgres psql -U process_mining -d process_mining_db -c \
-  "SELECT analysis_id, analysis_name, created_at FROM analysis_results;"
+  "SELECT analysis_id, analysis_name, created_at FROM process_analysis_results;"
 
 # Complete database reset
 docker compose down -v

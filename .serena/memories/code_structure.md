@@ -60,7 +60,7 @@ open-process-mining/
 
 - **fct_event_log**: Process mining event log with organization info
 - **fct_case_outcomes**: Case-level outcome metrics
-- **analysis_results**: Process analysis results (JSONB)
+- **process_analysis_results**: Process analysis results (JSONB)
 - **organization_analysis_results**: Organization analysis results (JSONB)
 - **outcome_analysis_results**: Outcome analysis results (JSONB)
 - **master_employees**: Employee master data

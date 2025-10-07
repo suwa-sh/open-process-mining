@@ -10,9 +10,9 @@ from src.db.connection import Base
 
 
 class AnalysisResultORM(Base):
-    """SQLAlchemy ORM model for analysis_results table"""
+    """SQLAlchemy ORM model for process_analysis_results table"""
 
-    __tablename__ = "analysis_results"
+    __tablename__ = "process_analysis_results"
 
     analysis_id = Column(PGUUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     analysis_name = Column(String(255), nullable=False)

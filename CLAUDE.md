@@ -28,7 +28,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - イベントログからDFG (Directly-Follows Graph)を生成
 - パフォーマンス指標を計算（頻度、平均待機時間）
-- 結果をReact Flow互換のJSON形式で`analysis_results`テーブルに保存
+- 結果をReact Flow互換のJSON形式で`process_analysis_results`テーブルに保存
 
 **APIサーバー (`main.py` - FastAPI)**:
 
@@ -125,7 +125,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | department_type      | varchar   | 部署タイプ（例: 管理部門）                               |
 | parent_department_id | varchar   | 親部署ID                                                 |
 
-### Analysis Result Schema (`public.analysis_results`)
+### Process Analysis Result Schema (`public.process_analysis_results`)
 
 | 列名          | データ型  | 説明                       |
 | ------------- | --------- | -------------------------- |

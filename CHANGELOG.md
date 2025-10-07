@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- データベーステーブル名を変更: `analysis_results` → `process_analysis_results`（他の分析テーブルとの命名規則統一のため）
+
 ## [1.0.0] - 2025-10-05
 
 ### Added
@@ -122,7 +128,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `fct_event_log`: プロセスイベントログ（組織情報含む）
 - `fct_case_outcomes`: ケース別成果データ
-- `analysis_results`: プロセス分析結果
+- `process_analysis_results`: プロセス分析結果
 - `organization_analysis_results`: 組織分析結果
 - `outcome_analysis_results`: 成果分析結果
 - `master_employees`: 社員マスター

@@ -63,7 +63,7 @@ Web UI上で「新規作成」ボタンから分析を作成：
 **1. プロセス分析**:
 
 - プロセスタイプ: `order-delivery`（受注配送）
-- 分析名: 「受注配送プロセス_2024」
+- 分析名: 「受注配送プロセス\_2024」
 - 「作成」ボタンをクリック
 - → プロセスマップが表示される
 
@@ -334,7 +334,7 @@ curl http://localhost:8000/health
 docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM fct_event_log;"
 
 # 分析結果が存在するか確認
-docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM analysis_results;"
+docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM process_analysis_results;"
 ```
 
 問題が解決しない場合は、[GitHub Issues](https://github.com/suwa-sh/open-process-mining/issues)で報告してください。

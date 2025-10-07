@@ -1,7 +1,7 @@
 -- Initialize database schema
 
--- Create analysis_results table
-CREATE TABLE IF NOT EXISTS analysis_results (
+-- Create process_analysis_results table
+CREATE TABLE IF NOT EXISTS process_analysis_results (
     analysis_id UUID PRIMARY KEY,
     analysis_name VARCHAR(255) NOT NULL,
     process_type VARCHAR(100),
@@ -10,10 +10,10 @@ CREATE TABLE IF NOT EXISTS analysis_results (
 );
 
 -- Create index on created_at for sorting
-CREATE INDEX IF NOT EXISTS idx_analysis_results_created_at ON analysis_results (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_process_analysis_results_created_at ON process_analysis_results (created_at DESC);
 
 -- Create index on process_type for filtering
-CREATE INDEX IF NOT EXISTS idx_analysis_results_process_type ON analysis_results (process_type);
+CREATE INDEX IF NOT EXISTS idx_process_analysis_results_process_type ON process_analysis_results (process_type);
 
 -- Create organization_analysis_results table
 CREATE TABLE IF NOT EXISTS organization_analysis_results (
@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_outcome_analysis_metric_name ON outcome_analysis_
 CREATE INDEX IF NOT EXISTS idx_outcome_result_data ON outcome_analysis_results USING gin (result_data);
 
 -- Create JSONB indexes for performance
-CREATE INDEX IF NOT EXISTS idx_analysis_result_data ON analysis_results USING gin (result_data);
+CREATE INDEX IF NOT EXISTS idx_process_analysis_result_data ON process_analysis_results USING gin (result_data);
 CREATE INDEX IF NOT EXISTS idx_org_handover_data ON organization_analysis_results USING gin (handover_data);
 CREATE INDEX IF NOT EXISTS idx_org_workload_data ON organization_analysis_results USING gin (workload_data);
 CREATE INDEX IF NOT EXISTS idx_org_performance_data ON organization_analysis_results USING gin (performance_data);
