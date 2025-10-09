@@ -1,4 +1,4 @@
-.PHONY: help fmt lint test test-frontend test-e2e test-all clean
+.PHONY: help fmt lint test test-dbt test-frontend test-e2e test-all clean
 
 # Default target - show help
 help:
@@ -6,9 +6,10 @@ help:
 	@echo "  make fmt           - Format all code (qlty fmt)"
 	@echo "  make lint          - Run all linters (qlty check + sqlfluff)"
 	@echo "  make test          - Run backend tests (pytest)"
+	@echo "  make test-dbt      - Run dbt tests"
 	@echo "  make test-frontend - Run frontend tests (jest)"
 	@echo "  make test-e2e      - Run E2E tests (Playwright)"
-	@echo "  make test-all      - Run all tests (backend + frontend + E2E)"
+	@echo "  make test-all      - Run all tests (backend + dbt + frontend + E2E)"
 	@echo "  make clean         - Clean up generated files and caches"
 
 # Format all code
@@ -32,6 +33,11 @@ test:
 	@echo "Running backend tests..."
 	docker compose exec backend pytest tests/
 
+# Run dbt tests
+test-dbt:
+	@echo "Running dbt tests..."
+	docker compose exec backend bash -c "cd /app/dbt && dbt test"
+
 # Run frontend tests
 test-frontend:
 	@echo "Running frontend tests..."
@@ -43,7 +49,7 @@ test-e2e:
 	cd e2e && npm test
 
 # Run all tests
-test-all: test test-frontend test-e2e
+test-all: test test-dbt test-frontend test-e2e
 	@echo ""
 	@echo "All tests completed!"
 

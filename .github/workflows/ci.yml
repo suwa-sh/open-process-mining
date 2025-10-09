@@ -140,6 +140,59 @@ jobs:
           sqlfluff lint backend/sql/ --dialect postgres --format github-annotation || true
           sqlfluff lint dbt/models/ --dialect postgres --config .sqlfluff --format github-annotation || true
 
+  dbt-test:
+    name: dbt Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: process_mining
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: process_mining_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dbt and dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install dbt-core dbt-postgres
+
+      - name: Generate sample data
+        run: |
+          cd scripts
+          pip install pandas
+          python generate_sample_data.py
+
+      - name: Run dbt
+        working-directory: ./dbt
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: process_mining
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: process_mining_db
+        run: |
+          dbt deps
+          dbt seed
+          dbt run
+          dbt test
+
   docker-build:
     name: Docker Build Test
     runs-on: ubuntu-latest

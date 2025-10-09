@@ -264,7 +264,24 @@ dbt run
 
 # データテストの実行
 dbt test
+
+# テスト結果の詳細表示（失敗したケースを保存）
+dbt test --store-failures
 ```
+
+**dbt テストの種類**:
+
+- **NOT NULL テスト**: 必須カラムに NULL がないことを確認
+- **Unique テスト**: 一意性制約の検証
+- **Relationships テスト**: 外部キー制約の検証（employee_id, department_id）
+- **Accepted Values テスト**: 許可された値のみが格納されていることを確認（process_type, metric_unit）
+- **Unique Combination テスト**: 複合キーの一意性検証
+
+**テスト対象**:
+
+- `stg_all_events`: 統合ステージングテーブル
+- `fct_event_log`: イベントログファクトテーブル（全6プロセスタイプ）
+- `fct_case_outcomes`: 成果データテーブル
 
 ### 分析の実行
 
@@ -289,6 +306,9 @@ make fmt
 
 # すべてのlinterを実行（qlty check + sqlfluff）
 make lint
+
+# dbt テストの実行
+make test-dbt
 
 # 個別に実行する場合
 qlty check                          # すべてのlinter/formatterを実行

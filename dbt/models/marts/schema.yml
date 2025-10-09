@@ -5,11 +5,19 @@ models:
     description: "Event log fact table in standard process mining format"
     columns:
       - name: process_type
-        description: "Process type identifier (e.g., 'order-delivery', 'employee-onboarding')"
+        description: "Process type identifier"
         tests:
           - not_null
           - accepted_values:
-              values: ["order-delivery", "employee-onboarding"]
+              values:
+                [
+                  "order-to-cash",
+                  "employee-onboarding",
+                  "itsm",
+                  "billing",
+                  "invoice-approval",
+                  "system-development",
+                ]
       - name: case_id
         description: "Case identifier (process instance)"
         tests:
@@ -23,9 +31,21 @@ models:
         tests:
           - not_null
       - name: resource
-        description: "Resource that performed the activity"
+        description: "Resource that performed the activity (employee_id)"
         tests:
           - not_null
+      - name: employee_id
+        description: "Employee ID"
+        tests:
+          - relationships:
+              to: ref('master_employees')
+              field: employee_id
+      - name: department_id
+        description: "Department ID"
+        tests:
+          - relationships:
+              to: ref('master_departments')
+              field: department_id
     tests:
       - dbt_utils.unique_combination_of_columns:
           combination_of_columns:
@@ -33,3 +53,55 @@ models:
             - case_id
             - timestamp
             - activity
+
+  - name: fct_case_outcomes
+    description: "Case-level outcome metrics for all process types"
+    columns:
+      - name: process_type
+        description: "Process type identifier"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                [
+                  "order-to-cash",
+                  "employee-onboarding",
+                  "itsm",
+                  "billing",
+                  "invoice-approval",
+                  "system-development",
+                ]
+      - name: case_id
+        description: "Case identifier"
+        tests:
+          - not_null
+      - name: metric_name
+        description: "Metric name (e.g., revenue, profit_margin)"
+        tests:
+          - not_null
+      - name: metric_value
+        description: "Metric value (numeric)"
+        tests:
+          - not_null
+      - name: metric_unit
+        description: "Metric unit (e.g., JPY, percent, count)"
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                [
+                  "JPY",
+                  "percent",
+                  "count",
+                  "days",
+                  "hours",
+                  "score",
+                  "points",
+                  "weight",
+                ]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - process_type
+            - case_id
+            - metric_name

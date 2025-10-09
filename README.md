@@ -289,6 +289,32 @@ cd /app
 npm run dev
 ```
 
+### dbt テスト（データ品質保証）
+
+dbt テストは、データパイプラインの品質を保証します。
+
+```bash
+# dbt テストを実行
+make test-dbt
+
+# または個別に実行
+docker compose exec backend bash -c "cd /app/dbt && dbt test"
+```
+
+**テスト内容**:
+
+- **NULL チェック**: 必須カラムに NULL がないことを確認
+- **一意性制約**: プライマリキーの一意性を検証
+- **参照整合性**: 外部キー制約の検証（employee_id, department_id）
+- **値の妥当性**: process_type, metric_unit の許可値チェック
+- **複合キー**: 複数カラムの組み合わせの一意性検証
+
+**テスト対象**:
+
+- `stg_all_events`: 統合ステージングテーブル
+- `fct_event_log`: イベントログファクトテーブル（全6プロセスタイプ）
+- `fct_case_outcomes`: 成果データテーブル
+
 ### E2Eテスト（Playwright）
 
 E2Eテストは、実際のブラウザを使ってアプリケーション全体の動作を検証します。
