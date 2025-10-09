@@ -9,15 +9,16 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                [
-                  "order-to-cash",
-                  "employee-onboarding",
-                  "itsm",
-                  "billing",
-                  "invoice-approval",
-                  "system-development",
-                ]
+              arguments:
+                values:
+                  [
+                    "order-to-cash",
+                    "employee-onboarding",
+                    "itsm",
+                    "billing",
+                    "invoice-approval",
+                    "system-development",
+                  ]
       - name: case_id
         description: "Case identifier (process instance)"
         tests:
@@ -38,21 +39,24 @@ models:
         description: "Employee ID"
         tests:
           - relationships:
-              to: ref('master_employees')
-              field: employee_id
+              arguments:
+                to: ref('master_employees')
+                field: employee_id
       - name: department_id
         description: "Department ID"
         tests:
           - relationships:
-              to: ref('master_departments')
-              field: department_id
+              arguments:
+                to: ref('master_departments')
+                field: department_id
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - process_type
-            - case_id
-            - timestamp
-            - activity
+          arguments:
+            combination_of_columns:
+              - process_type
+              - case_id
+              - timestamp
+              - activity
 
   - name: fct_case_outcomes
     description: "Case-level outcome metrics for all process types"
@@ -62,15 +66,16 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                [
-                  "order-to-cash",
-                  "employee-onboarding",
-                  "itsm",
-                  "billing",
-                  "invoice-approval",
-                  "system-development",
-                ]
+              arguments:
+                values:
+                  [
+                    "order-to-cash",
+                    "employee-onboarding",
+                    "itsm",
+                    "billing",
+                    "invoice-approval",
+                    "system-development",
+                  ]
       - name: case_id
         description: "Case identifier"
         tests:
@@ -88,20 +93,22 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                [
-                  "JPY",
-                  "percent",
-                  "count",
-                  "days",
-                  "hours",
-                  "score",
-                  "points",
-                  "weight",
-                ]
+              arguments:
+                values:
+                  [
+                    "JPY",
+                    "percent",
+                    "count",
+                    "days",
+                    "hours",
+                    "score",
+                    "points",
+                    "weight",
+                  ]
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - process_type
-            - case_id
-            - metric_name
+          arguments:
+            combination_of_columns:
+              - process_type
+              - case_id
+              - metric_name

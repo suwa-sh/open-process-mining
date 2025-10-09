@@ -9,15 +9,16 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                [
-                  "order-to-cash",
-                  "employee-onboarding",
-                  "itsm",
-                  "billing",
-                  "invoice-approval",
-                  "system-development",
-                ]
+              arguments:
+                values:
+                  [
+                    "order-to-cash",
+                    "employee-onboarding",
+                    "itsm",
+                    "billing",
+                    "invoice-approval",
+                    "system-development",
+                  ]
       - name: case_id
         description: "Case identifier"
         tests:
