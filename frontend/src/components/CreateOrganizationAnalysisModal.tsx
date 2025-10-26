@@ -1,27 +1,29 @@
 import React, { useState, useEffect } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
+  TextField,
+  Select,
+  MenuItem,
   FormControl,
   FormLabel,
-  Input,
-  Select,
   Radio,
   RadioGroup,
-  Text,
-  VStack,
-  HStack,
+  FormControlLabel,
+  Typography,
+  Stack,
   Box,
-  useToast,
-} from "@chakra-ui/react";
+  IconButton,
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import InfoIcon from "@mui/icons-material/Info";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { createOrganizationAnalysis, getProcessTypes } from "../api/client";
 import { FilterMode } from "../types";
+import { useSnackbar } from "../hooks/useSnackbar";
 
 interface CreateOrganizationAnalysisModalProps {
   isOpen: boolean;
@@ -39,7 +41,9 @@ const CreateOrganizationAnalysisModal: React.FC<
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast();
+  const [isAnalysisNameManuallySet, setIsAnalysisNameManuallySet] =
+    useState(false);
+  const { showSnackbar } = useSnackbar();
 
   // プロセスタイプ一覧を取得
   useEffect(() => {
@@ -60,34 +64,22 @@ const CreateOrganizationAnalysisModal: React.FC<
     }
   }, [isOpen]);
 
-  // プロセスタイプ変更時に分析名を自動生成
+  // プロセスタイプ変更時に分析名を自動生成（手動入力されていない場合のみ）
   useEffect(() => {
-    if (processType) {
+    if (processType && !isAnalysisNameManuallySet) {
       const today = new Date().toISOString().split("T")[0];
       setAnalysisName(`${processType}_${today}`);
     }
-  }, [processType]);
+  }, [processType, isAnalysisNameManuallySet]);
 
   const handleSubmit = async () => {
     if (!analysisName || !processType) {
-      toast({
-        title: "入力エラー",
-        description: "分析名とプロセスタイプを入力してください",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSnackbar("分析名とプロセスタイプを入力してください", "error");
       return;
     }
 
     if (filterMode !== "all" && (!dateFrom || !dateTo)) {
-      toast({
-        title: "入力エラー",
-        description: "日付範囲を指定してください",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSnackbar("日付範囲を指定してください", "error");
       return;
     }
 
@@ -102,135 +94,189 @@ const CreateOrganizationAnalysisModal: React.FC<
         date_to: filterMode !== "all" ? dateTo : undefined,
       });
 
-      toast({
-        title: "組織分析を作成しました",
-        description: `${result.node_count}ノード、${result.resource_count}リソースの分析を作成しました`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSnackbar(
+        `${result.node_count}ノード、${result.resource_count}リソースの分析を作成しました`,
+        "success",
+      );
 
       onSuccess(result.analysis_id);
       onClose();
     } catch (error: any) {
-      toast({
-        title: "分析実行エラー",
-        description: error.response?.data?.detail || "分析の実行に失敗しました",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      showSnackbar(
+        error.response?.data?.detail || "分析の実行に失敗しました",
+        "error",
+        5000,
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>新規組織分析を作成</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack spacing={4} align="stretch">
-            <FormControl isRequired>
-              <FormLabel>分析名</FormLabel>
-              <Input
-                value={analysisName}
-                onChange={(e) => setAnalysisName(e.target.value)}
-                placeholder="例: employee-onboarding_組織分析_2025-10-04"
-              />
-            </FormControl>
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      disableEnforceFocus
+      disableAutoFocus
+      disableRestoreFocus
+    >
+      <DialogTitle>
+        新規組織分析を作成
+        <IconButton
+          aria-label="close"
+          onClick={onClose}
+          sx={{ position: "absolute", right: 8, top: 8 }}
+        >
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
+      <DialogContent>
+        <Stack spacing={3} sx={{ mt: 1 }}>
+          <FormControl required>
+            <FormLabel>分析名</FormLabel>
+            <TextField
+              fullWidth
+              value={analysisName}
+              onChange={(e) => {
+                setAnalysisName(e.target.value);
+                setIsAnalysisNameManuallySet(true);
+              }}
+              placeholder="例: employee-onboarding_組織分析_2025-10-04"
+              size="small"
+            />
+          </FormControl>
 
-            <FormControl isRequired>
-              <FormLabel>プロセスタイプ</FormLabel>
-              <Select
-                value={processType}
-                onChange={(e) => setProcessType(e.target.value)}
-              >
-                {processTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-            </FormControl>
+          <FormControl required>
+            <FormLabel>プロセスタイプ</FormLabel>
+            <Select
+              id="process-type-select"
+              fullWidth
+              value={processType}
+              onChange={(e) => setProcessType(e.target.value)}
+              size="small"
+              SelectDisplayProps={{
+                "data-testid": "process-type-select-trigger",
+              }}
+            >
+              {processTypes.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
+          <FormControl>
+            <FormLabel>分析対象期間の基準</FormLabel>
+            <RadioGroup
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value as FilterMode)}
+            >
+              <Stack>
+                <FormControlLabel
+                  value="all"
+                  control={<Radio />}
+                  label="すべての期間を含める"
+                />
+                <FormControlLabel
+                  value="case_start"
+                  control={<Radio />}
+                  label="ケース開始日で絞り込む（推奨）"
+                />
+                <FormControlLabel
+                  value="case_end"
+                  control={<Radio />}
+                  label="ケース完了日で絞り込む"
+                />
+              </Stack>
+            </RadioGroup>
+          </FormControl>
+
+          {filterMode !== "all" && (
             <FormControl>
-              <FormLabel>分析対象期間の基準</FormLabel>
-              <RadioGroup
-                value={filterMode}
-                onChange={(value) => setFilterMode(value as FilterMode)}
+              <FormLabel>対象期間</FormLabel>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <TextField
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  size="small"
+                  fullWidth
+                />
+                <Typography>〜</Typography>
+                <TextField
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  size="small"
+                  fullWidth
+                />
+              </Stack>
+              <Stack
+                direction="row"
+                spacing={0.5}
+                alignItems="center"
+                sx={{ mt: 1 }}
               >
-                <VStack align="start">
-                  <Radio value="all">すべての期間を含める</Radio>
-                  <Radio value="case_start">
-                    ケース開始日で絞り込む（推奨）
-                  </Radio>
-                  <Radio value="case_end">ケース完了日で絞り込む</Radio>
-                </VStack>
-              </RadioGroup>
+                <InfoIcon fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  期間外のイベントもケースに含まれる場合があります。
+                </Typography>
+              </Stack>
             </FormControl>
+          )}
 
-            {filterMode !== "all" && (
-              <FormControl>
-                <FormLabel>対象期間</FormLabel>
-                <HStack>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                  />
-                  <Text>〜</Text>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                  />
-                </HStack>
-                <Text fontSize="sm" color="gray.600" mt={2}>
-                  ℹ️ 期間外のイベントもケースに含まれる場合があります。
-                </Text>
-              </FormControl>
-            )}
-
-            <Box borderWidth={1} borderRadius="md" p={4} bg="purple.50">
-              <Text fontWeight="bold" mb={2} color="purple.900">
-                📊 組織分析について
-              </Text>
-              <VStack
-                align="start"
-                spacing={1}
-                fontSize="sm"
-                color="purple.800"
-              >
-                <Text>• ハンドオーバー分析: 誰と誰が連携しているか</Text>
-                <Text>• 作業負荷分析: 誰の作業量が多いか</Text>
-                <Text>• パフォーマンス分析: 誰の処理時間が長いか</Text>
-              </VStack>
-            </Box>
-          </VStack>
-        </ModalBody>
-
-        <ModalFooter>
-          <Button
-            variant="ghost"
-            mr={3}
-            onClick={onClose}
-            isDisabled={isSubmitting}
+          <Box
+            sx={{
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              p: 2,
+              bgcolor: "#f3e8ff",
+            }}
           >
-            キャンセル
-          </Button>
-          <Button
-            colorScheme="purple"
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-          >
-            分析を実行
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
+              <AssessmentIcon fontSize="small" sx={{ color: "#6b21a8" }} />
+              <Typography fontWeight="bold" sx={{ color: "#6b21a8" }}>
+                組織分析について
+              </Typography>
+            </Stack>
+            <Stack spacing={0.5}>
+              <Typography variant="body2" sx={{ color: "#7c3aed" }}>
+                • ハンドオーバー分析: 誰と誰が連携しているか
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#7c3aed" }}>
+                • 作業負荷分析: 誰の作業量が多いか
+              </Typography>
+              <Typography variant="body2" sx={{ color: "#7c3aed" }}>
+                • パフォーマンス分析: 誰の処理時間が長いか
+              </Typography>
+            </Stack>
+          </Box>
+        </Stack>
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={onClose} disabled={isSubmitting}>
+          キャンセル
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          variant="contained"
+          color="secondary"
+          disabled={isSubmitting}
+        >
+          分析を実行
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

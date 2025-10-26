@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import {
   ReactFlow,
   Background,
@@ -6,16 +6,16 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  Node as FlowNode,
+  Edge as FlowEdge,
 } from "@xyflow/react";
 import {
   Box,
-  Flex,
-  Spinner,
-  Center,
-  VStack,
-  Text,
+  CircularProgress,
+  Typography,
   Button,
-} from "@chakra-ui/react";
+  Stack,
+} from "@mui/material";
 import "@xyflow/react/dist/style.css";
 
 import ActionNode from "./ActionNode";
@@ -37,8 +37,8 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
   const { data, loading, error } = useAnalysisData(analysisId);
   const { displayMetric, pathThreshold, setGraphData } = useStore();
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
 
   useEffect(() => {
     if (data) {
@@ -134,63 +134,83 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
         const savedPosition = positionMap.get(node.id);
         return {
           ...node,
-          position: savedPosition || node.position, // 既存の位置があれば使用
+          position: savedPosition || node.position || { x: 0, y: 0 }, // 既存の位置があれば使用
         };
-      });
+      }) as any;
     });
   }, [filteredNodes, setNodes]);
 
   useEffect(() => {
-    setEdges(filteredEdges);
+    setEdges(filteredEdges as any);
   }, [filteredEdges, setEdges]);
 
   if (loading || isLayouting) {
     return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Spinner size="xl" color="blue.500" />
-          <Text>プロセスマップを読み込んでいます...</Text>
-        </VStack>
-      </Center>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress size={60} />
+          <Typography>プロセスマップを読み込んでいます...</Typography>
+        </Stack>
+      </Box>
     );
   }
 
   if (error) {
     return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Text color="red.500" fontSize="lg">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Stack spacing={2} alignItems="center">
+          <Typography color="error" fontSize="1.125rem">
             {error}
-          </Text>
-          <Button onClick={onBack} colorScheme="blue">
+          </Typography>
+          <Button onClick={onBack} variant="contained" color="primary">
             一覧に戻る
           </Button>
-        </VStack>
-      </Center>
+        </Stack>
+      </Box>
     );
   }
 
   if (!data) {
     return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Text>データがありません</Text>
-          <Button onClick={onBack} colorScheme="blue">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Stack spacing={2} alignItems="center">
+          <Typography>データがありません</Typography>
+          <Button onClick={onBack} variant="contained" color="primary">
             一覧に戻る
           </Button>
-        </VStack>
-      </Center>
+        </Stack>
+      </Box>
     );
   }
 
   return (
-    <Flex h="100vh" direction="column">
-      <Box p={4} borderBottom="1px" borderColor="gray.200">
-        <Button onClick={onBack} size="sm" colorScheme="blue" variant="outline">
+    <Box display="flex" flexDirection="column" height="100vh">
+      <Box p={2} borderBottom={1} borderColor="grey.300">
+        <Button
+          onClick={onBack}
+          size="small"
+          variant="outlined"
+          color="primary"
+        >
           ← 一覧に戻る
         </Button>
       </Box>
-      <Flex flex={1}>
+      <Box display="flex" flex={1}>
         <Box flex={1}>
           <ReactFlow
             nodes={nodes}
@@ -206,11 +226,17 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
             <MiniMap />
           </ReactFlow>
         </Box>
-        <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+        <Box
+          width="300px"
+          p={2}
+          bgcolor="white"
+          borderLeft={1}
+          borderColor="grey.300"
+        >
           <Controls leadTimeStats={data.lead_time_stats} />
         </Box>
-      </Flex>
-    </Flex>
+      </Box>
+    </Box>
   );
 };
 

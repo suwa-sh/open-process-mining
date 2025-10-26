@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Heading, VStack, HStack, Text, Badge } from "@chakra-ui/react";
+import { Box, Typography, Stack, Chip } from "@mui/material";
 import { PerformanceAnalysis } from "../types";
 
 interface PerformanceChartProps {
@@ -9,95 +9,125 @@ interface PerformanceChartProps {
 const PerformanceChart: React.FC<PerformanceChartProps> = ({ data }) => {
   if (data.performance.length === 0) {
     return (
-      <Box p={4}>
-        <Text color="gray.500">データがありません</Text>
+      <Box sx={{ p: 2 }}>
+        <Typography color="text.secondary">データがありません</Typography>
       </Box>
     );
   }
 
   // Helper function to get color based on performance ranking
   const getColorScheme = (index: number) => {
-    if (index === 0) return "red"; // Slowest (bottleneck)
-    if (index === 1) return "orange";
-    if (index === 2) return "yellow";
-    return "green";
+    if (index === 0) return "error"; // Slowest (bottleneck)
+    if (index === 1) return "warning";
+    if (index === 2) return "warning";
+    return "success";
   };
 
   return (
-    <Box width="100%" p={4}>
-      <Heading size="md" mb={4}>
+    <Box sx={{ width: "100%", p: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         パフォーマンス分析（処理時間）
-      </Heading>
-      <VStack spacing={4} align="stretch">
+      </Typography>
+      <Stack spacing={2}>
         {data.performance.map((item, index) => (
           <Box
             key={item.resource_id}
-            p={4}
-            borderWidth="1px"
-            borderRadius="md"
-            bg={index === 0 ? "red.50" : "white"}
-            borderColor={index === 0 ? "red.300" : "gray.200"}
+            sx={{
+              p: 2,
+              border: 1,
+              borderColor: index === 0 ? "error.light" : "divider",
+              borderRadius: 1,
+              bgcolor: index === 0 ? "#fef2f2" : "background.paper",
+            }}
           >
-            <HStack justify="space-between" mb={2}>
-              <VStack align="start" spacing={0}>
-                <HStack>
-                  <Text fontWeight="bold" fontSize="lg">
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
+              <Stack spacing={0}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography fontWeight="bold" fontSize="1.125rem">
                     {index + 1}. {item.resource_name}
-                  </Text>
+                  </Typography>
                   {index === 0 && (
-                    <Badge colorScheme="red" fontSize="xs">
-                      要注意
-                    </Badge>
+                    <Chip
+                      label="要注意"
+                      color="error"
+                      size="small"
+                      sx={{ height: 20, fontSize: "0.75rem" }}
+                    />
                   )}
-                </HStack>
-                <Text fontSize="sm" color="gray.600">
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
                   ID: {item.resource_id}
-                </Text>
-              </VStack>
-              <VStack align="end" spacing={0}>
-                <Text
-                  fontSize="2xl"
+                </Typography>
+              </Stack>
+              <Stack alignItems="flex-end" spacing={0}>
+                <Typography
+                  fontSize="1.5rem"
                   fontWeight="bold"
-                  color={`${getColorScheme(index)}.600`}
+                  color={`${getColorScheme(index)}.main`}
                 >
                   {item.avg_duration_hours.toFixed(1)}h
-                </Text>
-                <Text fontSize="sm" color="gray.600">
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
                   平均処理時間
-                </Text>
-              </VStack>
-            </HStack>
+                </Typography>
+              </Stack>
+            </Stack>
 
-            <VStack align="stretch" spacing={2} mt={3}>
-              <HStack justify="space-between" fontSize="sm">
-                <Text color="gray.600">中央値:</Text>
-                <Text fontWeight="semibold">
+            <Stack spacing={1} sx={{ mt: 1.5 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                sx={{ fontSize: "0.875rem" }}
+              >
+                <Typography color="text.secondary">中央値:</Typography>
+                <Typography fontWeight="600">
                   {item.median_duration_hours.toFixed(1)} 時間
-                </Text>
-              </HStack>
-              <HStack justify="space-between" fontSize="sm">
-                <Text color="gray.600">合計処理時間:</Text>
-                <Text fontWeight="semibold">
+                </Typography>
+              </Stack>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                sx={{ fontSize: "0.875rem" }}
+              >
+                <Typography color="text.secondary">合計処理時間:</Typography>
+                <Typography fontWeight="600">
                   {item.total_duration_hours.toFixed(1)} 時間
-                </Text>
-              </HStack>
-              <HStack justify="space-between" fontSize="sm">
-                <Text color="gray.600">処理件数:</Text>
-                <Text fontWeight="semibold">{item.activity_count} 件</Text>
-              </HStack>
-            </VStack>
+                </Typography>
+              </Stack>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                sx={{ fontSize: "0.875rem" }}
+              >
+                <Typography color="text.secondary">処理件数:</Typography>
+                <Typography fontWeight="600">
+                  {item.activity_count} 件
+                </Typography>
+              </Stack>
+            </Stack>
 
             {index === 0 && (
-              <Box mt={3} p={2} bg="red.100" borderRadius="md">
-                <Text fontSize="xs" color="red.800">
+              <Box
+                sx={{
+                  mt: 1.5,
+                  p: 1,
+                  bgcolor: "#fee2e2",
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="caption" sx={{ color: "#991b1b" }}>
                   ⚠️
                   この担当者/部署の処理時間が最も長くなっています。ボトルネックの可能性があります。
-                </Text>
+                </Typography>
               </Box>
             )}
           </Box>
         ))}
-      </VStack>
+      </Stack>
     </Box>
   );
 };

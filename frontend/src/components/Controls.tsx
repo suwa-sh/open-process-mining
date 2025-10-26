@@ -3,15 +3,14 @@ import {
   Box,
   Radio,
   RadioGroup,
-  Stack,
+  FormControlLabel,
   Slider,
-  SliderTrack,
-  SliderFilledTrack,
-  SliderThumb,
-  Text,
-  VStack,
+  Typography,
+  Stack,
   Divider,
-} from "@chakra-ui/react";
+} from "@mui/material";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import StarIcon from "@mui/icons-material/Star";
 import { useStore } from "../store/useStore";
 import { LeadTimeStats } from "../types";
 
@@ -24,21 +23,37 @@ const Controls: React.FC<ControlsProps> = ({ leadTimeStats }) => {
     useStore();
 
   return (
-    <Box p={4} bg="gray.50" borderRadius="md" shadow="md" minW="250px">
-      <VStack spacing={4} align="stretch">
+    <Box
+      sx={{
+        p: 2,
+        bgcolor: "grey.50",
+        borderRadius: 1,
+        boxShadow: 1,
+        minWidth: "250px",
+      }}
+    >
+      <Stack spacing={2}>
         <Box>
-          <Text fontWeight="bold" mb={2}>
+          <Typography fontWeight="bold" sx={{ mb: 1 }}>
             表示メトリクス
-          </Text>
+          </Typography>
           <RadioGroup
             value={displayMetric}
-            onChange={(value) =>
-              setDisplayMetric(value as "frequency" | "performance")
+            onChange={(e) =>
+              setDisplayMetric(e.target.value as "frequency" | "performance")
             }
           >
-            <Stack direction="column" spacing={2}>
-              <Radio value="frequency">頻度</Radio>
-              <Radio value="performance">平均待機時間</Radio>
+            <Stack spacing={1}>
+              <FormControlLabel
+                value="frequency"
+                control={<Radio />}
+                label="頻度"
+              />
+              <FormControlLabel
+                value="performance"
+                control={<Radio />}
+                label="平均待機時間"
+              />
             </Stack>
           </RadioGroup>
         </Box>
@@ -46,87 +61,103 @@ const Controls: React.FC<ControlsProps> = ({ leadTimeStats }) => {
         <Divider />
 
         <Box>
-          <Text fontWeight="bold" mb={2}>
+          <Typography fontWeight="bold" sx={{ mb: 1 }}>
             パスフィルター閾値
-          </Text>
+          </Typography>
           <Slider
             value={pathThreshold}
-            onChange={setPathThreshold}
+            onChange={(_, value) => setPathThreshold(value as number)}
             min={0}
             max={1}
             step={0.01}
-            colorScheme="blue"
-          >
-            <SliderTrack>
-              <SliderFilledTrack />
-            </SliderTrack>
-            <SliderThumb />
-          </Slider>
-          <Text fontSize="sm" color="gray.600" mt={1}>
+            color="primary"
+            valueLabelDisplay="auto"
+            valueLabelFormat={(value) => `${(value * 100).toFixed(0)}%`}
+          />
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             最大頻度の {(pathThreshold * 100).toFixed(0)}% 以上のパスを表示
-          </Text>
+          </Typography>
         </Box>
 
         {leadTimeStats && leadTimeStats.lead_time_hours.median !== null && (
           <>
             <Divider />
             <Box>
-              <Text fontWeight="bold" mb={2}>
-                📊 リードタイム統計
-              </Text>
-              <VStack align="start" spacing={1} fontSize="sm">
-                <Text fontWeight="semibold">全ケース:</Text>
-                <Text ml={2}>ケース数: {leadTimeStats.case_count}件</Text>
-                <Text ml={2}>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
+                <AssessmentIcon fontSize="small" />
+                <Typography fontWeight="bold">リードタイム統計</Typography>
+              </Stack>
+              <Stack spacing={0.5} sx={{ fontSize: "0.875rem" }}>
+                <Typography fontWeight="600">全ケース:</Typography>
+                <Typography sx={{ ml: 1 }}>
+                  ケース数: {leadTimeStats.case_count}件
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
                   最小: {leadTimeStats.lead_time_hours.min?.toFixed(1)}時間
-                </Text>
-                <Text ml={2}>
-                  中央値: {leadTimeStats.lead_time_hours.median?.toFixed(1)}時間
-                </Text>
-                <Text ml={2}>
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
+                  中央値: {leadTimeStats.lead_time_hours.median?.toFixed(1)}
+                  時間
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
                   最大: {leadTimeStats.lead_time_hours.max?.toFixed(1)}時間
-                </Text>
+                </Typography>
 
                 {leadTimeStats.happy_path &&
                   leadTimeStats.happy_path.case_count > 0 && (
                     <>
-                      <Text mt={2} fontWeight="semibold">
-                        ✨ ハッピーパス:
-                      </Text>
-                      <Text ml={2} fontSize="xs" color="gray.600">
+                      <Stack
+                        direction="row"
+                        spacing={0.5}
+                        alignItems="center"
+                        sx={{ mt: 1 }}
+                      >
+                        <StarIcon fontSize="small" />
+                        <Typography fontWeight="600">ハッピーパス:</Typography>
+                      </Stack>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ ml: 1 }}
+                      >
                         ({leadTimeStats.happy_path.path.join(" → ")})
-                      </Text>
-                      <Text ml={2}>
+                      </Typography>
+                      <Typography sx={{ ml: 1 }}>
                         ケース数: {leadTimeStats.happy_path.case_count}件
-                      </Text>
-                      <Text ml={2}>
+                      </Typography>
+                      <Typography sx={{ ml: 1 }}>
                         最小:{" "}
                         {leadTimeStats.happy_path.lead_time_hours.min?.toFixed(
                           1,
                         )}
                         時間
-                      </Text>
-                      <Text ml={2}>
+                      </Typography>
+                      <Typography sx={{ ml: 1 }}>
                         中央値:{" "}
                         {leadTimeStats.happy_path.lead_time_hours.median?.toFixed(
                           1,
                         )}
                         時間
-                      </Text>
-                      <Text ml={2}>
+                      </Typography>
+                      <Typography sx={{ ml: 1 }}>
                         最大:{" "}
                         {leadTimeStats.happy_path.lead_time_hours.max?.toFixed(
                           1,
                         )}
                         時間
-                      </Text>
+                      </Typography>
                     </>
                   )}
-              </VStack>
+              </Stack>
             </Box>
           </>
         )}
-      </VStack>
+      </Stack>
     </Box>
   );
 };

@@ -6,9 +6,11 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  Node as FlowNode,
+  Edge as FlowEdge,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Box, Text, Spinner, Center, Flex } from "@chakra-ui/react";
+import { Box, Typography, CircularProgress } from "@mui/material";
 import { HandoverAnalysis, Node, Edge } from "../types";
 import { useLayout } from "../hooks/useLayout";
 import { useStore } from "../store/useStore";
@@ -58,8 +60,8 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
     "DOWN",
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
 
   // Filter and style edges based on threshold and metric
   const filteredEdges = useMemo(() => {
@@ -125,48 +127,70 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
 
   // Update React Flow state
   useEffect(() => {
-    setNodes(filteredNodes);
+    setNodes(filteredNodes as any);
   }, [filteredNodes, setNodes]);
 
   useEffect(() => {
-    setEdges(filteredEdges);
+    setEdges(filteredEdges as any);
   }, [filteredEdges, setEdges]);
 
   if (isLayouting) {
     return (
-      <Flex h="100%" direction="row">
+      <Box display="flex" height="100%" flexDirection="row">
         <Box flex={1}>
-          <Center h="100%">
-            <Spinner size="xl" color="blue.500" />
-            <Text ml={4} color="gray.600">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
+            <CircularProgress size={60} />
+            <Typography ml={2} color="text.secondary">
               レイアウトを計算中...
-            </Text>
-          </Center>
+            </Typography>
+          </Box>
         </Box>
-        <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+        <Box
+          width="300px"
+          p={2}
+          bgcolor="white"
+          borderLeft={1}
+          borderColor="grey.300"
+        >
           <Controls />
         </Box>
-      </Flex>
+      </Box>
     );
   }
 
   if (nodes.length === 0) {
     return (
-      <Flex h="100%" direction="row">
+      <Box display="flex" height="100%" flexDirection="row">
         <Box flex={1}>
-          <Center h="100%">
-            <Text color="gray.500">データがありません</Text>
-          </Center>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
+            <Typography color="text.secondary">データがありません</Typography>
+          </Box>
         </Box>
-        <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+        <Box
+          width="300px"
+          p={2}
+          bgcolor="white"
+          borderLeft={1}
+          borderColor="grey.300"
+        >
           <Controls />
         </Box>
-      </Flex>
+      </Box>
     );
   }
 
   return (
-    <Flex h="100%" direction="row">
+    <Box display="flex" height="100%" flexDirection="row">
       <Box flex={1}>
         <ReactFlow
           nodes={nodes}
@@ -182,10 +206,16 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
           <MiniMap />
         </ReactFlow>
       </Box>
-      <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+      <Box
+        width="300px"
+        p={2}
+        bgcolor="white"
+        borderLeft={1}
+        borderColor="grey.300"
+      >
         <Controls />
       </Box>
-    </Flex>
+    </Box>
   );
 };
 

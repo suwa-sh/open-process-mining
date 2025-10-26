@@ -10,8 +10,10 @@ import {
   MiniMap,
   useNodesState,
   useEdgesState,
+  Node as FlowNode,
+  Edge as FlowEdge,
 } from "@xyflow/react";
-import { Box, Spinner, Center, Text, Flex } from "@chakra-ui/react";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import "@xyflow/react/dist/style.css";
 
 import ActionNode from "../ActionNode";
@@ -43,12 +45,12 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
   highlightDifferences,
 }) => {
   const { layoutedNodes, isLayouting } = useLayout(
-    analysis.result_data.nodes,
-    analysis.result_data.edges,
+    analysis.result_data.nodes || [],
+    analysis.result_data.edges || [],
   );
 
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
 
   // エッジに成果メトリックを表示
   const processedEdges = useMemo(() => {
@@ -129,7 +131,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
       const normalized = (value - minValue) / range;
 
       // メトリック単位に応じたラベル表示
-      const unit = analysis.result_data.edges[0]?.data.outcome_stats?.[
+      const unit = analysis.result_data.edges?.[0]?.data.outcome_stats?.[
         metricName
       ]
         ? getMetricUnit(metricName)
@@ -160,34 +162,39 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
 
   React.useEffect(() => {
     if (layoutedNodes && layoutedNodes.length > 0) {
-      setNodes(layoutedNodes);
+      setNodes(layoutedNodes as any);
     }
   }, [layoutedNodes, setNodes]);
 
   React.useEffect(() => {
     if (processedEdges && processedEdges.length > 0) {
-      setEdges(processedEdges);
+      setEdges(processedEdges as any);
     }
   }, [processedEdges, setEdges]);
 
   if (isLayouting) {
     return (
-      <Flex h="100%" direction="row">
+      <Box display="flex" height="100%" flexDirection="row">
         <Box flex={1}>
-          <Center h="100%">
-            <Spinner size="xl" color="green.500" />
-            <Text ml={4} color="gray.600">
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
+            <CircularProgress size={60} sx={{ color: "success.main" }} />
+            <Typography ml={2} color="text.secondary">
               レイアウトを計算中...
-            </Text>
-          </Center>
+            </Typography>
+          </Box>
         </Box>
         {showControls && (
           <Box
-            w="300px"
-            p={4}
-            bg="white"
-            borderLeft="1px"
-            borderColor="gray.200"
+            width="300px"
+            p={2}
+            bgcolor="white"
+            borderLeft={1}
+            borderColor="grey.300"
           >
             <OutcomeControls
               displayMode={displayMode}
@@ -197,25 +204,30 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
             />
           </Box>
         )}
-      </Flex>
+      </Box>
     );
   }
 
   if (!nodes.length || !edges.length) {
     return (
-      <Flex h="100%" direction="row">
+      <Box display="flex" height="100%" flexDirection="row">
         <Box flex={1}>
-          <Center h="100%">
-            <Text color="gray.500">データがありません</Text>
-          </Center>
+          <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            height="100%"
+          >
+            <Typography color="text.secondary">データがありません</Typography>
+          </Box>
         </Box>
         {showControls && (
           <Box
-            w="300px"
-            p={4}
-            bg="white"
-            borderLeft="1px"
-            borderColor="gray.200"
+            width="300px"
+            p={2}
+            bgcolor="white"
+            borderLeft={1}
+            borderColor="grey.300"
           >
             <OutcomeControls
               displayMode={displayMode}
@@ -225,12 +237,12 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
             />
           </Box>
         )}
-      </Flex>
+      </Box>
     );
   }
 
   return (
-    <Flex h="100%" direction="row">
+    <Box display="flex" height="100%" flexDirection="row">
       <Box flex={1}>
         <ReactFlow
           nodes={nodes}
@@ -249,7 +261,13 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         </ReactFlow>
       </Box>
       {showControls && (
-        <Box w="300px" p={4} bg="white" borderLeft="1px" borderColor="gray.200">
+        <Box
+          width="300px"
+          p={2}
+          bgcolor="white"
+          borderLeft={1}
+          borderColor="grey.300"
+        >
           <OutcomeControls
             displayMode={displayMode}
             onDisplayModeChange={onDisplayModeChange}
@@ -258,7 +276,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
           />
         </Box>
       )}
-    </Flex>
+    </Box>
   );
 };
 

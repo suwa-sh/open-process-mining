@@ -34,7 +34,7 @@ interface OutcomeState {
   clearError: () => void;
 }
 
-export const useOutcomeStore = create<OutcomeState>((set, get) => ({
+export const useOutcomeStore = create<OutcomeState>((set) => ({
   analyses: [],
   currentAnalysis: null,
   availableMetrics: [],

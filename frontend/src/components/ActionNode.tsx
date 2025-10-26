@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { Handle, Position } from "@xyflow/react";
-import { Box, Text } from "@chakra-ui/react";
+import { Paper, Typography } from "@mui/material";
 
 interface ActionNodeProps {
   data: {
@@ -11,26 +11,28 @@ interface ActionNodeProps {
 
 const ActionNode: React.FC<ActionNodeProps> = ({ data }) => {
   return (
-    <Box
-      borderWidth={2}
-      borderColor="blue.500"
-      borderRadius="md"
-      bg="white"
-      p={4}
-      minW="150px"
-      textAlign="center"
-      boxShadow="md"
-      _hover={{ boxShadow: "lg" }}
+    <Paper
+      elevation={3}
+      sx={{
+        border: 2,
+        borderColor: "primary.main",
+        borderRadius: 1,
+        bgcolor: "white",
+        p: 2,
+        minWidth: "150px",
+        textAlign: "center",
+        "&:hover": { boxShadow: 6 },
+      }}
     >
       <Handle type="target" position={Position.Top} />
-      <Text fontWeight="bold" fontSize="md" mb={1}>
+      <Typography variant="body1" fontWeight="bold" mb={0.5}>
         {data.label}
-      </Text>
-      <Text fontSize="sm" color="gray.600">
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
         {data.frequency} 件
-      </Text>
+      </Typography>
       <Handle type="source" position={Position.Bottom} />
-    </Box>
+    </Paper>
   );
 };
 

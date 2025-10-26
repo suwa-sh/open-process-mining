@@ -7,23 +7,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
-  Heading,
-  HStack,
-  VStack,
-  Text,
+  Typography,
+  Stack,
   Button,
-  Select,
-  Spinner,
+  CircularProgress,
   Alert,
-  AlertIcon,
   Card,
-  CardBody,
-  SimpleGrid,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-} from "@chakra-ui/react";
+  CardContent,
+} from "@mui/material";
 import { useOutcomeStore } from "../../stores/outcomeStore";
 import OutcomeProcessMap from "./OutcomeProcessMap";
 import SegmentComparison from "./SegmentComparison";
@@ -49,9 +40,9 @@ const OutcomeAnalysisDetail: React.FC = () => {
 
   if (loading) {
     return (
-      <Container maxW="container.xl" py={8}>
-        <Box textAlign="center" py={8}>
-          <Spinner size="xl" />
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress size={60} />
         </Box>
       </Container>
     );
@@ -59,19 +50,16 @@ const OutcomeAnalysisDetail: React.FC = () => {
 
   if (error) {
     return (
-      <Container maxW="container.xl" py={8}>
-        <Alert status="error">
-          <AlertIcon />
-          {error}
-        </Alert>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error">{error}</Alert>
       </Container>
     );
   }
 
   if (!currentAnalysis) {
     return (
-      <Container maxW="container.xl" py={8}>
-        <Text>分析結果が見つかりません</Text>
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Typography>分析結果が見つかりません</Typography>
       </Container>
     );
   }
@@ -81,43 +69,42 @@ const OutcomeAnalysisDetail: React.FC = () => {
     return <SegmentComparison analysis={currentAnalysis} />;
   }
 
-  const overallStats = currentAnalysis.result_data.summary.overall_stats;
   const metricName = currentAnalysis.metric_name;
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <VStack spacing={6} align="stretch">
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Stack spacing={3}>
         <Box>
           <Button
-            variant="outline"
-            colorScheme="green"
+            variant="outlined"
+            color="success"
             onClick={() => navigate("/outcome")}
-            mb={4}
+            sx={{ mb: 2 }}
           >
             ← 成果分析一覧に戻る
           </Button>
 
-          <Heading size="lg" mb={2}>
+          <Typography variant="h4" mb={1}>
             {currentAnalysis.analysis_name}
-          </Heading>
+          </Typography>
 
-          <HStack spacing={4} color="gray.600">
-            <Text>プロセス: {currentAnalysis.process_type}</Text>
-            <Text>メトリック: {metricName}</Text>
-            <Text>
+          <Stack direction="row" spacing={2} color="text.secondary">
+            <Typography variant="body2">
+              プロセス: {currentAnalysis.process_type}
+            </Typography>
+            <Typography variant="body2">メトリック: {metricName}</Typography>
+            <Typography variant="body2">
               作成日時:{" "}
               {new Date(currentAnalysis.created_at).toLocaleString("ja-JP")}
-            </Text>
-          </HStack>
+            </Typography>
+          </Stack>
         </Box>
 
-        <VStack align="stretch" spacing={4} h="calc(100vh - 280px)">
-          <Box p={4} bg="green.50" borderRadius="md">
-            <Text fontSize="sm" color="green.900">
-              💡 <strong>成果分析:</strong>{" "}
-              各パスでの成果メトリックを可視化します。緑色のパスは高成果、赤色のパスは低成果を示します。
-            </Text>
-          </Box>
+        <Stack spacing={2} height="calc(100vh - 280px)">
+          <Alert severity="success">
+            💡 <strong>成果分析:</strong>{" "}
+            各パスでの成果メトリックを可視化します。緑色のパスは高成果、赤色のパスは低成果を示します。
+          </Alert>
           <Box flex={1}>
             <OutcomeProcessMap
               analysis={currentAnalysis}
@@ -125,41 +112,42 @@ const OutcomeAnalysisDetail: React.FC = () => {
               onDisplayModeChange={setDisplayMode}
             />
           </Box>
-        </VStack>
+        </Stack>
 
-        {currentAnalysis.result_data.summary.top_paths.length > 0 && (
-          <Card>
-            <CardBody>
-              <Heading size="sm" mb={4}>
-                高成果パス（平均値が全体平均の1.2倍以上）
-              </Heading>
-              <VStack align="stretch" spacing={2}>
-                {currentAnalysis.result_data.summary.top_paths.map(
-                  (path, index) => (
-                    <Box
-                      key={index}
-                      p={3}
-                      bg="green.50"
-                      borderRadius="md"
-                      borderLeft="4px solid"
-                      borderColor="green.500"
-                    >
-                      <HStack justify="space-between">
-                        <Text>
-                          {path.source} → {path.target}
-                        </Text>
-                        <Text fontWeight="bold" color="green.700">
-                          {formatMetricValue(path.avg_outcome, metricName)}
-                        </Text>
-                      </HStack>
-                    </Box>
-                  ),
-                )}
-              </VStack>
-            </CardBody>
-          </Card>
-        )}
-      </VStack>
+        {currentAnalysis.result_data.summary.top_paths &&
+          currentAnalysis.result_data.summary.top_paths.length > 0 && (
+            <Card>
+              <CardContent>
+                <Typography variant="h6" mb={2}>
+                  高成果パス（平均値が全体平均の1.2倍以上）
+                </Typography>
+                <Stack spacing={1}>
+                  {currentAnalysis.result_data.summary.top_paths.map(
+                    (path, index) => (
+                      <Box
+                        key={index}
+                        p={1.5}
+                        bgcolor="success.50"
+                        borderRadius={1}
+                        borderLeft={4}
+                        borderColor="success.main"
+                      >
+                        <Stack direction="row" justifyContent="space-between">
+                          <Typography>
+                            {path.source} → {path.target}
+                          </Typography>
+                          <Typography fontWeight="bold" color="success.dark">
+                            {formatMetricValue(path.avg_outcome, metricName)}
+                          </Typography>
+                        </Stack>
+                      </Box>
+                    ),
+                  )}
+                </Stack>
+              </CardContent>
+            </Card>
+          )}
+      </Stack>
     </Container>
   );
 };

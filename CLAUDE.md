@@ -62,7 +62,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **グラフ可視化**: `@xyflow/react` (React Flow)
 - **自動レイアウト**: `elkjs`
 - **状態管理**: `zustand`
-- **UIライブラリ**: Chakra UI
+- **UIライブラリ**: MUI (Material-UI)
 
 **主要コンポーネント**:
 
@@ -407,6 +407,36 @@ npm run test:debug    # デバッグモード（ステップ実行）
 - `frontend/src/**/*.test.ts(x)`: フロントエンドユニットテスト（Jest）
 - `e2e/tests/`: E2Eテスト（Playwright）
 
+**E2Eテストのロケーター戦略:**
+
+Playwrightのstrict modeに対応するため、以下の優先順位でロケーターを使用：
+
+1. **Role-based locators（最優先）**:
+
+   ```typescript
+   page.getByRole("button", { name: "プロセス分析" })
+   page.getByRole("tab", { name: /ハンドオーバー分析/ })
+   ```
+
+2. **Test ID locators**:
+
+   ```typescript
+   page.getByTestId("process-type-select-trigger")
+   ```
+
+3. **Text-based locators（最終手段）**:
+
+   - 複数要素にマッチする可能性があるため注意
+   - emojiなどの特殊文字は避ける
+
+   ```typescript
+   // ❌ 悪い例（strict mode違反の可能性）
+   page.locator("text=ハンドオーバー分析")
+
+   // ✅ 良い例
+   page.getByRole("tab", { name: /ハンドオーバー分析/ })
+   ```
+
 ### APIの動作確認
 
 ```bash
@@ -546,6 +576,49 @@ useEffect(() => {
 }, []);
 ```
 
+### アイコンの統一
+
+**Material Icons使用方針**:
+
+- **emojiは使用しない** - アクセシビリティとブラウザ互換性のためMaterial Iconsを使用
+- **アイコンスタイル**: Filled（デフォルト）を使用
+- **サイズ指定**: コンテキストに応じて`fontSize`プロパティで指定
+  - ボタン、メニュー項目: `fontSize="small"`
+  - タブ、ヘッダー: `fontSize="medium"`
+
+**標準アイコンマッピング**:
+
+- プロセス分析: `TrendingUpIcon` (📈の代わり)
+- 組織分析: `BusinessIcon` (🏢の代わり)
+- 成果分析: `AssessmentIcon` (📊の代わり)
+- 社員別: `PersonIcon` (👤の代わり)
+- 部署別: `BusinessIcon` (🏢の代わり)
+- ハンドオーバー分析: `SyncAltIcon` (🔄の代わり)
+- 作業負荷分析: `AssessmentIcon` (📊の代わり)
+- パフォーマンス分析: `TimerIcon` (⏱️の代わり)
+- ハッピーパス: `StarIcon` (✨の代わり)
+- 情報メッセージ: `InfoIcon` (ℹ️の代わり)
+
+**実装パターン**:
+
+```typescript
+// ボタンの場合
+<Button startIcon={<TrendingUpIcon />}>プロセス分析</Button>
+
+// Chipの場合
+<Chip icon={<PersonIcon />} label="社員別" />
+
+// Tabの場合
+<Tab
+  label={
+    <Stack direction="row" spacing={1} alignItems="center">
+      <SyncAltIcon fontSize="medium" />
+      <span>ハンドオーバー分析</span>
+    </Stack>
+  }
+/>
+```
+
 ### 詳細画面の統一
 
 **一覧に戻るボタン**: 各分析タイプの配色で統一
@@ -672,7 +745,10 @@ python scripts/generate_sample_data.py
 docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
 ```
 
-**注意**: `-v` フラグを付けると、PostgreSQLの全データ（Named Volume `postgres-data`）が削除されます。
+**注意**:
+
+- `-v` フラグを付けると、PostgreSQLの全データ（Named Volume `postgres-data`）が削除されます
+- **フロントエンドの`node_modules`も削除される**ため、再起動後に`docker compose exec frontend npm install`が必要です
 
 ### dbtエラー
 
@@ -698,6 +774,50 @@ docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
 - `isInitialLoad`フラグが正しく設定されているか確認
 - useCallbackを使用せず、useEffect内で直接非同期関数を定義
 
+### E2EテストでMUI Selectが開かない
+
+MUI SelectコンポーネントのE2Eテストで問題が発生する場合：
+
+**症状**: Playwrightでクリックしてもlistboxが開かない
+
+**原因**: MUI Selectは透明なnative inputとdisplay divの2層構造。`fullWidth`指定時、
+透明inputがフィールド全体を覆うため、通常のクリックではdisplay divに到達しない。
+
+**解決策**:
+
+1. **モーダル内のSelect**: `id`属性を付与し、`selectMuiOption()`ヘルパーを使用
+
+   ```tsx
+   <Select id="process-type-select" ...>
+   ```
+
+   ```typescript
+   await selectMuiOption(page, "process-type-select", "order-to-cash");
+   ```
+
+2. **詳細画面内のSelect**: `SelectDisplayProps`で`data-testid`を追加
+
+   ```tsx
+   <Select
+     id="aggregation-level-select"
+     SelectDisplayProps={{
+       "data-testid": "aggregation-level-select-trigger"
+     }}
+   >
+   ```
+
+   ```typescript
+   await selectMuiOption(page, "aggregation-level-select", "department");
+   ```
+
+**技術詳細**:
+
+- `selectMuiOption()`はdata-testid要素に対して`mousedown`イベントを使用
+- モーダルのSelectには通常の`click()`を使用（後方互換性）
+- `force: true`やタイムアウト追加は推奨しない（エラーを隠蔽してしまう）
+
+詳細は [e2e/README.md](e2e/README.md) を参照。
+
 ## プロジェクトファイル構成
 
 詳細は以下を参照:
@@ -714,7 +834,7 @@ docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
 - **データ加工**: dbt Core
 - **データベース**: PostgreSQL
 - **バックエンド**: Python 3.9+, FastAPI, Pandas, SQLAlchemy, NetworkX
-- **フロントエンド**: React (TypeScript), React Flow, Elk.js, Zustand, Chakra UI
+- **フロントエンド**: React (TypeScript), React Flow, Elk.js, Zustand, MUI (Material-UI)
 - **インフラ**: Docker Compose
 - **ライセンス**: MIT（すべての依存ライブラリも許容ライセンス）
 
@@ -723,3 +843,53 @@ docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
 - フロントエンドは1000ノード/エッジ程度のグラフで60FPS維持
 - `React.memo`によるカスタムノードの最適化
 - レイアウト計算完了まで`opacity: 0`で初期描画のちらつきを防止
+
+## 作業ルール
+
+### 実装前の準備
+
+- **Contract-First開発の徹底**（必須）
+
+### 実装フェーズ
+
+- **テストルールに従ったTDD**
+  - presentationからadapterまで、**スケルトン実装**ですべてのレイヤーを通す
+    - presentation, adapterは**ティアをまたぐ仕様に従う**こと
+  - **domainのTDD**
+  - **usecaseのTDD** ※adapter内の**外部API呼び出し部分をmock**。usecase,domain,repo,adapterをつなげてテスト。
+  - frontendの場合
+    - chrome-devtoolsで動作確認
+    - ハッピーパスをe2eテストにケース追加
+    - e2eテストで動作確認
+
+### テスト・検証フェーズ
+
+- docker composeで**ティアをまたいだ動作確認**
+  - 包括的な動作確認を**e2eテストに追加**
+- **作業が完了したら確認**すること
+  - `make fmt` - コード自動整形
+  - `make lint-fix` - すべてのLinterが0 issues
+  - `docker compose down -v`, `docker compose up -d` - クリーン状態からe2eを実行する準備
+    - `docker compose exec frontend npm install`
+    - `docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"`
+  - `test-all` - すべてのテストがPASS、0 warnings
+  - 機能の動作確認が通ること
+- git commit
+  - **すべてのテストが通るところまで確認できたら**、commitで戻れる断面を用意します
+- **リファクタリング**
+  - この対応の中で読んだ範囲を、今考えられる最も可読性・メンテナンス性が高い状態にする
+  - 重複コードの共通処理化、コンセプトに合わない内容の最適化
+  - 不使用ファイルの削除、未使用importの削除、変数名の改善、docstring追加
+  - など
+- **仕様の最新化**
+  - 各種ドキュメントの仕様を最新状態に保つ
+- **作業のふりかえり**
+  - チャットの回答に出力
+  - Keep / Good: 今回の作業で良かったこと。続けていったほうが良いこと。
+  - Problem / Bad: 今回の作業で時間がかかったこと。やり直しが多かったこと。
+  - Try - Start: Keepを伸ばす、Problemを解消する、新たにやること
+  - Try - Stop: Keepを伸ばす、Problemを解消する、やめること
+- **各種ドキュメントの最新化**
+  - CLAUDE.md、README.md、各種ドキュメントの手順や考え方を最新状態に保つ
+- git commit
+  - 対応が完了したら断面を作ります

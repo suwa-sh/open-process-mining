@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from "react";
 import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   Button,
+  TextField,
   FormControl,
   FormLabel,
-  Input,
   Select,
+  MenuItem,
   Radio,
   RadioGroup,
+  FormControlLabel,
   Stack,
-  Text,
-  VStack,
-  HStack,
+  Typography,
   Box,
-  useToast,
-  Spinner,
-} from "@chakra-ui/react";
+  CircularProgress,
+} from "@mui/material";
+import InfoIcon from "@mui/icons-material/Info";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import StarIcon from "@mui/icons-material/Star";
 import {
   createAnalysis,
   getAnalysisPreview,
@@ -29,6 +28,7 @@ import {
   getLeadTimeStats,
 } from "../api/client";
 import { FilterMode, PreviewResponse, LeadTimeStats } from "../types";
+import { useSnackbar } from "../hooks/useSnackbar";
 
 interface CreateAnalysisModalProps {
   isOpen: boolean;
@@ -53,7 +53,9 @@ const CreateAnalysisModal: React.FC<CreateAnalysisModalProps> = ({
   );
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast();
+  const [isAnalysisNameManuallySet, setIsAnalysisNameManuallySet] =
+    useState(false);
+  const { showSnackbar } = useSnackbar();
 
   // プロセスタイプ一覧を取得
   useEffect(() => {
@@ -74,9 +76,9 @@ const CreateAnalysisModal: React.FC<CreateAnalysisModalProps> = ({
     }
   }, [isOpen]);
 
-  // プロセスタイプ変更時に分析名を自動生成
+  // プロセスタイプ変更時に分析名を自動生成（手動入力されていない場合のみ）
   useEffect(() => {
-    if (processType) {
+    if (processType && !isAnalysisNameManuallySet) {
       const now = new Date();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -84,7 +86,7 @@ const CreateAnalysisModal: React.FC<CreateAnalysisModalProps> = ({
       const dateStr = `${year}-${month}-${day}`;
       setAnalysisName(`${processType}_${dateStr}`);
     }
-  }, [processType]);
+  }, [processType, isAnalysisNameManuallySet]);
 
   // プレビュー取得（デバウンス）
   useEffect(() => {
@@ -121,24 +123,12 @@ const CreateAnalysisModal: React.FC<CreateAnalysisModalProps> = ({
 
   const handleSubmit = async () => {
     if (!analysisName || !processType) {
-      toast({
-        title: "入力エラー",
-        description: "分析名とプロセスタイプを入力してください",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSnackbar("分析名とプロセスタイプを入力してください", "error");
       return;
     }
 
     if (filterMode !== "all" && (!dateFrom || !dateTo)) {
-      toast({
-        title: "入力エラー",
-        description: "日付範囲を指定してください",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSnackbar("日付範囲を指定してください", "error");
       return;
     }
 
@@ -152,201 +142,245 @@ const CreateAnalysisModal: React.FC<CreateAnalysisModalProps> = ({
         date_to: filterMode !== "all" ? dateTo : undefined,
       });
 
-      toast({
-        title: "分析を作成しました",
-        description: `${result.event_count}件のイベント、${result.case_count}件のケースを分析しました`,
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
+      showSnackbar(
+        `分析を作成しました: ${result.event_count}件のイベント、${result.case_count}件のケース`,
+        "success",
+      );
 
       onSuccess(result.analysis_id);
       onClose();
     } catch (error: any) {
-      toast({
-        title: "分析実行エラー",
-        description: error.response?.data?.detail || "分析の実行に失敗しました",
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
+      showSnackbar(
+        error.response?.data?.detail || "分析の実行に失敗しました",
+        "error",
+        5000,
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="xl">
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>新規分析を作成</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <VStack spacing={4} align="stretch">
-            <FormControl isRequired>
-              <FormLabel>分析名</FormLabel>
-              <Input
-                value={analysisName}
-                onChange={(e) => setAnalysisName(e.target.value)}
-                placeholder="例: 受注から配送_2025-10"
+    <Dialog
+      open={isOpen}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      disableEnforceFocus
+      disableAutoFocus
+      disableRestoreFocus
+    >
+      <DialogTitle>新規分析を作成</DialogTitle>
+      <DialogContent>
+        <Stack spacing={3} sx={{ mt: 1 }}>
+          <TextField
+            required
+            label="分析名"
+            value={analysisName}
+            onChange={(e) => {
+              setAnalysisName(e.target.value);
+              setIsAnalysisNameManuallySet(true);
+            }}
+            placeholder="例: 受注から配送_2025-10"
+            fullWidth
+          />
+
+          <FormControl required fullWidth>
+            <FormLabel>プロセスタイプ</FormLabel>
+            <Select
+              id="process-type-select"
+              value={processType}
+              onChange={(e) => setProcessType(e.target.value)}
+              SelectDisplayProps={{
+                "data-testid": "process-type-select-trigger",
+              }}
+            >
+              {processTypes.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+
+          <FormControl>
+            <FormLabel>分析対象期間の基準</FormLabel>
+            <RadioGroup
+              value={filterMode}
+              onChange={(e) => setFilterMode(e.target.value as FilterMode)}
+            >
+              <FormControlLabel
+                value="all"
+                control={<Radio />}
+                label="すべての期間を含める"
               />
-            </FormControl>
+              <FormControlLabel
+                value="case_start"
+                control={<Radio />}
+                label="ケース開始日で絞り込む（推奨）"
+              />
+              <FormControlLabel
+                value="case_end"
+                control={<Radio />}
+                label="ケース完了日で絞り込む"
+              />
+            </RadioGroup>
+          </FormControl>
 
-            <FormControl isRequired>
-              <FormLabel>プロセスタイプ</FormLabel>
-              <Select
-                value={processType}
-                onChange={(e) => setProcessType(e.target.value)}
+          {filterMode !== "all" && (
+            <FormControl fullWidth>
+              <FormLabel>対象期間</FormLabel>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <TextField
+                  type="date"
+                  value={dateFrom}
+                  onChange={(e) => setDateFrom(e.target.value)}
+                  fullWidth
+                />
+                <Typography>〜</Typography>
+                <TextField
+                  type="date"
+                  value={dateTo}
+                  onChange={(e) => setDateTo(e.target.value)}
+                  fullWidth
+                />
+              </Stack>
+              <Stack
+                direction="row"
+                spacing={0.5}
+                alignItems="center"
+                sx={{ mt: 1 }}
               >
-                {processTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
+                <InfoIcon fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  期間外のイベントもケースに含まれる場合があります。
+                </Typography>
+              </Stack>
             </FormControl>
+          )}
 
-            <FormControl>
-              <FormLabel>分析対象期間の基準</FormLabel>
-              <RadioGroup
-                value={filterMode}
-                onChange={(value) => setFilterMode(value as FilterMode)}
-              >
-                <Stack>
-                  <Radio value="all">すべての期間を含める</Radio>
-                  <Radio value="case_start">
-                    ケース開始日で絞り込む（推奨）
-                  </Radio>
-                  <Radio value="case_end">ケース完了日で絞り込む</Radio>
-                </Stack>
-              </RadioGroup>
-            </FormControl>
-
-            {filterMode !== "all" && (
-              <FormControl>
-                <FormLabel>対象期間</FormLabel>
-                <HStack>
-                  <Input
-                    type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
-                  />
-                  <Text>〜</Text>
-                  <Input
-                    type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
-                  />
-                </HStack>
-                <Text fontSize="sm" color="gray.600" mt={2}>
-                  ℹ️ 期間外のイベントもケースに含まれる場合があります。
-                </Text>
-              </FormControl>
-            )}
-
-            <Box borderWidth={1} borderRadius="md" p={4} bg="gray.50">
-              <Text fontWeight="bold" mb={2}>
-                📊 プレビュー
-              </Text>
-              {isLoadingPreview ? (
-                <HStack>
-                  <Spinner size="sm" />
-                  <Text>読み込み中...</Text>
-                </HStack>
-              ) : preview ? (
-                <VStack align="start" spacing={1} fontSize="sm">
-                  <Text>対象ケース数: {preview.case_count}件</Text>
-                  <Text>対象イベント数: {preview.event_count}件</Text>
-                  {leadTimeStats &&
-                    leadTimeStats.lead_time_hours.median !== null && (
-                      <>
-                        <Text fontWeight="bold" mt={2}>
-                          リードタイム（開始〜終了）:
-                        </Text>
-                        <Text ml={2}>
-                          最小: {leadTimeStats.lead_time_hours.min?.toFixed(1)}
-                          時間
-                        </Text>
-                        <Text ml={2}>
-                          中央値:{" "}
-                          {leadTimeStats.lead_time_hours.median?.toFixed(1)}時間
-                        </Text>
-                        <Text ml={2}>
-                          最大: {leadTimeStats.lead_time_hours.max?.toFixed(1)}
-                          時間
-                        </Text>
-                        {leadTimeStats.happy_path &&
-                          leadTimeStats.happy_path.case_count > 0 && (
-                            <>
-                              <Text fontWeight="bold" mt={2}>
-                                ✨ ハッピーパス:
-                              </Text>
-                              <Text ml={2} fontSize="xs" color="gray.600">
-                                {leadTimeStats.happy_path.path.join(" → ")}
-                              </Text>
-                              <Text ml={2}>
-                                {leadTimeStats.happy_path.case_count}件のケース
-                              </Text>
-                              <Text ml={2}>
-                                中央値:{" "}
-                                {leadTimeStats.happy_path.lead_time_hours.median?.toFixed(
-                                  1,
-                                )}
-                                時間
-                              </Text>
-                            </>
-                          )}
-                      </>
-                    )}
-                  {filterMode !== "all" && (
+          <Box
+            sx={{
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              p: 2,
+              bgcolor: "grey.50",
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center" mb={1}>
+              <AssessmentIcon fontSize="small" />
+              <Typography fontWeight="bold">プレビュー</Typography>
+            </Stack>
+            {isLoadingPreview ? (
+              <Stack direction="row" spacing={1} alignItems="center">
+                <CircularProgress size={20} />
+                <Typography variant="body2">読み込み中...</Typography>
+              </Stack>
+            ) : preview ? (
+              <Stack spacing={0.5}>
+                <Typography variant="body2">
+                  対象ケース数: {preview.case_count}件
+                </Typography>
+                <Typography variant="body2">
+                  対象イベント数: {preview.event_count}件
+                </Typography>
+                {leadTimeStats &&
+                  leadTimeStats.lead_time_hours.median !== null && (
                     <>
-                      <Text mt={2}>
-                        ケース{filterMode === "case_start" ? "開始" : "完了"}
-                        期間: {dateFrom} 〜 {dateTo}
-                      </Text>
-                      {preview.date_range.min && preview.date_range.max && (
-                        <Text>
-                          実際のイベント期間:{" "}
-                          {new Date(preview.date_range.min).toLocaleDateString(
-                            "ja-JP",
-                          )}{" "}
-                          〜{" "}
-                          {new Date(preview.date_range.max).toLocaleDateString(
-                            "ja-JP",
-                          )}
-                        </Text>
-                      )}
+                      <Typography fontWeight="bold" variant="body2" mt={1}>
+                        リードタイム（開始〜終了）:
+                      </Typography>
+                      <Typography variant="body2" sx={{ ml: 2 }}>
+                        最小: {leadTimeStats.lead_time_hours.min?.toFixed(1)}
+                        時間
+                      </Typography>
+                      <Typography variant="body2" sx={{ ml: 2 }}>
+                        中央値:{" "}
+                        {leadTimeStats.lead_time_hours.median?.toFixed(1)}時間
+                      </Typography>
+                      <Typography variant="body2" sx={{ ml: 2 }}>
+                        最大: {leadTimeStats.lead_time_hours.max?.toFixed(1)}
+                        時間
+                      </Typography>
+                      {leadTimeStats.happy_path &&
+                        leadTimeStats.happy_path.case_count > 0 && (
+                          <>
+                            <Stack
+                              direction="row"
+                              spacing={0.5}
+                              alignItems="center"
+                              mt={1}
+                            >
+                              <StarIcon fontSize="small" />
+                              <Typography fontWeight="bold" variant="body2">
+                                ハッピーパス:
+                              </Typography>
+                            </Stack>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ ml: 2 }}
+                            >
+                              {leadTimeStats.happy_path.path.join(" → ")}
+                            </Typography>
+                            <Typography variant="body2" sx={{ ml: 2 }}>
+                              {leadTimeStats.happy_path.case_count}件のケース
+                            </Typography>
+                            <Typography variant="body2" sx={{ ml: 2 }}>
+                              中央値:{" "}
+                              {leadTimeStats.happy_path.lead_time_hours.median?.toFixed(
+                                1,
+                              )}
+                              時間
+                            </Typography>
+                          </>
+                        )}
                     </>
                   )}
-                </VStack>
-              ) : (
-                <Text fontSize="sm" color="gray.500">
-                  プレビュー情報を取得中...
-                </Text>
-              )}
-            </Box>
-          </VStack>
-        </ModalBody>
+                {filterMode !== "all" && (
+                  <>
+                    <Typography variant="body2" mt={1}>
+                      ケース{filterMode === "case_start" ? "開始" : "完了"}
+                      期間: {dateFrom} 〜 {dateTo}
+                    </Typography>
+                    {preview.date_range.min && preview.date_range.max && (
+                      <Typography variant="body2">
+                        実際のイベント期間:{" "}
+                        {new Date(preview.date_range.min).toLocaleDateString(
+                          "ja-JP",
+                        )}{" "}
+                        〜{" "}
+                        {new Date(preview.date_range.max).toLocaleDateString(
+                          "ja-JP",
+                        )}
+                      </Typography>
+                    )}
+                  </>
+                )}
+              </Stack>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                プレビュー情報を取得中...
+              </Typography>
+            )}
+          </Box>
+        </Stack>
+      </DialogContent>
 
-        <ModalFooter>
-          <Button
-            variant="ghost"
-            mr={3}
-            onClick={onClose}
-            isDisabled={isSubmitting}
-          >
-            キャンセル
-          </Button>
-          <Button
-            colorScheme="blue"
-            onClick={handleSubmit}
-            isLoading={isSubmitting}
-          >
-            分析を実行
-          </Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+      <DialogActions>
+        <Button onClick={onClose} disabled={isSubmitting}>
+          キャンセル
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <CircularProgress size={24} /> : "分析を実行"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 };
 

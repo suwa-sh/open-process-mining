@@ -1,5 +1,5 @@
 import React from "react";
-import { ChakraProvider } from "@chakra-ui/react";
+import { ThemeProvider, createTheme, CssBaseline } from "@mui/material";
 import {
   BrowserRouter,
   Routes,
@@ -7,6 +7,9 @@ import {
   useNavigate,
   useParams,
 } from "react-router-dom";
+import { SnackbarProvider } from "./hooks/useSnackbar";
+
+const theme = createTheme();
 import AnalysisList from "./components/AnalysisList";
 import ProcessMap from "./components/ProcessMap";
 import OrganizationAnalysisList from "./components/OrganizationAnalysisList";
@@ -70,24 +73,27 @@ const OrganizationAnalysisDetailPage: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ChakraProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<AnalysisListPage />} />
-          <Route path="/process/:analysisId" element={<ProcessMapPage />} />
-          <Route
-            path="/organization"
-            element={<OrganizationAnalysisListPage />}
-          />
-          <Route
-            path="/organization/:analysisId"
-            element={<OrganizationAnalysisDetailPage />}
-          />
-          <Route path="/outcome" element={<OutcomeAnalysisList />} />
-          <Route path="/outcome/:id" element={<OutcomeAnalysisDetail />} />
-        </Routes>
-      </BrowserRouter>
-    </ChakraProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <SnackbarProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<AnalysisListPage />} />
+            <Route path="/process/:analysisId" element={<ProcessMapPage />} />
+            <Route
+              path="/organization"
+              element={<OrganizationAnalysisListPage />}
+            />
+            <Route
+              path="/organization/:analysisId"
+              element={<OrganizationAnalysisDetailPage />}
+            />
+            <Route path="/outcome" element={<OutcomeAnalysisList />} />
+            <Route path="/outcome/:id" element={<OutcomeAnalysisDetail />} />
+          </Routes>
+        </BrowserRouter>
+      </SnackbarProvider>
+    </ThemeProvider>
   );
 };
 

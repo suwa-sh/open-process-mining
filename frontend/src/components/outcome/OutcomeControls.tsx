@@ -7,11 +7,12 @@ import {
   Box,
   Radio,
   RadioGroup,
+  FormControlLabel,
+  Typography,
   Stack,
-  Text,
-  VStack,
   Divider,
-} from "@chakra-ui/react";
+} from "@mui/material";
+import AssessmentIcon from "@mui/icons-material/Assessment";
 import { formatMetricValue } from "../../utils/formatMetricValue";
 
 interface OutcomeControlsProps {
@@ -35,22 +36,42 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
   overallStats,
 }) => {
   return (
-    <Box p={4} bg="gray.50" borderRadius="md" shadow="md" minW="250px">
-      <VStack spacing={4} align="stretch">
+    <Box
+      sx={{
+        p: 2,
+        bgcolor: "grey.50",
+        borderRadius: 1,
+        boxShadow: 1,
+        minWidth: "250px",
+      }}
+    >
+      <Stack spacing={2}>
         <Box>
-          <Text fontWeight="bold" mb={2}>
+          <Typography fontWeight="bold" sx={{ mb: 1 }}>
             表示モード
-          </Text>
+          </Typography>
           <RadioGroup
             value={displayMode}
-            onChange={(value) =>
-              onDisplayModeChange(value as "avg" | "median" | "total")
+            onChange={(e) =>
+              onDisplayModeChange(e.target.value as "avg" | "median" | "total")
             }
           >
-            <Stack direction="column" spacing={2}>
-              <Radio value="avg">平均値</Radio>
-              <Radio value="median">中央値</Radio>
-              <Radio value="total">合計値</Radio>
+            <Stack spacing={1}>
+              <FormControlLabel
+                value="avg"
+                control={<Radio />}
+                label="平均値"
+              />
+              <FormControlLabel
+                value="median"
+                control={<Radio />}
+                label="中央値"
+              />
+              <FormControlLabel
+                value="total"
+                control={<Radio />}
+                label="合計値"
+              />
             </Stack>
           </RadioGroup>
         </Box>
@@ -59,41 +80,47 @@ const OutcomeControls: React.FC<OutcomeControlsProps> = ({
           <>
             <Divider />
             <Box>
-              <Text fontWeight="bold" mb={2}>
-                📊 統計情報
-              </Text>
-              <VStack align="start" spacing={1} fontSize="sm">
-                <Text>総ケース数: {overallStats.count}件</Text>
-                <Text mt={2} fontWeight="semibold">
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
+                <AssessmentIcon fontSize="small" />
+                <Typography fontWeight="bold">統計情報</Typography>
+              </Stack>
+              <Stack spacing={0.5} sx={{ fontSize: "0.875rem" }}>
+                <Typography>総ケース数: {overallStats.count}件</Typography>
+                <Typography fontWeight="600" sx={{ mt: 1 }}>
                   平均値:
-                </Text>
-                <Text ml={2}>
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
                   {formatMetricValue(overallStats.avg, metricName)}
-                </Text>
-                <Text mt={2} fontWeight="semibold">
+                </Typography>
+                <Typography fontWeight="600" sx={{ mt: 1 }}>
                   中央値:
-                </Text>
-                <Text ml={2}>
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
                   {formatMetricValue(overallStats.median, metricName)}
-                </Text>
-                <Text mt={2} fontWeight="semibold">
+                </Typography>
+                <Typography fontWeight="600" sx={{ mt: 1 }}>
                   合計値:
-                </Text>
-                <Text ml={2}>
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
                   {formatMetricValue(overallStats.total, metricName)}
-                </Text>
-                <Text mt={2} fontWeight="semibold">
+                </Typography>
+                <Typography fontWeight="600" sx={{ mt: 1 }}>
                   範囲:
-                </Text>
-                <Text ml={2}>
+                </Typography>
+                <Typography sx={{ ml: 1 }}>
                   {formatMetricValue(overallStats.min, metricName)} -{" "}
                   {formatMetricValue(overallStats.max, metricName)}
-                </Text>
-              </VStack>
+                </Typography>
+              </Stack>
             </Box>
           </>
         )}
-      </VStack>
+      </Stack>
     </Box>
   );
 };

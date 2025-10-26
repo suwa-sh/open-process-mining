@@ -28,6 +28,10 @@ lint:
 	@echo "Running sqlfluff on dbt models..."
 	-~/.qlty/cache/tools/sqlfluff/3.4.0-f921ba7a9b1c/bin/sqlfluff lint dbt/models/ --dialect postgres
 
+lint-fix:
+	@echo "Running qlty check --fix..."
+	-qlty check --fix
+
 # Run backend tests
 test:
 	@echo "Running backend tests..."
@@ -46,7 +50,12 @@ test-frontend:
 # Run E2E tests
 test-e2e:
 	@echo "Running E2E tests..."
-	cd e2e && npm test
+	cd e2e && npm run test --reporter=list
+
+# Run E2E tests
+test-e2e-ui:
+	@echo "Running E2E tests..."
+	cd e2e && npm run test:ui
 
 # Run all tests
 test-all: test test-dbt test-frontend test-e2e

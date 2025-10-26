@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Heading, VStack, HStack, Text, Progress } from "@chakra-ui/react";
+import { Box, Typography, Stack, LinearProgress } from "@mui/material";
 import { WorkloadAnalysis } from "../types";
 
 interface WorkloadChartProps {
@@ -9,8 +9,8 @@ interface WorkloadChartProps {
 const WorkloadChart: React.FC<WorkloadChartProps> = ({ data }) => {
   if (data.workload.length === 0) {
     return (
-      <Box p={4}>
-        <Text color="gray.500">データがありません</Text>
+      <Box sx={{ p: 2 }}>
+        <Typography color="text.secondary">データがありません</Typography>
       </Box>
     );
   }
@@ -21,55 +21,72 @@ const WorkloadChart: React.FC<WorkloadChartProps> = ({ data }) => {
   );
 
   return (
-    <Box width="100%" p={4}>
-      <Heading size="md" mb={4}>
+    <Box sx={{ width: "100%", p: 2 }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         作業負荷分析
-      </Heading>
-      <VStack spacing={4} align="stretch">
+      </Typography>
+      <Stack spacing={2}>
         {data.workload.map((item, index) => (
           <Box
             key={item.resource_id}
-            p={4}
-            borderWidth="1px"
-            borderRadius="md"
-            bg={index === 0 ? "yellow.50" : "white"}
+            sx={{
+              p: 2,
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              bgcolor: index === 0 ? "#fef3c7" : "background.paper",
+            }}
           >
-            <HStack justify="space-between" mb={2}>
-              <VStack align="start" spacing={0}>
-                <Text fontWeight="bold" fontSize="lg">
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              sx={{ mb: 1 }}
+            >
+              <Stack spacing={0}>
+                <Typography fontWeight="bold" fontSize="1.125rem">
                   {index + 1}. {item.resource_name}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
                   ID: {item.resource_id}
-                </Text>
-              </VStack>
-              <VStack align="end" spacing={0}>
-                <Text fontSize="2xl" fontWeight="bold" color="blue.600">
+                </Typography>
+              </Stack>
+              <Stack alignItems="flex-end" spacing={0}>
+                <Typography
+                  fontSize="1.5rem"
+                  fontWeight="bold"
+                  color="primary.main"
+                >
                   {item.activity_count}
-                </Text>
-                <Text fontSize="sm" color="gray.600">
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
                   activities
-                </Text>
-              </VStack>
-            </HStack>
-            <Progress
+                </Typography>
+              </Stack>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
               value={(item.activity_count / maxActivityCount) * 100}
-              colorScheme="blue"
-              size="lg"
-              borderRadius="md"
-              mb={2}
+              sx={{
+                height: 8,
+                borderRadius: 1,
+                mb: 1,
+                bgcolor: "action.hover",
+                "& .MuiLinearProgress-bar": {
+                  bgcolor: "primary.main",
+                },
+              }}
             />
-            <HStack justify="space-between">
-              <Text fontSize="sm" color="gray.600">
+            <Stack direction="row" justifyContent="space-between">
+              <Typography variant="body2" color="text.secondary">
                 担当ケース数: {item.case_count}件
-              </Text>
-              <Text fontSize="sm" color="gray.600">
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
                 {((item.activity_count / maxActivityCount) * 100).toFixed(0)}%
-              </Text>
-            </HStack>
+              </Typography>
+            </Stack>
           </Box>
         ))}
-      </VStack>
+      </Stack>
     </Box>
   );
 };

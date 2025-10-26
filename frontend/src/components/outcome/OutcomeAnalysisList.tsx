@@ -7,25 +7,29 @@ import { useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
-  Heading,
+  Typography,
   List,
   ListItem,
+  ListItemText,
   Select,
-  HStack,
-  VStack,
-  Text,
-  Spinner,
-  Center,
-  Badge,
-  useDisclosure,
-} from "@chakra-ui/react";
+  MenuItem,
+  FormControl,
+  FormLabel,
+  Stack,
+  CircularProgress,
+  Chip,
+} from "@mui/material";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import BusinessIcon from "@mui/icons-material/Business";
 import { useOutcomeStore } from "../../stores/outcomeStore";
 import { getProcessTypes } from "../../api/client";
 import CreateOutcomeAnalysisModal from "./CreateOutcomeAnalysisModal";
 
 const OutcomeAnalysisList: React.FC = () => {
   const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
+  const onOpen = () => setIsOpen(true);
+  const onClose = () => setIsOpen(false);
   const [processTypeFilter, setProcessTypeFilter] = useState<string>("");
   const [metricNameFilter, setMetricNameFilter] = useState<string>("");
   const [processTypes, setProcessTypes] = useState<string[]>([]);
@@ -70,119 +74,155 @@ const OutcomeAnalysisList: React.FC = () => {
   };
 
   return (
-    <Box p={8} maxW="800px" mx="auto">
-      <HStack justify="space-between" align="center" mb={6}>
-        <Heading size="lg">成果分析</Heading>
-        <HStack>
-          <Button colorScheme="blue" onClick={() => navigate("/")}>
-            📈 プロセス分析
+    <Box p={4} maxWidth="800px" mx="auto">
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+      >
+        <Typography variant="h4">成果分析</Typography>
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate("/")}
+            startIcon={<TrendingUpIcon />}
+          >
+            プロセス分析
           </Button>
           <Button
-            colorScheme="purple"
+            variant="contained"
+            color="secondary"
             onClick={() => navigate("/organization")}
+            startIcon={<BusinessIcon />}
           >
-            🏢 組織分析
+            組織分析
           </Button>
-          <Button colorScheme="green" onClick={onOpen}>
+          <Button variant="contained" color="success" onClick={onOpen}>
             + 新規分析を作成
           </Button>
-        </HStack>
-      </HStack>
+        </Stack>
+      </Stack>
 
-      <Box mb={6}>
-        <Text fontSize="sm" mb={2} fontWeight="medium">
-          フィルター:
-        </Text>
-        <HStack spacing={4}>
-          <Select
-            placeholder="すべてのプロセスタイプ"
-            value={processTypeFilter}
-            onChange={(e) => setProcessTypeFilter(e.target.value)}
-          >
-            {processTypes.map((type) => (
-              <option key={type} value={type}>
-                {type}
-              </option>
-            ))}
-          </Select>
+      <Box mb={3}>
+        <FormLabel>フィルター:</FormLabel>
+        <Stack direction="row" spacing={2}>
+          <FormControl fullWidth>
+            <Select
+              value={processTypeFilter}
+              onChange={(e) => setProcessTypeFilter(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">すべてのプロセスタイプ</MenuItem>
+              {processTypes.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {type}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
 
-          <Select
-            placeholder="すべてのメトリック"
-            value={metricNameFilter}
-            onChange={(e) => setMetricNameFilter(e.target.value)}
-          >
-            {metricNames.map((metric) => (
-              <option key={metric} value={metric}>
-                {metric}
-              </option>
-            ))}
-          </Select>
-        </HStack>
+          <FormControl fullWidth>
+            <Select
+              value={metricNameFilter}
+              onChange={(e) => setMetricNameFilter(e.target.value)}
+              displayEmpty
+            >
+              <MenuItem value="">すべてのメトリック</MenuItem>
+              {metricNames.map((metric) => (
+                <MenuItem key={metric} value={metric}>
+                  {metric}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Stack>
       </Box>
 
       {loading ? (
-        <Center py={8}>
-          <VStack spacing={4}>
-            <Spinner size="xl" color="green.500" />
-            <Text>成果分析データを読み込んでいます...</Text>
-          </VStack>
-        </Center>
+        <Box display="flex" justifyContent="center" py={4}>
+          <Stack spacing={2} alignItems="center">
+            <CircularProgress size={60} sx={{ color: "success.main" }} />
+            <Typography>成果分析データを読み込んでいます...</Typography>
+          </Stack>
+        </Box>
       ) : error ? (
-        <Center py={8}>
-          <VStack spacing={3}>
-            <Text fontSize="md" color="gray.600">
+        <Box display="flex" justifyContent="center" py={4}>
+          <Stack spacing={1.5} alignItems="center">
+            <Typography variant="body1" color="text.secondary">
               成果分析が見つかりません
-            </Text>
-            <Text fontSize="sm" color="gray.500">
+            </Typography>
+            <Typography variant="body2" color="text.disabled">
               「新規分析を作成」ボタンから最初の分析を作成してください。
-            </Text>
-          </VStack>
-        </Center>
+            </Typography>
+          </Stack>
+        </Box>
       ) : analyses.length === 0 ? (
-        <Center py={8}>
-          <VStack spacing={3}>
-            <Text fontSize="md" color="gray.600">
+        <Box display="flex" justifyContent="center" py={4}>
+          <Stack spacing={1.5} alignItems="center">
+            <Typography variant="body1" color="text.secondary">
               成果分析が見つかりません
-            </Text>
-            <Text fontSize="sm" color="gray.500">
+            </Typography>
+            <Typography variant="body2" color="text.disabled">
               「新規分析を作成」ボタンから最初の分析を作成してください。
-            </Text>
-          </VStack>
-        </Center>
+            </Typography>
+          </Stack>
+        </Box>
       ) : (
-        <List spacing={3}>
+        <List>
           {analyses.map((analysis) => (
             <ListItem
               key={analysis.analysis_id}
-              p={4}
-              borderWidth={1}
-              borderRadius="md"
-              cursor="pointer"
-              transition="all 0.2s"
-              _hover={{
-                bg: "green.50",
-                borderColor: "green.500",
-                transform: "translateY(-2px)",
+              sx={{
+                p: 2,
+                mb: 1.5,
+                border: 1,
+                borderColor: "grey.300",
+                borderRadius: 1,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                "&:hover": {
+                  bgcolor: "success.50",
+                  borderColor: "success.main",
+                  transform: "translateY(-2px)",
+                },
               }}
               onClick={() => handleRowClick(analysis.analysis_id)}
             >
-              <VStack align="start" spacing={1}>
-                <HStack spacing={3}>
-                  <Text fontWeight="bold" fontSize="lg">
-                    {analysis.analysis_name}
-                  </Text>
-                  <Badge colorScheme="green">{analysis.process_type}</Badge>
-                  <Badge colorScheme="orange">{analysis.metric_name}</Badge>
-                  <Badge colorScheme="cyan">
-                    {analysis.analysis_type === "path-outcome"
-                      ? "パス別成果"
-                      : "セグメント比較"}
-                  </Badge>
-                </HStack>
-                <Text fontSize="sm" color="gray.600">
-                  作成日時: {formatDate(analysis.created_at)}
-                </Text>
-              </VStack>
+              <ListItemText
+                primary={
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Typography variant="h6" fontWeight="bold">
+                      {analysis.analysis_name}
+                    </Typography>
+                    <Chip
+                      label={analysis.process_type}
+                      color="success"
+                      size="small"
+                    />
+                    <Chip
+                      label={analysis.metric_name}
+                      color="warning"
+                      size="small"
+                    />
+                    <Chip
+                      label={
+                        analysis.analysis_type === "path-outcome"
+                          ? "パス別成果"
+                          : "セグメント比較"
+                      }
+                      color="info"
+                      size="small"
+                    />
+                  </Stack>
+                }
+                secondary={
+                  <Typography variant="body2" color="text.secondary">
+                    作成日時: {formatDate(analysis.created_at)}
+                  </Typography>
+                }
+              />
             </ListItem>
           ))}
         </List>

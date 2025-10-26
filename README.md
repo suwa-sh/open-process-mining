@@ -13,7 +13,7 @@
 
 - **データ加工**: dbt Coreによる再現可能なデータパイプライン
 - **分析エンジン**: DFG (Directly-Follows Graph) ベースのプロセス発見
-- **インタラクティブな可視化**: React FlowとChakra UIによるリッチなWeb UI
+- **インタラクティブな可視化**: React FlowとMUIによるリッチなWeb UI
   - ドラッグ&ドロップでノードを自由に配置
   - 頻度の高いパスは太い青線で表示（ハッピーパス）
   - 処理時間が長いパスは赤線で警告表示
@@ -75,7 +75,7 @@ graph TB
 
 - **データ加工**: dbt Core, PostgreSQL
 - **バックエンド**: Python 3.11, FastAPI, Pandas, NetworkX
-- **フロントエンド**: React, TypeScript, Vite, Chakra UI, React Flow
+- **フロントエンド**: React, TypeScript, Vite, MUI (Material-UI), React Flow
 - **インフラ**: Docker Compose
 
 ## クイックスタート

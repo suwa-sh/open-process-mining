@@ -2,23 +2,23 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Container,
-  Heading,
-  VStack,
-  HStack,
+  Typography,
+  Stack,
   Button,
   Select,
+  MenuItem,
+  FormControl,
   Tabs,
-  TabList,
-  TabPanels,
   Tab,
-  TabPanel,
-  Spinner,
-  Text,
-  useToast,
-  Badge,
-  Center,
-} from "@chakra-ui/react";
-import { useNavigate } from "react-router-dom";
+  CircularProgress,
+  Chip,
+  Alert,
+} from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import BusinessIcon from "@mui/icons-material/Business";
+import SyncAltIcon from "@mui/icons-material/SyncAlt";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+import TimerIcon from "@mui/icons-material/Timer";
 import {
   getOrganizationAnalysisById,
   getHandoverAnalysis,
@@ -35,6 +35,7 @@ import {
 import HandoverNetwork from "./HandoverNetwork";
 import WorkloadChart from "./WorkloadChart";
 import PerformanceChart from "./PerformanceChart";
+import { useSnackbar } from "../hooks/useSnackbar";
 
 interface OrganizationAnalysisDetailProps {
   analysisId: string;
@@ -45,7 +46,8 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
   analysisId,
   onBack,
 }) => {
-  const toast = useToast();
+  const { showSnackbar } = useSnackbar();
+  const [tabValue, setTabValue] = useState(0);
 
   const [analysis, setAnalysis] =
     useState<OrganizationAnalysisDetailType | null>(null);
@@ -76,18 +78,13 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
         setPerformanceData(data.performance_data);
         setIsInitialLoad(false);
       } catch (error) {
-        toast({
-          title: "エラー",
-          description: "組織分析データの取得に失敗しました",
-          status: "error",
-          duration: 3000,
-        });
+        showSnackbar("組織分析データの取得に失敗しました", "error", 3000);
       } finally {
         setLoading(false);
       }
     };
     loadAnalysis();
-  }, [analysisId, toast]);
+  }, [analysisId, showSnackbar]);
 
   // Reload analyses when aggregation level changes (after initial load)
   useEffect(() => {
@@ -123,12 +120,7 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
           setWorkloadData(workload);
           setPerformanceData(performance);
         } catch (error) {
-          toast({
-            title: "エラー",
-            description: "組織分析の取得に失敗しました",
-            status: "error",
-            duration: 3000,
-          });
+          showSnackbar("組織分析の取得に失敗しました", "error", 3000);
         } finally {
           setLoading(false);
         }
@@ -136,162 +128,224 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
 
       loadData();
     }
-  }, [aggregationLevel, isInitialLoad, analysis, toast]);
+  }, [aggregationLevel, isInitialLoad, analysis, showSnackbar]);
 
   if (loading) {
     return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Spinner size="xl" color="purple.500" />
-          <Text>組織分析データを読み込んでいます...</Text>
-        </VStack>
-      </Center>
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress size={60} sx={{ color: "secondary.main" }} />
+          <Typography>組織分析データを読み込んでいます...</Typography>
+        </Stack>
+      </Box>
     );
   }
 
   if (!analysis) {
     return (
-      <Center h="100vh">
-        <VStack spacing={4}>
-          <Text color="red.500">分析データが見つかりません</Text>
-          <Button onClick={onBack} colorScheme="purple">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        height="100vh"
+      >
+        <Stack spacing={2} alignItems="center">
+          <Typography color="error">分析データが見つかりません</Typography>
+          <Button onClick={onBack} variant="contained" color="secondary">
             組織分析一覧に戻る
           </Button>
-        </VStack>
-      </Center>
+        </Stack>
+      </Box>
     );
   }
 
   return (
-    <Container maxW="container.xl" py={6}>
-      <VStack spacing={6} align="stretch">
+    <Container maxWidth="xl" sx={{ py: 3 }}>
+      <Stack spacing={3}>
         {/* Header */}
-        <HStack justify="space-between">
-          <VStack align="start" spacing={1}>
-            <Heading size="lg">{analysis.analysis_name}</Heading>
-            <HStack>
-              <Badge colorScheme="purple">{analysis.process_type}</Badge>
-              <Badge colorScheme="cyan">
-                {analysis.aggregation_level === "employee"
-                  ? "👤 社員別"
-                  : "🏢 部署別"}
-              </Badge>
-              <Text fontSize="sm" color="gray.600">
+        <Stack direction="row" justifyContent="space-between">
+          <Stack spacing={0.5}>
+            <Typography variant="h4">{analysis.analysis_name}</Typography>
+            <Stack direction="row" spacing={1}>
+              <Chip
+                label={analysis.process_type}
+                color="secondary"
+                size="small"
+              />
+              <Chip
+                icon={
+                  analysis.aggregation_level === "employee" ? (
+                    <PersonIcon />
+                  ) : (
+                    <BusinessIcon />
+                  )
+                }
+                label={
+                  analysis.aggregation_level === "employee"
+                    ? "社員別"
+                    : "部署別"
+                }
+                color="info"
+                size="small"
+              />
+              <Typography variant="body2" color="text.secondary">
                 作成: {new Date(analysis.created_at).toLocaleString("ja-JP")}
-              </Text>
-            </HStack>
-          </VStack>
-          <Button onClick={onBack} variant="outline" colorScheme="purple">
-            組織分析一覧に戻る
+              </Typography>
+            </Stack>
+          </Stack>
+          <Button onClick={onBack} variant="outlined" color="secondary">
+            ← 組織分析一覧に戻る
           </Button>
-        </HStack>
+        </Stack>
 
         {/* Controls */}
-        <Box p={4} borderWidth="1px" borderRadius="md" bg="purple.50">
-          <HStack spacing={4}>
+        <Box
+          p={2}
+          border={1}
+          borderColor="grey.300"
+          borderRadius={1}
+          bgcolor="secondary.50"
+        >
+          <Stack direction="row" spacing={2}>
             <Box flex={1}>
-              <Text
-                mb={2}
-                fontWeight="semibold"
-                fontSize="sm"
-                color="purple.900"
+              <Typography
+                mb={1}
+                fontWeight="600"
+                variant="body2"
+                color="text.primary"
               >
                 プロセスタイプ（固定）
-              </Text>
-              <Text fontSize="md" fontWeight="bold" color="purple.700">
+              </Typography>
+              <Typography variant="body1" fontWeight="bold">
                 {analysis.process_type}
-              </Text>
+              </Typography>
             </Box>
 
             <Box flex={1}>
-              <Text
-                mb={2}
-                fontWeight="semibold"
-                fontSize="sm"
-                color="purple.900"
+              <Typography
+                mb={1}
+                fontWeight="600"
+                variant="body2"
+                color="text.primary"
               >
                 集計レベル
-              </Text>
-              <Select
-                value={aggregationLevel}
-                onChange={(e) =>
-                  setAggregationLevel(e.target.value as AggregationLevel)
-                }
-                bg="white"
-              >
-                <option value="employee">👤 社員別</option>
-                <option value="department">🏢 部署別</option>
-              </Select>
+              </Typography>
+              <FormControl fullWidth>
+                <Select
+                  id="aggregation-level-select"
+                  value={aggregationLevel}
+                  onChange={(e) =>
+                    setAggregationLevel(e.target.value as AggregationLevel)
+                  }
+                  SelectDisplayProps={{
+                    "data-testid": "aggregation-level-select-trigger",
+                  }}
+                >
+                  <MenuItem value="employee">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <PersonIcon fontSize="small" />
+                      <span>社員別</span>
+                    </Stack>
+                  </MenuItem>
+                  <MenuItem value="department">
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <BusinessIcon fontSize="small" />
+                      <span>部署別</span>
+                    </Stack>
+                  </MenuItem>
+                </Select>
+              </FormControl>
             </Box>
-          </HStack>
+          </Stack>
         </Box>
 
         {/* Analysis Tabs */}
         {!loading && handoverData && workloadData && performanceData && (
-          <Tabs colorScheme="blue" variant="enclosed">
-            <TabList>
-              <Tab>
-                🔄 ハンドオーバー分析
-                <Badge ml={2} colorScheme="blue">
-                  {handoverData.nodes.length} ノード
-                </Badge>
-              </Tab>
-              <Tab>
-                📊 作業負荷分析
-                <Badge ml={2} colorScheme="green">
-                  {workloadData.workload.length} 担当者
-                </Badge>
-              </Tab>
-              <Tab>
-                ⏱️ パフォーマンス分析
-                <Badge ml={2} colorScheme="purple">
-                  {performanceData.performance.length} 担当者
-                </Badge>
-              </Tab>
-            </TabList>
+          <Box>
+            <Tabs
+              value={tabValue}
+              onChange={(_e, newValue) => setTabValue(newValue)}
+            >
+              <Tab
+                label={
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <SyncAltIcon fontSize="medium" />
+                    <span>ハンドオーバー分析</span>
+                    <Chip
+                      label={`${handoverData.nodes.length} ノード`}
+                      color="primary"
+                      size="small"
+                    />
+                  </Stack>
+                }
+              />
+              <Tab
+                label={
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <AssessmentIcon fontSize="medium" />
+                    <span>作業負荷分析</span>
+                    <Chip
+                      label={`${workloadData.workload.length} 担当者`}
+                      color="success"
+                      size="small"
+                    />
+                  </Stack>
+                }
+              />
+              <Tab
+                label={
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TimerIcon fontSize="medium" />
+                    <span>パフォーマンス分析</span>
+                    <Chip
+                      label={`${performanceData.performance.length} 担当者`}
+                      color="secondary"
+                      size="small"
+                    />
+                  </Stack>
+                }
+              />
+            </Tabs>
 
-            <TabPanels>
-              <TabPanel p={0}>
-                <VStack align="stretch" spacing={4} h="calc(100vh - 280px)">
-                  <Box p={4} bg="blue.50" borderRadius="md">
-                    <Text fontSize="sm" color="blue.900">
-                      💡 <strong>ハンドオーバー分析:</strong>{" "}
-                      誰と誰が連携して作業しているかを可視化します。矢印は作業の引き継ぎ（ハンドオーバー）を表します。
-                    </Text>
-                  </Box>
-                  <Box flex={1}>
-                    <HandoverNetwork data={handoverData} />
-                  </Box>
-                </VStack>
-              </TabPanel>
+            {tabValue === 0 && (
+              <Stack spacing={2} height="calc(100vh - 280px)">
+                <Alert severity="info">
+                  💡 <strong>ハンドオーバー分析:</strong>{" "}
+                  誰と誰が連携して作業しているかを可視化します。矢印は作業の引き継ぎ（ハンドオーバー）を表します。
+                </Alert>
+                <Box flex={1}>
+                  <HandoverNetwork data={handoverData} />
+                </Box>
+              </Stack>
+            )}
 
-              <TabPanel>
-                <VStack align="stretch" spacing={4}>
-                  <Box p={4} bg="green.50" borderRadius="md">
-                    <Text fontSize="sm" color="green.900">
-                      💡 <strong>作業負荷分析:</strong>{" "}
-                      誰の作業量が多いかを可視化します。上位の担当者は作業が集中している可能性があります。
-                    </Text>
-                  </Box>
-                  <WorkloadChart data={workloadData} />
-                </VStack>
-              </TabPanel>
+            {tabValue === 1 && (
+              <Stack spacing={2}>
+                <Alert severity="success">
+                  💡 <strong>作業負荷分析:</strong>{" "}
+                  誰の作業量が多いかを可視化します。上位の担当者は作業が集中している可能性があります。
+                </Alert>
+                <WorkloadChart data={workloadData} />
+              </Stack>
+            )}
 
-              <TabPanel>
-                <VStack align="stretch" spacing={4}>
-                  <Box p={4} bg="purple.50" borderRadius="md">
-                    <Text fontSize="sm" color="purple.900">
-                      💡 <strong>パフォーマンス分析:</strong>{" "}
-                      誰の処理時間が長いかを可視化します。上位の担当者はボトルネックになっている可能性があります。
-                    </Text>
-                  </Box>
-                  <PerformanceChart data={performanceData} />
-                </VStack>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+            {tabValue === 2 && (
+              <Stack spacing={2}>
+                <Alert severity="warning">
+                  💡 <strong>パフォーマンス分析:</strong>{" "}
+                  誰の処理時間が長いかを可視化します。上位の担当者はボトルネックになっている可能性があります。
+                </Alert>
+                <PerformanceChart data={performanceData} />
+              </Stack>
+            )}
+          </Box>
         )}
-      </VStack>
+      </Stack>
     </Container>
   );
 };
