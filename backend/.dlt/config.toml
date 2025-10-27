@@ -1,0 +1,29 @@
+# dlt configuration file
+# See: https://dlthub.com/docs/general-usage/credentials/config_toml
+
+[runtime]
+log_level = "INFO"
+log_format = "JSON"
+
+[destination.postgres]
+dataset_name = "bronze_raw"
+
+[sources.github]
+# GitHub organization/owner and repositories
+owner = "suwa-sh"
+repositories = ["open-process-mining"]
+
+[sources.gitlab]
+# GitLab namespace and projects
+namespace = "my-company"
+projects = ["project-a", "project-b"]
+
+[sources.jira]
+# Jira server URL and JQL query
+server_url = "https://your-company.atlassian.net"
+jql = "project = PROJ ORDER BY created DESC"
+
+[sources.jenkins]
+# Jenkins server URL
+server_url = "https://jenkins.example.com"
+jobs = ["backend-build", "frontend-build", "deploy-production"]

@@ -914,6 +914,227 @@ def generate_employee_onboarding_data():
     return candidates, outcomes
 
 
+def generate_github_bronze_data():
+    """Generate GitHub Bronze layer sample data with consistent case_ids
+
+    Creates 3 CSV files with realistic project flows:
+    - bronze_github_issues.csv
+    - bronze_github_pull_requests.csv
+    - bronze_github_actions.csv
+
+    Each project follows a consistent timeline:
+    Issue Created → PR Opened → Code Merged → Build Started → Build Completed →
+    Deployed Production → Issue Closed
+    """
+    issues = []
+    pull_requests = []
+    actions_runs = []
+
+    # Define 10 projects with consistent case_ids
+    projects = []
+    for i in range(1, 11):
+        # 60% Jira-style, 40% GitHub issue style
+        if i <= 6:
+            case_id = f"PROJ-{100 + i}"
+            issue_number = 100 + i
+            use_jira = True
+        else:
+            case_id = f"suwa-sh/open-process-mining#{i - 6}"
+            issue_number = i - 6
+            use_jira = False
+
+        # Each project starts at a random date
+        start_date = random_date(START_DATE, END_DATE - timedelta(days=60))
+
+        projects.append(
+            {
+                "case_id": case_id,
+                "issue_number": issue_number,
+                "use_jira": use_jira,
+                "start_date": start_date,
+                # Workflow flags (probabilities)
+                "has_pr": random.random() < 0.8,  # 80% have PRs
+                "has_build": random.random() < 0.7,  # 70% have builds
+                "has_deploy": random.random() < 0.3,  # 30% deploy to production
+                "is_closed": random.random() < 0.7,  # 70% are closed
+            }
+        )
+
+    # Generate events for each project
+    for proj in projects:
+        case_id = proj["case_id"]
+        issue_num = proj["issue_number"]
+        use_jira = proj["use_jira"]
+        current_time = proj["start_date"]
+
+        # 1. Issue Created (always)
+        if use_jira:
+            title = f"[{case_id}] Implement new feature"
+            labels = '["feature", "backend"]'
+        else:
+            title = "Fix bug in authentication module"
+            labels = '["bug", "frontend"]'
+
+        issues.append(
+            {
+                "id": 1000 + issue_num,
+                "number": issue_num,
+                "title": title,
+                "state": "closed" if proj["is_closed"] else "open",
+                "created_at": current_time.isoformat(),
+                "closed_at": (
+                    add_days(current_time, random.randint(14, 45)).isoformat()
+                    if proj["is_closed"]
+                    else ""
+                ),
+                "labels": labels,
+                "loaded_at": datetime.now().isoformat(),
+            }
+        )
+
+        # 2. PR Opened → Code Merged (80% of projects)
+        if proj["has_pr"]:
+            pr_created = add_days(current_time, random.randint(2, 7))
+
+            if use_jira:
+                head_ref = f"feature/{case_id}-implement-api"
+                pr_title = f"Implement API endpoint for {case_id}"
+            else:
+                head_ref = f"fix/issue-{issue_num}"
+                pr_title = f"Fix authentication bug (fixes #{issue_num})"
+
+            # 90% of PRs are merged
+            is_merged = random.random() < 0.9
+            merged_at = (
+                add_days(pr_created, random.randint(1, 5)).isoformat()
+                if is_merged
+                else ""
+            )
+
+            pull_requests.append(
+                {
+                    "id": 2000 + issue_num,
+                    "number": 100 + issue_num,
+                    "title": pr_title,
+                    "state": "closed" if is_merged else "open",
+                    "created_at": pr_created.isoformat(),
+                    "merged_at": merged_at,
+                    "head_ref": head_ref,
+                    "loaded_at": datetime.now().isoformat(),
+                }
+            )
+
+            if is_merged:
+                current_time = add_days(pr_created, random.randint(1, 5))
+
+        # 3. Build Started → Build Completed (70% of projects with PRs)
+        if proj["has_pr"] and proj["has_build"]:
+            build_started = add_days(current_time, random.randint(0, 1))
+            build_duration = random.uniform(0.5, 2.0)  # hours
+            build_completed = add_hours(build_started, build_duration)
+
+            if use_jira:
+                head_branch = f"feature/{case_id}-implement-api"
+            else:
+                head_branch = f"fix/issue-{issue_num}"
+
+            # Build Started
+            actions_runs.append(
+                {
+                    "id": 3000 + issue_num * 10 + 1,
+                    "name": "CI Build",
+                    "status": "completed",
+                    "conclusion": "success",
+                    "created_at": build_started.isoformat(),
+                    "updated_at": build_completed.isoformat(),
+                    "head_branch": head_branch,
+                    "loaded_at": datetime.now().isoformat(),
+                }
+            )
+
+            current_time = build_completed
+
+            # 4. Deployed Production (30% of projects with builds)
+            if proj["has_deploy"]:
+                deploy_time = add_hours(current_time, random.uniform(0.5, 1.5))
+
+                actions_runs.append(
+                    {
+                        "id": 3000 + issue_num * 10 + 2,
+                        "name": "Deploy to Production",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "created_at": deploy_time.isoformat(),
+                        "updated_at": add_hours(deploy_time, 0.2).isoformat(),
+                        "head_branch": head_branch,
+                        "loaded_at": datetime.now().isoformat(),
+                    }
+                )
+
+    # Write to CSV files
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # GitHub Issues
+    issues_path = OUTPUT_DIR / "bronze_github_issues.csv"
+    with open(issues_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "number",
+                "title",
+                "state",
+                "created_at",
+                "closed_at",
+                "labels",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(issues)
+    print(f"  Created: {issues_path} ({len(issues)} issues)")
+
+    # GitHub Pull Requests
+    prs_path = OUTPUT_DIR / "bronze_github_pull_requests.csv"
+    with open(prs_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "number",
+                "title",
+                "state",
+                "created_at",
+                "merged_at",
+                "head_ref",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(pull_requests)
+    print(f"  Created: {prs_path} ({len(pull_requests)} pull requests)")
+
+    # GitHub Actions
+    actions_path = OUTPUT_DIR / "bronze_github_actions.csv"
+    with open(actions_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "name",
+                "status",
+                "conclusion",
+                "created_at",
+                "updated_at",
+                "head_branch",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(actions_runs)
+    print(f"  Created: {actions_path} ({len(actions_runs)} workflow runs)")
+
+
 # Generate all data
 def main():
     print("Generating sample data for 2024...")
@@ -991,7 +1212,12 @@ def main():
     }
     write_process_data("system_development", dev_events, dev_outcomes, dev_schema)
 
+    # GitHub Bronze layer data (simulating dlt output)
+    print("\n- GitHub Bronze Layer (20 issues, 15 PRs, 25 workflow runs)")
+    generate_github_bronze_data()
+
     print("\nDone! Generated 6 process types with source-specific CSV schemas.")
+    print("Plus Bronze layer GitHub data (simulating dlt output).\n")
     print("\nSource schemas:")
     print("  - Order to Cash: order_id, order_status, status_changed_at, employee_id")
     print(
@@ -1003,6 +1229,16 @@ def main():
         "  - Invoice Approval: invoice_id, approval_status, status_time, processor_id"
     )
     print("  - System Development: project_id, phase, phase_changed_at, developer_id")
+    print("\nBronze layer schemas (GitHub):")
+    print(
+        "  - bronze_github_issues: id, number, title, state, created_at, closed_at, labels, loaded_at"
+    )
+    print(
+        "  - bronze_github_pull_requests: id, number, title, state, created_at, merged_at, head_ref, loaded_at"
+    )
+    print(
+        "  - bronze_github_actions: id, name, status, conclusion, created_at, updated_at, head_branch, loaded_at"
+    )
 
 
 if __name__ == "__main__":

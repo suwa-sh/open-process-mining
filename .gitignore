@@ -22,6 +22,11 @@ dbt/dbt_packages/
 dbt/logs/
 dbt/dbt_modules/
 
+# dlt
+backend/.dlt/secrets.toml
+backend/.dlt/.sources
+.dlt/.state/
+
 # Node
 node_modules/
 dist/

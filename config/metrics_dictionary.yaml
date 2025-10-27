@@ -1,0 +1,52 @@
+# メトリック辞書
+# システム開発プロセスマイニングで使用するメトリックの定義
+
+metrics:
+  # リードタイム: 案件の開始から完了までの時間
+  lead_time_days:
+    unit: days
+    agg: "EXTRACT(EPOCH FROM (end_ts - start_ts)) / 86400"
+    domain: process
+    desc: "案件の開始（Issue Created）から完了（Issue Closed/Deployed）までのリードタイム"
+
+  # サイクルタイム: 作業開始からコードマージまでの時間
+  cycle_time_days:
+    unit: days
+    agg: "EXTRACT(EPOCH FROM (code_merged_ts - work_started_ts)) / 86400"
+    domain: process
+    desc: "作業開始（Work Started）からコードマージ（Code Merged）までのサイクルタイム"
+
+  # コードレビュー時間: PRオープンからマージまでの時間
+  code_review_time_hours:
+    unit: hours
+    agg: "EXTRACT(EPOCH FROM (pr_merged_ts - pr_opened_ts)) / 3600"
+    domain: process
+    desc: "プルリクエストオープン（PR Opened）からマージ（Code Merged）までのレビュー時間"
+
+  # ビルド時間: ビルド開始から完了までの時間
+  build_time_minutes:
+    unit: minutes
+    agg: "EXTRACT(EPOCH FROM (build_completed_ts - build_started_ts)) / 60"
+    domain: process
+    desc: "ビルド開始（Build Started）から完了（Build Completed）までの時間"
+
+  # デプロイ頻度: 期間内のデプロイ回数
+  deployment_frequency:
+    unit: count
+    agg: "COUNT(CASE WHEN activity = 'Deployed Production' THEN 1 END)"
+    domain: process
+    desc: "本番環境へのデプロイ回数"
+
+  # 変更失敗率: デプロイ後の失敗率
+  change_failure_rate:
+    unit: percent
+    agg: "COUNT(CASE WHEN activity = 'Rollback' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN activity = 'Deployed Production' THEN 1 END), 0)"
+    domain: process
+    desc: "デプロイ後のロールバック率（変更失敗率）"
+
+  # 平均復旧時間: インシデント発生から解決までの時間
+  mean_time_to_recovery_hours:
+    unit: hours
+    agg: "EXTRACT(EPOCH FROM (incident_resolved_ts - incident_detected_ts)) / 3600"
+    domain: process
+    desc: "インシデント検知から解決までの平均時間（MTTR）"

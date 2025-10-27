@@ -58,3 +58,13 @@ SELECT
     metric_value::numeric,
     metric_unit
 FROM {{ ref('outcome_system_development_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    metric_name,
+    metric_value::numeric,
+    metric_unit
+FROM {{ ref('outcome_github_system_development') }}

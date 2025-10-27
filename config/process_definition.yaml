@@ -1,0 +1,62 @@
+# プロセス定義
+# 各プロセスタイプの開始/終了イベントと完了定義モード
+
+system-development:
+  # 開始イベント候補（優先順位順）
+  start_events:
+    - activity: "Issue Created"
+      priority: 1
+      description: "Issueが作成された時点を案件開始とする"
+    - activity: "Work Started"
+      priority: 2
+      description: "Jiraでステータスが'In Progress'に遷移した時点"
+    - activity: "First Commit"
+      priority: 3
+      description: "最初のコミットが行われた時点（Issueが無い場合の代替）"
+
+  # 終了イベント候補（優先順位順）
+  end_events:
+    - activity: "Issue Closed"
+      priority: 1
+      description: "Issueがクローズされた時点を案件完了とする"
+    - activity: "Deployed Production"
+      priority: 2
+      description: "本番環境へのデプロイが完了した時点"
+    - activity: "Code Merged"
+      priority: 3
+      description: "コードがマージされた時点（代替指標）"
+
+  # 完了定義モード
+  # - "issue_closed": Issue Closedを完了とする（デフォルト）
+  # - "production_deploy": Deployed Productionを必須とする
+  # - "code_merged": Code Mergedで完了とみなす
+  completion_mode: "issue_closed"
+
+  # 再オープン処理
+  reopen_handling:
+    keep_original_start: true  # 初回作成時刻を維持
+    track_reopen_count: true   # 再オープン回数を別途集計
+
+  # タイムゾーン設定
+  timezone: "UTC"
+
+# 既存プロセス（参考）
+order-to-cash:
+  start_events:
+    - activity: "受注登録"
+      priority: 1
+  end_events:
+    - activity: "入金確認"
+      priority: 1
+  completion_mode: "default"
+  timezone: "Asia/Tokyo"
+
+employee-onboarding:
+  start_events:
+    - activity: "応募受付"
+      priority: 1
+  end_events:
+    - activity: "入社手続き完了"
+      priority: 1
+  completion_mode: "default"
+  timezone: "Asia/Tokyo"

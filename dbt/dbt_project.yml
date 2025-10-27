@@ -75,3 +75,40 @@ seeds:
         metric_name: varchar
         metric_value: numeric
         metric_unit: varchar
+
+    # GitHub Bronze layer (simulating dlt output)
+    bronze_github_issues:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        number: int
+        title: varchar
+        state: varchar
+        created_at: timestamp
+        closed_at: timestamp
+        labels: varchar
+        loaded_at: timestamp
+
+    bronze_github_pull_requests:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        number: int
+        title: varchar
+        state: varchar
+        created_at: timestamp
+        merged_at: timestamp
+        head_ref: varchar
+        loaded_at: timestamp
+
+    bronze_github_actions:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        name: varchar
+        status: varchar
+        conclusion: varchar
+        created_at: timestamp
+        updated_at: timestamp
+        head_branch: varchar
+        loaded_at: timestamp

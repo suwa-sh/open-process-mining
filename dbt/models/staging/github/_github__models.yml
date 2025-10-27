@@ -1,0 +1,86 @@
+version: 2
+
+models:
+  - name: stg_github_issues
+    description: "GitHub Issuesから標準イベントログ形式に変換したステージングモデル"
+    columns:
+      - name: case_id
+        description: "ケースID（owner/repo#number形式）"
+        data_tests:
+          - not_null
+      - name: activity
+        description: "アクティビティ名（Issue Created, Issue Closed）"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Issue Created', 'Issue Closed']
+      - name: timestamp
+        description: "イベント発生日時（UTC）"
+        data_tests:
+          - not_null
+      - name: source_system
+        description: "ソースシステム識別子"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['github_issue']
+      - name: attributes_json
+        description: "イベント属性（JSONB）"
+        data_tests:
+          - not_null
+
+  - name: stg_github_pull_requests
+    description: "GitHub Pull Requestsから標準イベントログ形式に変換したステージングモデル"
+    columns:
+      - name: case_id
+        description: "ケースID（Jiraキーまたはowner/repo#number形式）"
+        data_tests:
+          - not_null
+      - name: activity
+        description: "アクティビティ名（PR Opened, Code Merged）"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['PR Opened', 'Code Merged']
+      - name: timestamp
+        description: "イベント発生日時（UTC）"
+        data_tests:
+          - not_null
+      - name: source_system
+        description: "ソースシステム識別子"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['github_repo']
+      - name: attributes_json
+        description: "イベント属性（JSONB）"
+        data_tests:
+          - not_null
+
+  - name: stg_github_actions
+    description: "GitHub Actions実行履歴から標準イベントログ形式に変換したステージングモデル"
+    columns:
+      - name: case_id
+        description: "ケースID（Jiraキーまたはowner/repo#number形式）"
+        data_tests:
+          - not_null
+      - name: activity
+        description: "アクティビティ名（Build Started, Build Completed, Deployed Production）"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Build Started', 'Build Completed', 'Deployed Production']
+      - name: timestamp
+        description: "イベント発生日時（UTC）"
+        data_tests:
+          - not_null
+      - name: source_system
+        description: "ソースシステム識別子"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['github_actions']
+      - name: attributes_json
+        description: "イベント属性（JSONB）"
+        data_tests:
+          - not_null

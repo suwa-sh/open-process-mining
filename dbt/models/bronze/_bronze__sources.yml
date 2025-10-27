@@ -1,0 +1,92 @@
+version: 2
+
+sources:
+  - name: bronze_raw
+    schema: public_bronze_raw
+    description: "Bronze層（dltで抽出した生データ）"
+    tables:
+      - name: bronze_github_issues
+        identifier: bronze_github_issues
+        description: "GitHub Issues"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+        columns:
+          - name: id
+            description: "Issue ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: number
+            description: "Issue番号"
+            data_tests:
+              - not_null
+          - name: title
+            description: "タイトル"
+          - name: state
+            description: "状態（open/closed）"
+            data_tests:
+              - accepted_values:
+                  values: ['open', 'closed']
+          - name: created_at
+            description: "作成日時"
+            data_tests:
+              - not_null
+          - name: closed_at
+            description: "完了日時"
+
+      - name: bronze_github_pull_requests
+        identifier: bronze_github_pull_requests
+        description: "GitHub Pull Requests"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+        columns:
+          - name: id
+            description: "PR ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: number
+            description: "PR番号"
+            data_tests:
+              - not_null
+          - name: title
+            description: "タイトル"
+          - name: state
+            description: "状態"
+          - name: created_at
+            description: "作成日時"
+            data_tests:
+              - not_null
+          - name: merged_at
+            description: "マージ日時"
+          - name: head_ref
+            description: "ブランチ名"
+
+      - name: bronze_github_actions
+        identifier: bronze_github_actions
+        description: "GitHub Actions実行履歴"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+        columns:
+          - name: id
+            description: "実行ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: name
+            description: "ワークフロー名"
+          - name: status
+            description: "ステータス"
+          - name: conclusion
+            description: "結果"
+          - name: created_at
+            description: "開始日時"
+            data_tests:
+              - not_null
+          - name: updated_at
+            description: "更新日時"
+          - name: head_branch
+            description: "ブランチ名"

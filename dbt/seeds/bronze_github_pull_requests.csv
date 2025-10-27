@@ -1,0 +1,8 @@
+id,number,title,state,created_at,merged_at,head_ref,loaded_at
+2102,202,Implement API endpoint for PROJ-102,closed,2024-05-10T16:36:00,2024-05-11T16:36:00,feature/PROJ-102-implement-api,2025-10-27T08:07:30.360908
+2104,204,Implement API endpoint for PROJ-104,closed,2024-04-22T16:54:00,2024-04-27T16:54:00,feature/PROJ-104-implement-api,2025-10-27T08:07:30.360922
+2105,205,Implement API endpoint for PROJ-105,closed,2024-03-02T05:53:00,2024-03-07T05:53:00,feature/PROJ-105-implement-api,2025-10-27T08:07:30.360938
+2106,206,Implement API endpoint for PROJ-106,closed,2024-03-02T10:07:00,2024-03-07T10:07:00,feature/PROJ-106-implement-api,2025-10-27T08:07:30.360957
+2001,101,Fix authentication bug (fixes #1),closed,2024-06-01T17:46:00,2024-06-04T17:46:00,fix/issue-1,2025-10-27T08:07:30.360972
+2002,102,Fix authentication bug (fixes #2),closed,2024-06-10T21:53:00,2024-06-11T21:53:00,fix/issue-2,2025-10-27T08:07:30.360990
+2004,104,Fix authentication bug (fixes #4),closed,2024-09-11T21:06:00,2024-09-16T21:06:00,fix/issue-4,2025-10-27T08:07:30.361014
