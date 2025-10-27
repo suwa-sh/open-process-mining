@@ -1,13 +1,78 @@
 import { useEffect, useState } from "react";
 import ELK from "elkjs/lib/elk.bundled.js";
 import { Node, Edge } from "../types";
+import { detectBackEdges } from "../utils/detectBackEdges";
 
 const elk = new ELK();
 
 /**
- * Adjust START/END node positions to align with connected activity nodes.
- * - START node: x-coordinate centered with first activity, y-coordinate gap reduced by half
- * - END node: x-coordinate centered with last activity, y-coordinate kept as-is
+ * START node位置を調整する
+ * @param node 対象ノード
+ * @param nodes 全ノード
+ * @param edges 全エッジ
+ * @returns 調整後のノード、または調整不要の場合は元のノード
+ */
+const adjustStartNodePosition = (
+  node: Node,
+  nodes: Node[],
+  edges: Edge[],
+): Node => {
+  const firstActivityEdge = edges.find((e) => e.source === "START");
+  if (!firstActivityEdge) return node;
+
+  const firstActivity = nodes.find((n) => n.id === firstActivityEdge.target);
+  if (!firstActivity?.position || !node.position) return node;
+
+  const activityWidth = 150;
+  const startNodeWidth = 16;
+  const centerOffset = (activityWidth - startNodeWidth) / 2;
+  const yGap = firstActivity.position.y - node.position.y;
+  const reducedYGap = yGap / 2;
+
+  return {
+    ...node,
+    position: {
+      x: firstActivity.position.x + centerOffset,
+      y: firstActivity.position.y - reducedYGap,
+    },
+  };
+};
+
+/**
+ * END node位置を調整する
+ * @param node 対象ノード
+ * @param nodes 全ノード
+ * @param edges 全エッジ
+ * @returns 調整後のノード、または調整不要の場合は元のノード
+ */
+const adjustEndNodePosition = (
+  node: Node,
+  nodes: Node[],
+  edges: Edge[],
+): Node => {
+  const lastActivityEdge = edges.find((e) => e.target === "END");
+  if (!lastActivityEdge) return node;
+
+  const lastActivity = nodes.find((n) => n.id === lastActivityEdge.source);
+  if (!lastActivity?.position || !node.position) return node;
+
+  const activityWidth = 150;
+  const endNodeWidth = 20;
+  const centerOffset = (activityWidth - endNodeWidth) / 2;
+
+  return {
+    ...node,
+    position: {
+      x: lastActivity.position.x + centerOffset,
+      y: node.position.y,
+    },
+  };
+};
+
+/**
+ * START/END node位置を調整する
+ * - START node: 最初のアクティビティとx座標を揃え、y座標のギャップを半分に
+ * - END node: 最後のアクティビティとx座標を揃え、y座標はそのまま
  */
 const adjustStartEndNodePositions = (nodes: Node[], edges: Edge[]): Node[] => {
   const startNode = nodes.find((n) => n.id === "START");
@@ -17,63 +82,14 @@ const adjustStartEndNodePositions = (nodes: Node[], edges: Edge[]): Node[] => {
     return nodes;
   }
 
-  const adjustedNodes = nodes.map((node) => {
+  return nodes.map((node) => {
     if (node.id === "START" && startNode) {
-      // Find the first activity that START connects to
-      const firstActivityEdge = edges.find((e) => e.source === "START");
-      if (firstActivityEdge) {
-        const firstActivity = nodes.find(
-          (n) => n.id === firstActivityEdge.target,
-        );
-        if (firstActivity) {
-          // Center START node horizontally with first activity
-          // Assuming activity node width is 150px and START node width is 16px
-          const activityWidth = 150;
-          const startNodeWidth = 16;
-          const centerOffset = (activityWidth - startNodeWidth) / 2;
-
-          // Reduce the y-coordinate gap by half
-          const yGap = firstActivity.position.y - node.position.y;
-          const reducedYGap = yGap / 2;
-
-          return {
-            ...node,
-            position: {
-              x: firstActivity.position.x + centerOffset,
-              y: firstActivity.position.y - reducedYGap,
-            },
-          };
-        }
-      }
+      return adjustStartNodePosition(node, nodes, edges);
     } else if (node.id === "END" && endNode) {
-      // Find the first activity that connects to END
-      const lastActivityEdge = edges.find((e) => e.target === "END");
-      if (lastActivityEdge) {
-        const lastActivity = nodes.find(
-          (n) => n.id === lastActivityEdge.source,
-        );
-        if (lastActivity) {
-          // Center END node horizontally with last activity
-          // Assuming activity node width is 150px and END node width is 20px
-          const activityWidth = 150;
-          const endNodeWidth = 20;
-          const centerOffset = (activityWidth - endNodeWidth) / 2;
-
-          // Keep END node y-coordinate as-is (gap is already good)
-          return {
-            ...node,
-            position: {
-              x: lastActivity.position.x + centerOffset,
-              y: node.position.y,
-            },
-          };
-        }
-      }
+      return adjustEndNodePosition(node, nodes, edges);
     }
     return node;
   });
-
-  return adjustedNodes;
 };
 
 export const useLayout = (
@@ -93,24 +109,70 @@ export const useLayout = (
 
       setIsLayouting(true);
 
+      // 1. Detect back edges (rework loops)
+      const backEdges = detectBackEdges(nodes, edges);
+
+      // 2. Prepare nodes with layer constraints
+      // Use FIRST/LAST constraints for START/END nodes
+      const elkNodes = nodes.map((node) => {
+        const nodeConfig: any = {
+          id: node.id,
+          width: 150,
+          height: 50,
+        };
+
+        // Assign layer constraints
+        if (node.id === "START") {
+          nodeConfig.layoutOptions = {
+            "elk.layered.layering.layerConstraint": "FIRST",
+          };
+        } else if (node.id === "END") {
+          nodeConfig.layoutOptions = {
+            "elk.layered.layering.layerConstraint": "LAST",
+          };
+        }
+
+        return nodeConfig;
+      });
+
+      // 4. Prepare edges with feedback flag for back edges
+      const elkEdges = edges.map((edge) => {
+        const edgeKey = `${edge.source}->${edge.target}`;
+        const edgeConfig: any = {
+          id: edge.id,
+          sources: [edge.source],
+          targets: [edge.target],
+        };
+
+        // Mark back edges as feedback edges
+        if (backEdges.has(edgeKey)) {
+          edgeConfig.layoutOptions = {
+            "elk.layered.priority.direction": "10", // Lower priority for back edges
+          };
+        }
+
+        return edgeConfig;
+      });
+
       const elkGraph = {
         id: "root",
         layoutOptions: {
           "elk.algorithm": "layered",
           "elk.direction": direction,
-          "elk.spacing.nodeNode": "80",
+          // Horizontal spacing between nodes in the same layer (increased for better branch visibility)
+          "elk.spacing.nodeNode": "150",
+          // Vertical spacing between layers
           "elk.layered.spacing.nodeNodeBetweenLayers": "100",
+          // Use LONGEST_PATH strategy to arrange longest path vertically
+          "elk.layered.layering.strategy": "LONGEST_PATH",
+          // Thorough cycle breaking to handle back edges properly
+          "elk.layered.cycleBreaking.strategy": "DEPTH_FIRST",
+          // Wide layout: spread nodes horizontally
+          "elk.layered.nodePlacement.strategy": "NETWORK_SIMPLEX",
+          "elk.layered.thoroughness": "7",
         },
-        children: nodes.map((node) => ({
-          id: node.id,
-          width: 150,
-          height: 50,
-        })),
-        edges: edges.map((edge) => ({
-          id: edge.id,
-          sources: [edge.source],
-          targets: [edge.target],
-        })),
+        children: elkNodes,
+        edges: elkEdges,
       };
 
       try {

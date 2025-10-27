@@ -414,27 +414,26 @@ Playwrightのstrict modeに対応するため、以下の優先順位でロケ�
 1. **Role-based locators（最優先）**:
 
    ```typescript
-   page.getByRole("button", { name: "プロセス分析" })
-   page.getByRole("tab", { name: /ハンドオーバー分析/ })
+   page.getByRole("button", { name: "プロセス分析" });
+   page.getByRole("tab", { name: /ハンドオーバー分析/ });
    ```
 
 2. **Test ID locators**:
 
    ```typescript
-   page.getByTestId("process-type-select-trigger")
+   page.getByTestId("process-type-select-trigger");
    ```
 
 3. **Text-based locators（最終手段）**:
-
    - 複数要素にマッチする可能性があるため注意
    - emojiなどの特殊文字は避ける
 
    ```typescript
    // ❌ 悪い例（strict mode違反の可能性）
-   page.locator("text=ハンドオーバー分析")
+   page.locator("text=ハンドオーバー分析");
 
    // ✅ 良い例
-   page.getByRole("tab", { name: /ハンドオーバー分析/ })
+   page.getByRole("tab", { name: /ハンドオーバー分析/ });
    ```
 
 ### APIの動作確認
@@ -669,10 +668,27 @@ useEffect(() => {
 **ProcessMap.tsx（プロセスマップ）**:
 
 - `useLayout`フック: `elkjs`との連携による自動レイアウト計算
+  - **最長パス縦配置**: `LONGEST_PATH`戦略により最長パスを縦方向に配置
+  - **バックエッジ検出**: DFSによりサイクル（手戻りループ）を自動検出
+  - **レイヤー制約**: START/ENDノードに`FIRST`/`LAST`制約を適用
+  - **サイクル処理**: `DEPTH_FIRST`戦略でバックエッジを適切に処理
+  - **ノード間隔**: 横150px、縦100pxで広々としたレイアウト
 - 動的エッジラベル: `displayMetric`状態に応じて頻度/待機時間を切替
 - パスフィルタリング: `pathThreshold`に基づき`edges`に`hidden`プロパティを追加
 - ハッピーパス強調: 頻度80%以上のエッジを青い太線で表示（`strokeColor: '#3182ce'`, `strokeWidth: normalizedFreq * 8`）
 - 問題パス警告: 待機時間70%以上のエッジを赤線で表示（`strokeColor: '#e53e3e'`）
+
+**バックエッジ検出（`detectBackEdges.ts`）**:
+
+- DFS（深さ優先探索）によるサイクル検出アルゴリズム
+- 戻り値: `Set<string>` - エッジキー（"source->target"形式）
+- 用途: ELK.jsレイアウトでバックエッジを識別し、適切な優先度を設定
+
+**最長パス計算（`calculateLongestPath.ts`）**:
+
+- バックエッジを除外したDAGで最長パス長を計算
+- トポロジカルソートベースのアルゴリズム
+- `getLongestPathNodes()`: 最長パス順にソートされたノードIDリストを返す
 
 **OrganizationAnalysisDetail.tsx（組織分析詳細）**:
 

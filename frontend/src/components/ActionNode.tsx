@@ -15,7 +15,7 @@ const ActionNode: React.FC<ActionNodeProps> = ({ data }) => {
       elevation={3}
       sx={{
         border: 2,
-        borderColor: "primary.main",
+        borderColor: "grey.400",
         borderRadius: 1,
         bgcolor: "white",
         p: 2,

@@ -946,17 +946,21 @@ def generate_github_bronze_data():
         # Each project starts at a random date
         start_date = random_date(START_DATE, END_DATE - timedelta(days=60))
 
+        has_pr = random.random() < 0.7  # 70% have PRs
+        has_build = has_pr and (random.random() < 0.9)  # 90% of PRs trigger builds
+        has_deploy = has_build and (random.random() < 0.3)  # 30% of builds deploy
+
         projects.append(
             {
                 "case_id": case_id,
                 "issue_number": issue_number,
                 "use_jira": use_jira,
                 "start_date": start_date,
-                # Workflow flags (probabilities)
-                "has_pr": random.random() < 0.8,  # 80% have PRs
-                "has_build": random.random() < 0.7,  # 70% have builds
-                "has_deploy": random.random() < 0.3,  # 30% deploy to production
-                "is_closed": random.random() < 0.7,  # 70% are closed
+                # Workflow flags
+                "has_pr": has_pr,
+                "has_build": has_build,
+                "has_deploy": has_deploy,
+                "is_closed": True,  # All issues are eventually closed
             }
         )
 
@@ -975,24 +979,10 @@ def generate_github_bronze_data():
             title = "Fix bug in authentication module"
             labels = '["bug", "frontend"]'
 
-        issues.append(
-            {
-                "id": 1000 + issue_num,
-                "number": issue_num,
-                "title": title,
-                "state": "closed" if proj["is_closed"] else "open",
-                "created_at": current_time.isoformat(),
-                "closed_at": (
-                    add_days(current_time, random.randint(14, 45)).isoformat()
-                    if proj["is_closed"]
-                    else ""
-                ),
-                "labels": labels,
-                "loaded_at": datetime.now().isoformat(),
-            }
-        )
+        issue_created_time = current_time
+        issue_closed_time = None  # Will be set later
 
-        # 2. PR Opened → Code Merged (80% of projects)
+        # 2. PR Opened → Code Merged (70% of projects)
         if proj["has_pr"]:
             pr_created = add_days(current_time, random.randint(2, 7))
 
@@ -1003,58 +993,119 @@ def generate_github_bronze_data():
                 head_ref = f"fix/issue-{issue_num}"
                 pr_title = f"Fix authentication bug (fixes #{issue_num})"
 
-            # 90% of PRs are merged
-            is_merged = random.random() < 0.9
-            merged_at = (
-                add_days(pr_created, random.randint(1, 5)).isoformat()
-                if is_merged
-                else ""
-            )
+            # All PRs in this simulation are eventually merged
+            # (unmerged PRs don't proceed to build/deploy)
+            merged_time = add_days(pr_created, random.randint(1, 5))
 
             pull_requests.append(
                 {
                     "id": 2000 + issue_num,
                     "number": 100 + issue_num,
                     "title": pr_title,
-                    "state": "closed" if is_merged else "open",
+                    "state": "closed",
                     "created_at": pr_created.isoformat(),
-                    "merged_at": merged_at,
+                    "merged_at": merged_time.isoformat(),
                     "head_ref": head_ref,
                     "loaded_at": datetime.now().isoformat(),
                 }
             )
 
-            if is_merged:
-                current_time = add_days(pr_created, random.randint(1, 5))
+            current_time = merged_time
 
-        # 3. Build Started → Build Completed (70% of projects with PRs)
-        if proj["has_pr"] and proj["has_build"]:
-            build_started = add_days(current_time, random.randint(0, 1))
-            build_duration = random.uniform(0.5, 2.0)  # hours
-            build_completed = add_hours(build_started, build_duration)
-
+        # 3. Build Started → Build Completed (if has_build)
+        # 30%の確率で手戻り（ビルド失敗→再修正）を含む
+        if proj["has_build"]:
             if use_jira:
                 head_branch = f"feature/{case_id}-implement-api"
             else:
                 head_branch = f"fix/issue-{issue_num}"
 
-            # Build Started
-            actions_runs.append(
-                {
-                    "id": 3000 + issue_num * 10 + 1,
-                    "name": "CI Build",
-                    "status": "completed",
-                    "conclusion": "success",
-                    "created_at": build_started.isoformat(),
-                    "updated_at": build_completed.isoformat(),
-                    "head_branch": head_branch,
-                    "loaded_at": datetime.now().isoformat(),
-                }
-            )
+            has_rework = random.random() < 0.3  # 30% have build failures requiring rework
 
-            current_time = build_completed
+            if has_rework:
+                # First build attempt - fails
+                build_started_1 = add_days(current_time, random.randint(0, 1))
+                build_duration_1 = random.uniform(0.3, 1.0)
+                build_completed_1 = add_hours(build_started_1, build_duration_1)
 
-            # 4. Deployed Production (30% of projects with builds)
+                actions_runs.append(
+                    {
+                        "id": 3000 + issue_num * 10 + 1,
+                        "name": "CI Build",
+                        "status": "completed",
+                        "conclusion": "failure",
+                        "created_at": build_started_1.isoformat(),
+                        "updated_at": build_completed_1.isoformat(),
+                        "head_branch": head_branch,
+                        "loaded_at": datetime.now().isoformat(),
+                    }
+                )
+
+                # Code Merged again (rework) - creates a cycle: Build Completed -> Code Merged
+                rework_merge_time = add_hours(build_completed_1, random.uniform(2, 8))
+
+                if use_jira:
+                    rework_pr_title = f"[REWORK] Implement API endpoint for {case_id}"
+                else:
+                    rework_pr_title = f"[REWORK] Fix authentication bug (fixes #{issue_num})"
+
+                pull_requests.append(
+                    {
+                        "id": 2000 + issue_num + 1000,  # Different ID for rework PR
+                        "number": 100 + issue_num + 1000,
+                        "title": rework_pr_title,
+                        "state": "closed",
+                        "created_at": add_hours(build_completed_1, random.uniform(0.5, 2)).isoformat(),
+                        "merged_at": rework_merge_time.isoformat(),
+                        "head_ref": head_branch,
+                        "loaded_at": datetime.now().isoformat(),
+                    }
+                )
+
+                current_time = rework_merge_time
+
+                # Second build attempt - succeeds
+                build_started_2 = add_hours(current_time, random.uniform(0.1, 0.5))
+                build_duration_2 = random.uniform(0.5, 2.0)
+                build_completed_2 = add_hours(build_started_2, build_duration_2)
+
+                actions_runs.append(
+                    {
+                        "id": 3000 + issue_num * 10 + 3,
+                        "name": "CI Build",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "created_at": build_started_2.isoformat(),
+                        "updated_at": build_completed_2.isoformat(),
+                        "head_branch": head_branch,
+                        "loaded_at": datetime.now().isoformat(),
+                    }
+                )
+
+                current_time = build_completed_2
+            else:
+                # Normal flow - build succeeds on first try
+                build_started = add_days(current_time, random.randint(0, 1))
+                build_duration = random.uniform(0.5, 2.0)  # hours
+                build_completed = add_hours(build_started, build_duration)
+
+                # Build Started
+                actions_runs.append(
+                    {
+                        "id": 3000 + issue_num * 10 + 1,
+                        "name": "CI Build",
+                        "status": "completed",
+                        "conclusion": "success",
+                        "created_at": build_started.isoformat(),
+                        "updated_at": build_completed.isoformat(),
+                        "head_branch": head_branch,
+                        "loaded_at": datetime.now().isoformat(),
+                    }
+                )
+
+                current_time = build_completed
+
+            # 4. Deployed Production (if has_deploy)
             if proj["has_deploy"]:
                 deploy_time = add_hours(current_time, random.uniform(0.5, 1.5))
 
@@ -1070,6 +1121,29 @@ def generate_github_bronze_data():
                         "loaded_at": datetime.now().isoformat(),
                     }
                 )
+
+                current_time = add_hours(deploy_time, 0.2)
+
+        # Issue Closed (always, at the end)
+        if not proj["has_pr"]:
+            # Direct close: 1-3 days after creation
+            issue_closed_time = add_days(issue_created_time, random.randint(1, 3))
+        else:
+            # Close after workflow: 1-7 days after last activity
+            issue_closed_time = add_days(current_time, random.randint(1, 7))
+
+        issues.append(
+            {
+                "id": 1000 + issue_num,
+                "number": issue_num,
+                "title": title,
+                "state": "closed",
+                "created_at": issue_created_time.isoformat(),
+                "closed_at": issue_closed_time.isoformat(),
+                "labels": labels,
+                "loaded_at": datetime.now().isoformat(),
+            }
+        )
 
     # Write to CSV files
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

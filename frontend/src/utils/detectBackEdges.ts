@@ -4,14 +4,14 @@ import { Node, Edge } from "../types";
  * バックエッジ（サイクルを形成するエッジ）を検出する
  *
  * DFS（深さ優先探索）を使用してグラフのサイクルを検出し、
- * サイクルを形成するバックエッジのIDリストを返す。
+ * サイクルを形成するバックエッジをエッジキー形式（"source->target"）で返す。
  *
  * @param nodes ノードの配列
  * @param edges エッジの配列
- * @returns バックエッジのID配列
+ * @returns バックエッジのキー（"source->target"形式）のSet
  */
-export function detectBackEdges(nodes: Node[], edges: Edge[]): string[] {
-  const backEdgeIds: string[] = [];
+export function detectBackEdges(nodes: Node[], edges: Edge[]): Set<string> {
+  const backEdgeKeys = new Set<string>();
 
   // ノードIDからエッジのリストへのマッピング
   const adjacencyList = new Map<string, Edge[]>();
@@ -37,7 +37,7 @@ export function detectBackEdges(nodes: Node[], edges: Edge[]): string[] {
 
       if (visiting.has(targetId)) {
         // 訪問中のノードへの接続 = バックエッジ（サイクル形成）
-        backEdgeIds.push(edge.id);
+        backEdgeKeys.add(`${edge.source}->${edge.target}`);
       } else if (!visited.has(targetId)) {
         // 未訪問のノードを探索
         dfs(targetId);
@@ -54,5 +54,5 @@ export function detectBackEdges(nodes: Node[], edges: Edge[]): string[] {
     }
   });
 
-  return backEdgeIds;
+  return backEdgeKeys;
 }

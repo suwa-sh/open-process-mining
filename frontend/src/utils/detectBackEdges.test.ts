@@ -2,7 +2,7 @@ import { detectBackEdges } from "./detectBackEdges";
 import { Node, Edge } from "../types";
 
 describe("detectBackEdges", () => {
-  describe("detectBackEdges_サイクルがない場合_空配列を返すこと", () => {
+  describe("detectBackEdges_サイクルがない場合_空Setを返すこと", () => {
     test("線形フローの場合", () => {
       // Given: A → B → C
       const nodes: Node[] = [
@@ -34,7 +34,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual([]);
+      expect(backEdges).toEqual(new Set());
     });
 
     test("分岐があるが戻りがない場合", () => {
@@ -77,7 +77,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual([]);
+      expect(backEdges).toEqual(new Set());
     });
   });
 
@@ -107,7 +107,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual(["e2"]);
+      expect(backEdges).toEqual(new Set(["B->A"]));
     });
 
     test("3ノードのサイクル: A → B → C → A", () => {
@@ -142,7 +142,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual(["e3"]);
+      expect(backEdges).toEqual(new Set(["C->A"]));
     });
   });
 
@@ -187,7 +187,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual(["e4"]);
+      expect(backEdges).toEqual(new Set(["D->B"]));
     });
 
     test("実際の請求プロセス: 承認申請 → 差戻 → 修正 → 再申請 → 承認申請", () => {
@@ -263,7 +263,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual(["e5"]);
+      expect(backEdges).toEqual(new Set(["再申請->承認申請"]));
     });
   });
 
@@ -307,11 +307,11 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual(["e3"]);
+      expect(backEdges).toEqual(new Set(["B->A"]));
     });
   });
 
-  describe("detectBackEdges_エッジがない場合_空配列を返すこと", () => {
+  describe("detectBackEdges_エッジがない場合_空Setを返すこと", () => {
     test("ノードのみでエッジが0個", () => {
       // Given
       const nodes: Node[] = [
@@ -328,7 +328,7 @@ describe("detectBackEdges", () => {
       const backEdges = detectBackEdges(nodes, edges);
 
       // Then
-      expect(backEdges).toEqual([]);
+      expect(backEdges).toEqual(new Set());
     });
   });
 });

@@ -21,8 +21,8 @@ case_extraction AS (
             -- 優先順位2: タイトルからJiraキー抽出
             substring(title FROM '([A-Z][A-Z0-9]+-\d+)'),
             -- 優先順位3: GitHub Issue番号
-            '{{ var("github_owner", "suwa-sh") }}' || '/' || '{{ var("github_repo", "open-process-mining") }}' || '#' ||
-                substring(title FROM '#(\d+)')
+            '{{ var("github_owner", "suwa-sh") }}' || '/' || '{{ var("github_repo", "open-process-mining") }}' || '#'
+                || substring(title FROM '#(\d+)')
         ) AS case_id
     FROM source
 ),

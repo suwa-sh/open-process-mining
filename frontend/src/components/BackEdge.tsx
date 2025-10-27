@@ -1,12 +1,12 @@
 /**
  * バックエッジコンポーネント
  *
- * サイクルを形成するエッジを横方向（曲線）で表示するカスタムエッジ
- * ノードの右側から接続し、完全なベジェ曲線で描画
+ * サイクルを形成するエッジを横方向（直角コネクタ、角丸あり）で表示するカスタムエッジ
+ * ノードの右側から接続し、直角の折れ線（角を丸める）で描画
  */
 
 import React from "react";
-import { BaseEdge, EdgeProps, getBezierPath, Position } from "@xyflow/react";
+import { BaseEdge, EdgeProps } from "@xyflow/react";
 
 const BackEdge: React.FC<EdgeProps> = ({
   id,
@@ -22,17 +22,28 @@ const BackEdge: React.FC<EdgeProps> = ({
   labelStyle,
   labelBgStyle,
 }) => {
-  // ノードの右側から接続するように設定
-  const [edgePath, labelX, labelY] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition: Position.Right,
-    targetX,
-    targetY,
-    targetPosition: Position.Right,
-    // 横方向に大きく膨らませるため、curvatureを調整
-    curvature: 0.25,
-  });
+  // 直角コネクタのパラメータ
+  const offset = 80; // 横方向のオフセット（ピクセル）
+  const cornerRadius = 10; // 角の丸め半径（ピクセル）
+
+  // 制御点を計算
+  const rightX = Math.max(sourceX, targetX) + offset;
+  const midY = (sourceY + targetY) / 2;
+
+  // 直角コネクタのパス生成（角丸あり）
+  // sourceから右へ → 下/上へ → 左へtargetへ
+  const edgePath = `
+    M ${sourceX},${sourceY}
+    L ${rightX - cornerRadius},${sourceY}
+    Q ${rightX},${sourceY} ${rightX},${sourceY + (sourceY < targetY ? cornerRadius : -cornerRadius)}
+    L ${rightX},${targetY + (sourceY < targetY ? -cornerRadius : cornerRadius)}
+    Q ${rightX},${targetY} ${rightX - cornerRadius},${targetY}
+    L ${targetX},${targetY}
+  `;
+
+  // ラベルの位置を右側の中央に配置
+  const labelX = rightX;
+  const labelY = midY;
 
   return (
     <>

@@ -101,6 +101,7 @@ models:
                     "count",
                     "days",
                     "hours",
+                    "minutes",
                     "score",
                     "points",
                     "weight",

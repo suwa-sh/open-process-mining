@@ -19,8 +19,8 @@ case_extraction AS (
             -- 優先順位1: ブランチ名からJiraキー抽出
             substring(head_branch FROM '([A-Z][A-Z0-9]+-\d+)'),
             -- 優先順位2: GitHub Issue番号
-            '{{ var("github_owner", "suwa-sh") }}' || '/' || '{{ var("github_repo", "open-process-mining") }}' || '#' ||
-                substring(head_branch FROM '#(\d+)')
+            '{{ var("github_owner", "suwa-sh") }}' || '/' || '{{ var("github_repo", "open-process-mining") }}' || '#'
+                || substring(head_branch FROM '#(\d+)')
         ) AS case_id
     FROM source
 ),

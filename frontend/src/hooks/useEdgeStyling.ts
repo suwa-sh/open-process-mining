@@ -70,8 +70,7 @@ export const useEdgeStyling = (
       if (edge.hidden) {
         strokeColor = "#ccc";
       } else if (excludeStartEndEdges && isStartOrEndEdge) {
-        // START/ENDエッジは強調しない
-        strokeColor = "#555";
+        // START/ENDエッジは強調しない（デフォルト色を使用）
       } else if (normalizedWaitingTime > longWaitingTimeThreshold) {
         // 長待機時間パスは赤色で警告
         strokeColor = "#e53e3e";
