@@ -12,13 +12,18 @@ import {
   useEdgesState,
   Node as FlowNode,
   Edge as FlowEdge,
+  MarkerType,
 } from "@xyflow/react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import "@xyflow/react/dist/style.css";
 
 import ActionNode from "../ActionNode";
+import StartNode from "../StartNode";
+import EndNode from "../EndNode";
+import BackEdge from "../BackEdge";
 import { useLayout } from "../../hooks/useLayout";
 import OutcomeControls from "./OutcomeControls";
+import { detectBackEdges } from "../../utils/detectBackEdges";
 import type {
   OutcomeAnalysisDetail,
   OutcomeStats,
@@ -27,6 +32,12 @@ import type {
 
 const nodeTypes = {
   actionNode: ActionNode,
+  startNode: StartNode,
+  endNode: EndNode,
+};
+
+const edgeTypes = {
+  backEdge: BackEdge,
 };
 
 interface OutcomeProcessMapProps {
@@ -81,6 +92,10 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
           return {
             ...edge,
             label: baseLabel,
+            markerEnd: {
+              type: MarkerType.ArrowClosed,
+              color: strokeColor,
+            },
             style: {
               stroke: strokeColor,
               strokeWidth: diffStrokeWidth,
@@ -92,6 +107,10 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         return {
           ...edge,
           label: baseLabel,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: "#ccc",
+          },
           style: {
             stroke: "#ccc",
             strokeWidth: 2,
@@ -120,6 +139,10 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         return {
           ...edge,
           label: `${edge.data.frequency} 件`,
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            color: "#ccc",
+          },
           style: {
             stroke: "#ccc",
             strokeWidth: 2,
@@ -147,11 +170,16 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         strokeColor = "#e53e3e"; // 低成果: 赤
       }
 
-      const strokeWidth = Math.max(2, normalized * 8);
+      // エッジの太さ: 最大3.5倍に調整
+      const strokeWidth = Math.max(2, normalized * 3.5);
 
       return {
         ...edge,
         label,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: strokeColor,
+        },
         style: {
           stroke: strokeColor,
           strokeWidth,
@@ -160,6 +188,27 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
     });
   }, [analysis, displayMode, highlightDifferences]);
 
+  // バックエッジを検出してタイプを設定
+  const edgesWithBackEdgeType = useMemo(() => {
+    if (!layoutedNodes || layoutedNodes.length === 0 || !processedEdges) {
+      return processedEdges;
+    }
+
+    const backEdgeIds = detectBackEdges(layoutedNodes, processedEdges);
+    const backEdgeIdSet = new Set(backEdgeIds);
+
+    return processedEdges.map((edge) => {
+      const isBackEdge = backEdgeIdSet.has(edge.id);
+      return {
+        ...edge,
+        type: isBackEdge ? "backEdge" : undefined,
+        // バックエッジの場合は右側のハンドルを使用
+        sourceHandle: isBackEdge ? "right-source" : undefined,
+        targetHandle: isBackEdge ? "right-target" : undefined,
+      };
+    });
+  }, [layoutedNodes, processedEdges]);
+
   React.useEffect(() => {
     if (layoutedNodes && layoutedNodes.length > 0) {
       setNodes(layoutedNodes as any);
@@ -167,10 +216,10 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
   }, [layoutedNodes, setNodes]);
 
   React.useEffect(() => {
-    if (processedEdges && processedEdges.length > 0) {
-      setEdges(processedEdges as any);
+    if (edgesWithBackEdgeType && edgesWithBackEdgeType.length > 0) {
+      setEdges(edgesWithBackEdgeType as any);
     }
-  }, [processedEdges, setEdges]);
+  }, [edgesWithBackEdgeType, setEdges]);
 
   if (isLayouting) {
     return (
@@ -250,6 +299,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           minZoom={0.1}
           maxZoom={2}

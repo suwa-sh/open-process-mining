@@ -24,14 +24,30 @@ const ActionNode: React.FC<ActionNodeProps> = ({ data }) => {
         "&:hover": { boxShadow: 6 },
       }}
     >
+      {/* 通常の縦方向フローのハンドル */}
       <Handle type="target" position={Position.Top} />
+      <Handle type="source" position={Position.Bottom} />
+
+      {/* バックエッジ用の横方向ハンドル */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right-source"
+        style={{ opacity: 0 }}
+      />
+      <Handle
+        type="target"
+        position={Position.Right}
+        id="right-target"
+        style={{ opacity: 0 }}
+      />
+
       <Typography variant="body1" fontWeight="bold" mb={0.5}>
         {data.label}
       </Typography>
       <Typography variant="body2" color="text.secondary">
         {data.frequency} 件
       </Typography>
-      <Handle type="source" position={Position.Bottom} />
     </Paper>
   );
 };

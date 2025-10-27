@@ -8,6 +8,7 @@ import {
   useEdgesState,
   Node as FlowNode,
   Edge as FlowEdge,
+  MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Box, Typography, CircularProgress } from "@mui/material";
@@ -83,7 +84,8 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
           ? `${edge.data.frequency} 件`
           : `${edge.data.avg_waiting_time_hours.toFixed(1)}時間`;
 
-      const strokeWidth = Math.max(2, normalizedFreq * 8);
+      // エッジの太さ: 最大3.5倍に調整
+      const strokeWidth = Math.max(2, normalizedFreq * 3.5);
 
       // Color based on waiting time and frequency (same logic as ProcessMap)
       let strokeColor = "#555"; // Default
@@ -99,6 +101,10 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
         ...edge,
         hidden: isHidden,
         label,
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          color: strokeColor,
+        },
         style: {
           stroke: strokeColor,
           strokeWidth,

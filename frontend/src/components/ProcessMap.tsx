@@ -19,13 +19,24 @@ import {
 import "@xyflow/react/dist/style.css";
 
 import ActionNode from "./ActionNode";
+import StartNode from "./StartNode";
+import EndNode from "./EndNode";
+import BackEdge from "./BackEdge";
 import Controls from "./Controls";
 import { useAnalysisData } from "../hooks/useAnalysisData";
 import { useLayout } from "../hooks/useLayout";
+import { useEdgeStyling } from "../hooks/useEdgeStyling";
 import { useStore } from "../store/useStore";
+import { detectBackEdges } from "../utils/detectBackEdges";
 
 const nodeTypes = {
   actionNode: ActionNode,
+  startNode: StartNode,
+  endNode: EndNode,
+};
+
+const edgeTypes = {
+  backEdge: BackEdge,
 };
 
 interface ProcessMapProps {
@@ -51,18 +62,14 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
     data?.edges || [],
   );
 
-  const filteredEdges = useMemo(() => {
+  // パスフィルタリング: 閾値以下のエッジを非表示
+  const edgesWithVisibility = useMemo(() => {
     if (!data || data.edges.length === 0) return [];
 
     const maxFrequency = Math.max(...data.edges.map((e) => e.data.frequency));
-    const maxWaitingTime = Math.max(
-      ...data.edges.map((e) => e.data.avg_waiting_time_hours),
-    );
 
     return data.edges.map((edge) => {
       const normalizedFreq = edge.data.frequency / maxFrequency;
-      const normalizedWaitingTime =
-        edge.data.avg_waiting_time_hours / maxWaitingTime;
       const isHidden = normalizedFreq < pathThreshold;
 
       const label =
@@ -70,38 +77,46 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
           ? `${edge.data.frequency} 件`
           : `${edge.data.avg_waiting_time_hours.toFixed(1)}時間`;
 
-      // ハッピーパス（頻度に基づいて線の太さを変える）
-      const strokeWidth = Math.max(2, normalizedFreq * 8);
-
-      // 処理時間が長いパスを赤色で強調
-      let strokeColor = "#555"; // デフォルト
-      if (isHidden) {
-        strokeColor = "#ccc";
-      } else if (normalizedWaitingTime > 0.7) {
-        // 最大待機時間の70%以上は赤色で警告
-        strokeColor = "#e53e3e"; // 赤色
-      } else if (normalizedFreq > 0.8) {
-        // 頻度が高いハッピーパスは青色
-        strokeColor = "#3182ce"; // 青色
-      }
-
       return {
         ...edge,
         hidden: isHidden,
         label,
-        style: {
-          stroke: strokeColor,
-          strokeWidth,
-        },
       };
     });
   }, [data, pathThreshold, displayMetric]);
+
+  // エッジスタイリング: 太さ、色、矢印
+  const styledEdges = useEdgeStyling(edgesWithVisibility, {
+    maxStrokeWidthMultiplier: 3.5,
+    excludeStartEndEdges: true,
+  });
+
+  // バックエッジを検出してタイプを設定
+  const edgesWithBackEdgeType = useMemo(() => {
+    if (!layoutedNodes || layoutedNodes.length === 0 || !styledEdges) {
+      return styledEdges;
+    }
+
+    const backEdgeIds = detectBackEdges(layoutedNodes, styledEdges);
+    const backEdgeIdSet = new Set(backEdgeIds);
+
+    return styledEdges.map((edge) => {
+      const isBackEdge = backEdgeIdSet.has(edge.id);
+      return {
+        ...edge,
+        type: isBackEdge ? "backEdge" : undefined,
+        // バックエッジの場合は右側のハンドルを使用
+        sourceHandle: isBackEdge ? "right-source" : undefined,
+        targetHandle: isBackEdge ? "right-target" : undefined,
+      };
+    });
+  }, [layoutedNodes, styledEdges]);
 
   const filteredNodes = useMemo(() => {
     if (!layoutedNodes || layoutedNodes.length === 0) return [];
 
     // 表示されているエッジに接続されているノードIDを収集
-    const visibleEdges = filteredEdges.filter((edge) => !edge.hidden);
+    const visibleEdges = edgesWithBackEdgeType.filter((edge) => !edge.hidden);
     const connectedNodeIds = new Set<string>();
 
     visibleEdges.forEach((edge) => {
@@ -115,7 +130,7 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
       hidden: !connectedNodeIds.has(node.id),
       draggable: true, // ノードをドラッグ可能にする
     }));
-  }, [layoutedNodes, filteredEdges]);
+  }, [layoutedNodes, edgesWithBackEdgeType]);
 
   // filteredNodesとfilteredEdgesが更新されたらReact Flowの状態を更新
   // ただし、既存のノード位置は保持する
@@ -141,8 +156,8 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
   }, [filteredNodes, setNodes]);
 
   useEffect(() => {
-    setEdges(filteredEdges as any);
-  }, [filteredEdges, setEdges]);
+    setEdges(edgesWithBackEdgeType as any);
+  }, [edgesWithBackEdgeType, setEdges]);
 
   if (loading || isLayouting) {
     return (
@@ -218,6 +233,7 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
             nodesDraggable={true}
             fitView
           >

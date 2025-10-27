@@ -159,9 +159,22 @@ def analyze_path_outcome(
     # DFGを構築
     edges_map = {}  # (source, target) -> list of case_ids
     activity_counts = {}
+    start_activities = {}  # activity -> count
+    end_activities = {}  # activity -> count
 
     for case_id, group in events_df.groupby("case_id"):
         activities = group.sort_values("timestamp")["activity"].tolist()
+
+        if activities:
+            # 開始アクティビティを記録
+            first_activity = activities[0]
+            start_activities[first_activity] = (
+                start_activities.get(first_activity, 0) + 1
+            )
+
+            # 終了アクティビティを記録
+            last_activity = activities[-1]
+            end_activities[last_activity] = end_activities.get(last_activity, 0) + 1
 
         for activity in activities:
             activity_counts[activity] = activity_counts.get(activity, 0) + 1
@@ -193,7 +206,18 @@ def analyze_path_outcome(
             waiting_times[edge_key].append(time_diff)
 
     # React Flow互換のノードとエッジを生成
-    nodes = []
+    total_cases = len(events_df["case_id"].unique())
+
+    # START ノードを追加
+    nodes = [
+        {
+            "id": "START",
+            "type": "startNode",
+            "data": {"label": "START", "frequency": total_cases},
+        }
+    ]
+
+    # アクティビティノードを追加
     for activity, count in activity_counts.items():
         nodes.append(
             {
@@ -203,8 +227,35 @@ def analyze_path_outcome(
             }
         )
 
+    # END ノードを追加
+    nodes.append(
+        {
+            "id": "END",
+            "type": "endNode",
+            "data": {"label": "END", "frequency": total_cases},
+        }
+    )
+
     edges = []
     edge_id = 0
+
+    # START エッジを追加
+    for activity, count in start_activities.items():
+        edge_id += 1
+        edges.append(
+            {
+                "id": f"edge-{edge_id}",
+                "source": "START",
+                "target": activity,
+                "data": {
+                    "frequency": count,
+                    "avg_waiting_time_hours": 0.0,
+                    "outcome_stats": {},
+                },
+            }
+        )
+
+    # アクティビティ間のエッジを追加
     for (source, target), case_ids in edges_map.items():
         edge_id += 1
 
@@ -232,6 +283,22 @@ def analyze_path_outcome(
             }
         )
 
+    # END エッジを追加
+    for activity, count in end_activities.items():
+        edge_id += 1
+        edges.append(
+            {
+                "id": f"edge-{edge_id}",
+                "source": activity,
+                "target": "END",
+                "data": {
+                    "frequency": count,
+                    "avg_waiting_time_hours": 0.0,
+                    "outcome_stats": {},
+                },
+            }
+        )
+
     # サマリー情報を生成
     all_outcome_values = outcomes_df["metric_value"].tolist()
     overall_stats = _calculate_outcome_stats(all_outcome_values)
@@ -239,6 +306,10 @@ def analyze_path_outcome(
     # 高成果パスを特定（平均値が全体平均の1.2倍以上）
     top_paths = []
     for edge in edges:
+        # START/ENDエッジは除外
+        if edge["source"] == "START" or edge["target"] == "END":
+            continue
+
         edge_avg = edge["data"]["outcome_stats"][metric_name]["avg"]
         if edge_avg >= overall_stats.avg * 1.2:
             top_paths.append(
@@ -357,9 +428,22 @@ def analyze_segment_comparison(
         edges_map = {}
         activity_counts = {}
         waiting_times = {}
+        start_activities = {}
+        end_activities = {}
 
         for case_id, group in segment_events.groupby("case_id"):
             activities = group.sort_values("timestamp")["activity"].tolist()
+
+            if activities:
+                # 開始アクティビティを記録
+                first_activity = activities[0]
+                start_activities[first_activity] = (
+                    start_activities.get(first_activity, 0) + 1
+                )
+
+                # 終了アクティビティを記録
+                last_activity = activities[-1]
+                end_activities[last_activity] = end_activities.get(last_activity, 0) + 1
 
             for activity in activities:
                 activity_counts[activity] = activity_counts.get(activity, 0) + 1
@@ -390,7 +474,18 @@ def analyze_segment_comparison(
                 waiting_times[edge_key].append(time_diff)
 
         # ノード生成
-        nodes = []
+        total_cases = len(case_ids)
+
+        # START ノードを追加
+        nodes = [
+            {
+                "id": "START",
+                "type": "startNode",
+                "data": {"label": "START", "frequency": total_cases},
+            }
+        ]
+
+        # アクティビティノードを追加
         for activity, count in activity_counts.items():
             nodes.append(
                 {
@@ -400,9 +495,35 @@ def analyze_segment_comparison(
                 }
             )
 
+        # END ノードを追加
+        nodes.append(
+            {
+                "id": "END",
+                "type": "endNode",
+                "data": {"label": "END", "frequency": total_cases},
+            }
+        )
+
         # エッジ生成
         edges = []
         edge_id = 0
+
+        # START エッジを追加
+        for activity, count in start_activities.items():
+            edge_id += 1
+            edges.append(
+                {
+                    "id": f"edge-{edge_id}",
+                    "source": "START",
+                    "target": activity,
+                    "data": {
+                        "frequency": count,
+                        "avg_waiting_time_hours": 0.0,
+                    },
+                }
+            )
+
+        # アクティビティ間のエッジを追加
         for (source, target), case_ids_list in edges_map.items():
             edge_id += 1
             avg_waiting_time = np.mean(waiting_times.get((source, target), [0]))
@@ -415,6 +536,21 @@ def analyze_segment_comparison(
                     "data": {
                         "frequency": len(case_ids_list),
                         "avg_waiting_time_hours": float(avg_waiting_time),
+                    },
+                }
+            )
+
+        # END エッジを追加
+        for activity, count in end_activities.items():
+            edge_id += 1
+            edges.append(
+                {
+                    "id": f"edge-{edge_id}",
+                    "source": activity,
+                    "target": "END",
+                    "data": {
+                        "frequency": count,
+                        "avg_waiting_time_hours": 0.0,
                     },
                 }
             )

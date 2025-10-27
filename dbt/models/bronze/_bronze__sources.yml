@@ -10,7 +10,7 @@ sources:
         description: "GitHub Issues"
         loaded_at_field: loaded_at
         freshness:
-          warn_after: {count: 24, period: hour}
+          warn_after: { count: 24, period: hour }
         columns:
           - name: id
             description: "Issue ID"
@@ -27,7 +27,7 @@ sources:
             description: "状態（open/closed）"
             data_tests:
               - accepted_values:
-                  values: ['open', 'closed']
+                  values: ["open", "closed"]
           - name: created_at
             description: "作成日時"
             data_tests:
@@ -40,7 +40,7 @@ sources:
         description: "GitHub Pull Requests"
         loaded_at_field: loaded_at
         freshness:
-          warn_after: {count: 24, period: hour}
+          warn_after: { count: 24, period: hour }
         columns:
           - name: id
             description: "PR ID"
@@ -69,7 +69,7 @@ sources:
         description: "GitHub Actions実行履歴"
         loaded_at_field: loaded_at
         freshness:
-          warn_after: {count: 24, period: hour}
+          warn_after: { count: 24, period: hour }
         columns:
           - name: id
             description: "実行ID"

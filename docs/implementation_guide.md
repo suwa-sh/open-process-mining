@@ -43,7 +43,7 @@ sources:
         description: "GitHub Issues"
         loaded_at_field: loaded_at
         freshness:
-          warn_after: {count: 24, period: hour}
+          warn_after: { count: 24, period: hour }
         columns:
           - name: id
             description: "Issue ID"
@@ -61,13 +61,13 @@ sources:
         description: "GitHub Pull Requests"
         loaded_at_field: loaded_at
         freshness:
-          warn_after: {count: 24, period: hour}
+          warn_after: { count: 24, period: hour }
 
       - name: github_actions_runs
         description: "GitHub Actions実行履歴"
         loaded_at_field: loaded_at
         freshness:
-          warn_after: {count: 24, period: hour}
+          warn_after: { count: 24, period: hour }
 ```
 
 #### 3.2 ステージングモデル

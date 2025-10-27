@@ -68,13 +68,23 @@ def convert_dfg_to_react_flow(dfg: nx.DiGraph) -> Dict:
     # Convert nodes
     for node_id in dfg.nodes():
         node_data = dfg.nodes[node_id]
-        nodes.append(
-            {
-                "id": node_id,
-                "type": "actionNode",
-                "data": {"label": node_id, "frequency": node_data.get("frequency", 0)},
-            }
-        )
+        node_type = node_data.get("node_type", "action")
+
+        if node_type == "start":
+            nodes.append({"id": node_id, "type": "startNode", "data": {}})
+        elif node_type == "end":
+            nodes.append({"id": node_id, "type": "endNode", "data": {}})
+        else:
+            nodes.append(
+                {
+                    "id": node_id,
+                    "type": "actionNode",
+                    "data": {
+                        "label": node_id,
+                        "frequency": node_data.get("frequency", 0),
+                    },
+                }
+            )
 
     # Convert edges
     edge_counter = 0

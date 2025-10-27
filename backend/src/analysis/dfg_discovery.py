@@ -14,6 +14,7 @@ def discover_dfg(event_log: List[EventLog]) -> nx.DiGraph:
 
     Returns:
         NetworkX DiGraph with nodes (activities) and edges (transitions)
+        Includes START and END nodes for UML activity diagram notation
     """
     # Initialize graph
     dfg = nx.DiGraph()
@@ -34,7 +35,27 @@ def discover_dfg(event_log: List[EventLog]) -> nx.DiGraph:
 
     # Add nodes with frequency attribute
     for activity, frequency in activity_frequency.items():
-        dfg.add_node(activity, frequency=frequency)
+        dfg.add_node(activity, frequency=frequency, node_type="action")
+
+    # Detect start and end activities
+    start_activities = defaultdict(int)
+    end_activities = defaultdict(int)
+
+    for case_id, events in cases.items():
+        if events:
+            start_activities[events[0].activity] += 1
+            end_activities[events[-1].activity] += 1
+
+    # Add START node
+    total_cases = len(cases)
+    dfg.add_node("START", frequency=total_cases, node_type="start")
+    for activity, frequency in start_activities.items():
+        dfg.add_edge("START", activity, frequency=frequency)
+
+    # Add END node
+    dfg.add_node("END", frequency=total_cases, node_type="end")
+    for activity, frequency in end_activities.items():
+        dfg.add_edge(activity, "END", frequency=frequency)
 
     # Count direct succession frequencies (for edges)
     edge_frequency = defaultdict(int)

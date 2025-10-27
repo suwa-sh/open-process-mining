@@ -49,8 +49,8 @@ def test_convert_dfg_to_react_flow():
     """Test conversion of DFG to React Flow format."""
     # Create simple DFG
     dfg = nx.DiGraph()
-    dfg.add_node("A", frequency=10)
-    dfg.add_node("B", frequency=8)
+    dfg.add_node("A", frequency=10, node_type="action")
+    dfg.add_node("B", frequency=8, node_type="action")
     dfg.add_edge("A", "B", frequency=8, avg_waiting_time_hours=2.5)
 
     result = convert_dfg_to_react_flow(dfg)
@@ -73,3 +73,40 @@ def test_convert_dfg_to_react_flow():
     assert edge["target"] == "B"
     assert edge["data"]["frequency"] == 8
     assert edge["data"]["avg_waiting_time_hours"] == 2.5
+
+
+def test_convert_dfg_to_react_flow_with_start_end_nodes():
+    """Test conversion of DFG with START/END nodes."""
+    # Create DFG with START and END nodes
+    dfg = nx.DiGraph()
+    dfg.add_node("START", frequency=2, node_type="start")
+    dfg.add_node("A", frequency=2, node_type="action")
+    dfg.add_node("B", frequency=2, node_type="action")
+    dfg.add_node("END", frequency=2, node_type="end")
+    dfg.add_edge("START", "A", frequency=2)
+    dfg.add_edge("A", "B", frequency=2, avg_waiting_time_hours=1.5)
+    dfg.add_edge("B", "END", frequency=2)
+
+    result = convert_dfg_to_react_flow(dfg)
+
+    # Check nodes
+    assert len(result["nodes"]) == 4
+    start_node = next(n for n in result["nodes"] if n["id"] == "START")
+    end_node = next(n for n in result["nodes"] if n["id"] == "END")
+    action_node = next(n for n in result["nodes"] if n["id"] == "A")
+
+    # Check node types
+    assert start_node["type"] == "startNode"
+    assert end_node["type"] == "endNode"
+    assert action_node["type"] == "actionNode"
+
+    # START/END nodes should have empty data
+    assert start_node["data"] == {}
+    assert end_node["data"] == {}
+
+    # Action node should have label and frequency
+    assert action_node["data"]["label"] == "A"
+    assert action_node["data"]["frequency"] == 2
+
+    # Check edges
+    assert len(result["edges"]) == 3
