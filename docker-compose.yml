@@ -72,6 +72,27 @@ services:
     networks:
       - process-mining-network
 
+  dlt:
+    build: ./dlt
+    container_name: process-mining-dlt
+    profiles:
+      - dlt
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./dlt/sources:/app/sources
+      - ./dlt/pipelines:/app/pipelines
+      - ./dlt/.dlt:/app/.dlt
+    networks:
+      - process-mining-network
+
 networks:
   process-mining-network:
     driver: bridge

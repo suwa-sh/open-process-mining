@@ -58,3 +58,53 @@ SELECT
     timestamp,
     resource
 FROM {{ ref('stg_system_development_2024') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    NULL AS resource
+FROM {{ ref('stg_gitlab_issues') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    NULL AS resource
+FROM {{ ref('stg_gitlab_merge_requests') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    NULL AS resource
+FROM {{ ref('stg_gitlab_pipelines') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    NULL AS resource
+FROM {{ ref('stg_jira_issues') }}
+
+UNION ALL
+
+SELECT
+    process_type,
+    case_id,
+    activity,
+    timestamp,
+    NULL AS resource
+FROM {{ ref('stg_jenkins_builds') }}

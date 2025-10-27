@@ -8,18 +8,24 @@ import {
   useEdgesState,
   Node as FlowNode,
   Edge as FlowEdge,
-  MarkerType,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Box, Typography, CircularProgress } from "@mui/material";
 import { HandoverAnalysis, Node, Edge } from "../types";
 import { useLayout } from "../hooks/useLayout";
+import { useEdgeStyling } from "../hooks/useEdgeStyling";
 import { useStore } from "../store/useStore";
-import OrganizationNode from "./OrganizationNode";
+import ActionNode from "./ActionNode";
+import BackEdge from "./BackEdge";
+import { detectBackEdges } from "../utils/detectBackEdges";
 import Controls from "./Controls";
 
 const nodeTypes = {
-  organizationNode: OrganizationNode,
+  actionNode: ActionNode,
+};
+
+const edgeTypes = {
+  backEdge: BackEdge,
 };
 
 interface HandoverNetworkProps {
@@ -33,7 +39,7 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
   const { initialNodes, initialEdges } = useMemo(() => {
     const nodes: Node[] = data.nodes.map((node) => ({
       id: node.id,
-      type: "organizationNode",
+      type: "actionNode",
       data: {
         label: node.label,
         frequency: node.activity_count,
@@ -64,19 +70,14 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
 
-  // Filter and style edges based on threshold and metric
-  const filteredEdges = useMemo(() => {
+  // エッジにラベルとhiddenフラグを設定
+  const edgesWithVisibility = useMemo(() => {
     if (!initialEdges || initialEdges.length === 0) return [];
 
     const maxFrequency = Math.max(...initialEdges.map((e) => e.data.frequency));
-    const maxWaitingTime = Math.max(
-      ...initialEdges.map((e) => e.data.avg_waiting_time_hours),
-    );
 
     return initialEdges.map((edge) => {
       const normalizedFreq = edge.data.frequency / maxFrequency;
-      const normalizedWaitingTime =
-        edge.data.avg_waiting_time_hours / maxWaitingTime;
       const isHidden = normalizedFreq < pathThreshold;
 
       const label =
@@ -84,40 +85,48 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
           ? `${edge.data.frequency} 件`
           : `${edge.data.avg_waiting_time_hours.toFixed(1)}時間`;
 
-      // エッジの太さ: 最大3.5倍に調整
-      const strokeWidth = Math.max(2, normalizedFreq * 3.5);
-
-      // Color based on waiting time and frequency (same logic as ProcessMap)
-      let strokeColor = "#555"; // Default
-      if (isHidden) {
-        strokeColor = "#ccc";
-      } else if (normalizedWaitingTime > 0.7) {
-        strokeColor = "#e53e3e"; // Red for long waiting time
-      } else if (normalizedFreq > 0.8) {
-        strokeColor = "#3182ce"; // Blue for high-frequency paths
-      }
-
       return {
         ...edge,
         hidden: isHidden,
         label,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: strokeColor,
-        },
-        style: {
-          stroke: strokeColor,
-          strokeWidth,
-        },
       };
     });
   }, [initialEdges, pathThreshold, displayMetric]);
+
+  // useEdgeStylingでプロセス分析と統一されたスタイルを適用
+  const styledEdges = useEdgeStyling(edgesWithVisibility, {
+    maxStrokeWidthMultiplier: 3.5,
+    excludeStartEndEdges: false, // 組織分析にはSTART/ENDノードがない
+  });
+
+  // バックエッジを検出してタイプを設定
+  const edgesWithBackEdgeType = useMemo(() => {
+    if (!layoutedNodes || layoutedNodes.length === 0 || !styledEdges) {
+      return styledEdges;
+    }
+
+    const backEdgeIds = detectBackEdges(layoutedNodes, styledEdges);
+    const backEdgeIdSet = new Set(backEdgeIds);
+
+    return styledEdges.map((edge) => {
+      // エッジキーを "source->target" 形式で作成して比較
+      const edgeKey = `${edge.source}->${edge.target}`;
+      const isBackEdge = backEdgeIdSet.has(edgeKey);
+      return {
+        ...edge,
+        type: isBackEdge ? "backEdge" : undefined,
+        // バックエッジの場合は右側のハンドルを使用
+        sourceHandle: isBackEdge ? "right-source" : undefined,
+        targetHandle: isBackEdge ? "right-target" : undefined,
+      };
+    });
+  }, [layoutedNodes, styledEdges]);
 
   // Filter nodes to only show connected ones
   const filteredNodes = useMemo(() => {
     if (!layoutedNodes || layoutedNodes.length === 0) return [];
 
-    const visibleEdges = filteredEdges.filter((edge) => !edge.hidden);
+    const visibleEdges = edgesWithBackEdgeType.filter((edge) => !edge.hidden);
     const connectedNodeIds = new Set<string>();
 
     visibleEdges.forEach((edge) => {
@@ -129,7 +138,7 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
       ...node,
       hidden: !connectedNodeIds.has(node.id),
     }));
-  }, [layoutedNodes, filteredEdges]);
+  }, [layoutedNodes, edgesWithBackEdgeType]);
 
   // Update React Flow state
   useEffect(() => {
@@ -137,8 +146,8 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
   }, [filteredNodes, setNodes]);
 
   useEffect(() => {
-    setEdges(filteredEdges as any);
-  }, [filteredEdges, setEdges]);
+    setEdges(edgesWithBackEdgeType as any);
+  }, [edgesWithBackEdgeType, setEdges]);
 
   if (isLayouting) {
     return (
@@ -204,6 +213,7 @@ const HandoverNetwork: React.FC<HandoverNetworkProps> = ({ data }) => {
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           attributionPosition="bottom-right"
         >

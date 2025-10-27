@@ -1,6 +1,6 @@
 # サンプルデータ
 
-プロジェクトには 2024 年 1 年分の 6 種類のビジネスプロセスデータが含まれています。
+プロジェクトには 2024 年 1 年分の 8 種類のビジネスプロセスデータが含まれています。
 
 ## ペルソナ対応表
 
@@ -8,20 +8,22 @@
 
 | プロセスタイプ               | 想定ペルソナ         | 利用部門       | 主な関心事                                     |
 | ---------------------------- | -------------------- | -------------- | ---------------------------------------------- |
-| Order to Cash                | 営業 / 経理          | 営業部、経理部 | 受注から入金までのリードタイム短縮、売掛金管理 |
-| Billing                      | 経理 / 財務          | 経理部、財務部 | 請求処理の正確性、サイクルタイムの短縮         |
-| Invoice Approval             | 経理 / 購買          | 経理部、購買部 | 支払承認プロセスの効率化、コンプライアンス     |
-| Employee Onboarding          | 人事 / 採用担当      | 人事部         | 採用プロセスの効率化、候補者体験の向上         |
-| ITSM (IT Service Management) | IT サポート / DevOps | 情報システム部 | インシデント解決時間の短縮、SLA 遵守           |
-| System Development           | 開発者 / DevOps      | 開発部、IT 部  | 開発リードタイムの短縮、品質向上               |
+| order-to-cash                | 営業 / 経理          | 営業部、経理部 | 受注から入金までのリードタイム短縮、売掛金管理 |
+| billing                      | 経理 / 財務          | 経理部、財務部 | 請求処理の正確性、サイクルタイムの短縮         |
+| invoice-approval             | 経理 / 購買          | 経理部、購買部 | 支払承認プロセスの効率化、コンプライアンス     |
+| employee-onboarding          | 人事 / 採用担当      | 人事部         | 採用プロセスの効率化、候補者体験の向上         |
+| itsm                         | IT サポート          | 情報システム部 | インシデント解決時間の短縮、SLA 遵守           |
+| system-development           | 開発者 / DevOps      | 開発部、IT 部  | 開発リードタイムの短縮、品質向上               |
+| gitlab-devops                | 開発者 / DevOps      | 開発部、IT 部  | GitLab Issue → MR → Pipeline の効率化          |
+| hybrid-devops                | 開発者 / DevOps      | 開発部、IT 部  | Jira Issue → GitLab MR → Jenkins Build の効率化 |
 
 **利用シーン例:**
 
-- **営業 / 経理**: Order to Cash プロセスで、受注から入金までのボトルネックを特定し、キャッシュフロー改善
-- **経理 / 財務**: Billing / Invoice Approval プロセスで、承認遅延の原因を特定し、自動化を推進
-- **人事**: Employee Onboarding プロセスで、採用フローの各ステップでの離脱率を分析し、改善施策を実施
-- **IT サポート**: ITSM プロセスで、インシデント種別ごとの解決時間を可視化し、優先度付けを最適化
-- **開発者 / DevOps**: System Development プロセスで、コードレビューやテストのボトルネックを発見し、CI/CD パイプラインを改善
+- **営業 / 経理**: order-to-cash プロセスで、受注から入金までのボトルネックを特定し、キャッシュフロー改善
+- **経理 / 財務**: billing / invoice-approval プロセスで、承認遅延の原因を特定し、自動化を推進
+- **人事**: employee-onboarding プロセスで、採用フローの各ステップでの離脱率を分析し、改善施策を実施
+- **IT サポート**: itsm プロセスで、インシデント種別ごとの解決時間を可視化、優先度付けを最適化
+- **開発者 / DevOps**: gitlab-devops / hybrid-devops プロセスで、コードレビューやビルドのボトルネックを発見し、CI/CD パイプラインを改善
 
 ## データ
 
@@ -83,8 +85,9 @@
 
 **成果指標:**
 
-- `time_to_hire_days`: 採用リードタイム（日）
-- `satisfaction_score`: 満足度スコア（1-5）
+- `recruitment_cost`: 採用コスト（JPY）
+- `recruitment_days`: 採用日数（日）
+- `candidate_score`: 候補者スコア（1-100）
 
 ### ITSM（IT Service Management）- 150件のインシデント
 
@@ -113,13 +116,43 @@
 - `story_points`: ストーリーポイント
 - `defect_count`: 欠陥数
 
+### GitLab DevOps（GitLab開発プロセス）- 30件のIssue
+
+**典型的なフロー:**
+
+- **Issue Created** → PR Opened → Code Merged → Build Started → Build Completed → **Issue Closed**（ハッピーパス）
+- Issue Created → **Issue Closed**（直接クローズ、30%）
+- Build Started → **Deployed Production** → Build Completed（本番デプロイ）
+- Build Completed → Code Merged（ビルド失敗後の修正、バックエッジ）
+
+**成果指標:**
+
+- `lead_time_days`: リードタイム（日）
+- `code_review_time_hours`: コードレビュー時間（時間）
+- `build_time_minutes`: ビルド時間（分）
+
+### Hybrid DevOps（Jira + GitLab + Jenkins）- 30件のIssue
+
+**典型的なフロー:**
+
+- **Issue Created** → PR Opened → Code Merged → Build Started → Build Completed → **Issue Closed**（ハッピーパス）
+- Issue Created → **Issue Closed**（直接クローズ）
+- Build Started → **Deployed Production** → Build Completed（本番デプロイ）
+- Build Completed → Build Started（ビルド失敗後の再実行、バックエッジ）
+
+**成果指標:**
+
+- `lead_time_days`: リードタイム（日）
+- `code_review_time_hours`: コードレビュー時間（時間）
+- `build_time_minutes`: ビルド時間（分）
+
 ## 成果メトリックのデータ仕様
 
 成果メトリックは `fct_case_outcomes` テーブルに格納され、各メトリックには以下の属性があります：
 
 - **metric_name**: メトリック名（例: revenue, profit_margin, cycle_time_days）
 - **metric_value**: メトリック値（数値）
-- **metric_unit**: 単位（JPY, percent, count, days, hours, points, score, weight）
+- **metric_unit**: 単位（JPY, percent, count, days, hours, minutes, points, score, weight）
 
 ### サポートされている単位と表示フォーマット
 
@@ -130,6 +163,7 @@
 | count       | カウント       | 15.789     | 15.8     | 小数点1桁                   |
 | days        | 日数           | 7.345      | 7.3      | 小数点1桁                   |
 | hours       | 時間           | 12.567     | 12.6     | 小数点1桁                   |
+| minutes     | 分             | 45.678     | 45.7     | 小数点1桁                   |
 | points      | ポイント       | 13.456     | 13.5     | 小数点1桁                   |
 | score       | スコア         | 85.67      | 85.7     | 小数点1桁                   |
 | weight      | 重み           | 2.789      | 2.8      | 小数点1桁                   |
@@ -142,21 +176,24 @@
 
 ### 利用可能なメトリック一覧
 
-| metric_name           | metric_unit | プロセス                  | 説明               |
-| --------------------- | ----------- | ------------------------- | ------------------ |
-| revenue               | JPY         | Order to Cash             | 売上               |
-| profit_margin         | percent     | Order to Cash             | 利益率             |
-| quantity              | count       | Order to Cash             | 数量               |
-| recruitment_cost      | JPY         | Employee Onboarding       | 採用コスト         |
-| candidate_score       | score       | Employee Onboarding       | 候補者スコア       |
-| resolution_time_hours | hours       | ITSM                      | 解決時間           |
-| priority_weight       | weight      | ITSM                      | 優先度ウェイト     |
-| cycle_time_days       | days        | Billing                   | サイクルタイム     |
-| amount                | JPY         | Billing, Invoice Approval | 金額               |
-| processing_days       | days        | Invoice Approval          | 処理日数           |
-| lead_time_days        | days        | System Development        | リードタイム       |
-| story_points          | points      | System Development        | ストーリーポイント |
-| defect_count          | count       | System Development        | 欠陥数             |
+| metric_name            | metric_unit | プロセス                                     | 説明                   |
+| ---------------------- | ----------- | -------------------------------------------- | ---------------------- |
+| revenue                | JPY         | order-to-cash                                | 売上                   |
+| profit_margin          | percent     | order-to-cash                                | 利益率                 |
+| quantity               | count       | order-to-cash                                | 数量                   |
+| recruitment_cost       | JPY         | employee-onboarding                          | 採用コスト             |
+| recruitment_days       | days        | employee-onboarding                          | 採用日数               |
+| candidate_score        | score       | employee-onboarding                          | 候補者スコア           |
+| resolution_time_hours  | hours       | itsm                                         | 解決時間               |
+| priority_weight        | weight      | itsm                                         | 優先度ウェイト         |
+| cycle_time_days        | days        | billing                                      | サイクルタイム         |
+| amount                 | JPY         | billing, invoice-approval                    | 金額                   |
+| processing_days        | days        | invoice-approval                             | 処理日数               |
+| lead_time_days         | days        | system-development, gitlab-devops, hybrid-devops | リードタイム           |
+| story_points           | points      | system-development                           | ストーリーポイント     |
+| defect_count           | count       | system-development                           | 欠陥数                 |
+| code_review_time_hours | hours       | gitlab-devops, hybrid-devops                 | コードレビュー時間     |
+| build_time_minutes     | minutes     | gitlab-devops, hybrid-devops                 | ビルド時間             |
 
 ### 新しいメトリックの追加方法
 

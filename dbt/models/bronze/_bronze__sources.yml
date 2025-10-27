@@ -90,3 +90,159 @@ sources:
             description: "更新日時"
           - name: head_branch
             description: "ブランチ名"
+
+      - name: bronze_gitlab_issues
+        identifier: bronze_gitlab_issues
+        description: "GitLab Issues"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+        columns:
+          - name: id
+            description: "Issue ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: iid
+            description: "Issue IID (プロジェクト内の番号)"
+            data_tests:
+              - not_null
+          - name: title
+            description: "タイトル"
+          - name: state
+            description: "状態（opened/closed)"
+            data_tests:
+              - accepted_values:
+                  values: ["opened", "closed"]
+          - name: created_at
+            description: "作成日時"
+            data_tests:
+              - not_null
+          - name: closed_at
+            description: "完了日時"
+          - name: labels
+            description: "ラベル（JSON配列）"
+
+      - name: bronze_gitlab_merge_requests
+        identifier: bronze_gitlab_merge_requests
+        description: "GitLab Merge Requests"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+        columns:
+          - name: id
+            description: "MR ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: iid
+            description: "MR IID (プロジェクト内の番号)"
+            data_tests:
+              - not_null
+          - name: title
+            description: "タイトル"
+          - name: state
+            description: "状態（opened/merged/closed）"
+          - name: created_at
+            description: "作成日時"
+            data_tests:
+              - not_null
+          - name: merged_at
+            description: "マージ日時"
+          - name: source_branch
+            description: "ソースブランチ名"
+
+      - name: bronze_gitlab_pipelines
+        identifier: bronze_gitlab_pipelines
+        description: "GitLab CI Pipelines"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+        columns:
+          - name: id
+            description: "Pipeline ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: ref
+            description: "ブランチ/タグ名"
+          - name: status
+            description: "ステータス（success/failed）"
+          - name: created_at
+            description: "作成日時"
+            data_tests:
+              - not_null
+          - name: started_at
+            description: "開始日時"
+          - name: finished_at
+            description: "終了日時"
+          - name: duration
+            description: "実行時間（秒）"
+
+      - name: bronze_jira_issues
+        identifier: bronze_jira_issues
+        description: "Jira Issues (status transitionsを含む)"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+        columns:
+          - name: id
+            description: "Issue ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: key
+            description: "Issue Key (例: PROJ-123)"
+            data_tests:
+              - not_null
+          - name: summary
+            description: "概要"
+          - name: issue_type
+            description: "Issueタイプ（Story/Task/Bug）"
+          - name: status
+            description: "現在のステータス"
+          - name: priority
+            description: "優先度"
+          - name: created
+            description: "作成日時"
+            data_tests:
+              - not_null
+          - name: resolutiondate
+            description: "解決日時"
+          - name: assignee
+            description: "担当者"
+          - name: reporter
+            description: "報告者"
+          - name: status_transitions
+            description: "ステータス遷移履歴（JSON配列）"
+
+      - name: bronze_jenkins_builds
+        identifier: bronze_jenkins_builds
+        description: "Jenkins Build Jobs"
+        loaded_at_field: loaded_at
+        freshness:
+          warn_after: { count: 24, period: hour }
+        columns:
+          - name: id
+            description: "Build ID"
+            data_tests:
+              - not_null
+              - unique
+          - name: job_name
+            description: "ジョブ名"
+            data_tests:
+              - not_null
+          - name: build_number
+            description: "ビルド番号"
+            data_tests:
+              - not_null
+          - name: result
+            description: "結果（SUCCESS/FAILURE）"
+          - name: timestamp
+            description: "開始タイムスタンプ（ミリ秒）"
+            data_tests:
+              - not_null
+          - name: duration
+            description: "実行時間（ミリ秒）"
+          - name: commit_messages
+            description: "コミットメッセージ（JSON配列）"

@@ -106,7 +106,7 @@ docker compose exec backend bash -c "cd /app/dbt && dbt deps && dbt seed && dbt 
 
 ### プロセスマップの可視化
 
-![](https://share.cleanshot.com/5GNqNsNh+)
+![](https://share.cleanshot.com/7HJXl0dR+)
 
 - **ノードのドラッグ&ドロップ**: ノードを自由に配置して見やすいレイアウトを作成
 - **パスの強調表示**:
@@ -120,29 +120,29 @@ docker compose exec backend bash -c "cd /app/dbt && dbt deps && dbt seed && dbt 
 ### 組織分析（ハンドオーバー・作業負荷・パフォーマンス）
 
 - **🔄 ハンドオーバー分析**: 誰と誰が連携して作業しているかを可視化
-  - ![](https://share.cleanshot.com/CKC3Yjjn+)
+  - ![](https://share.cleanshot.com/JHgM2ps2+)
     - 社員別・部署別の集計レベルを選択可能
     - ハンドオーバー間の平均待機時間を計算
     - 頻度と待機時間のメトリクス切り替え
     - パスフィルターで重要な連携に集中
 - **📊 作業負荷分析**: 誰の作業量が多いかを可視化
-  - ![](https://share.cleanshot.com/HfWNlrMJ+)
+  - ![](https://share.cleanshot.com/KGjrl3Yr+)
     - アクティビティ数とケース数の集計
     - 作業が集中している担当者を特定
 - **⏱️ パフォーマンス分析**: 誰の処理時間が長いかを可視化
-  - ![](https://share.cleanshot.com/Nw0myRDx+)
+  - ![](https://share.cleanshot.com/Y30XhlMB+)
     - 平均処理時間・中央値・合計時間を分析
     - ボトルネックになっている担当者を特定
 
 ### 成果分析（パス別成果・セグメント比較）
 
 - **📈 パス別成果分析**: プロセスパスごとの成果指標を可視化
-  - ![](https://share.cleanshot.com/BPjyl0hH+)
+  - ![](https://share.cleanshot.com/gTmQQLb3+)
     - 各パスの平均値・中央値・合計値を表示
     - 成果の高いパスを自動検出（平均値の75%以上を強調表示）
     - プロセスマップ上で成果メトリックを確認
 - **🔍 セグメント比較**: 高成果パスと低成果パスを比較
-  - ![](https://share.cleanshot.com/lWDJd0xk+)
+  - ![](https://share.cleanshot.com/B7K98Gjs+)
     - 上位25% vs 下位25%の成果比較
     - カスタム閾値による柔軟なセグメント分割
     - 統計サマリー（平均値、中央値、最小値、最大値、合計値）

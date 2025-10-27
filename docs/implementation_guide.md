@@ -9,19 +9,21 @@ Phase 1-2で設計・基盤を構築しましたが、Phase 3以降の実装は�
 
 ### Phase 1: 設計・仕様策定 ✅
 
-- `config/metrics_dictionary.yaml`: メトリック定義
+- `docs/metrics_dictionary.yaml`: メトリック定義
 - `docs/case_id_rules.md`: case_idルール
 - `docs/schema_design.md`: スキーマ設計
-- `config/process_definition.yaml`: プロセス定義
+- `docs/process_definition.yaml`: プロセス定義
 
 ### Phase 2: Bronze層基盤構築（dlt） ✅
 
-- `backend/Dockerfile`: dlt[postgres]追加
-- `backend/.dlt/config.toml`: dlt設定
-- `backend/.dlt/secrets.toml.example`: 認証情報テンプレート
+- `dlt/Dockerfile`: dlt専用コンテナ
+- `dlt/.dlt/config.toml`: dlt設定
+- `dlt/.dlt/secrets.toml.example`: 認証情報テンプレート
 - `.gitignore`: dlt関連ファイル除外
 - `.env.example`: dlt環境変数
-- `backend/src/elt/sources/github_source.py`: GitHubコネクター
+- `dlt/sources/github_source.py`: GitHubコネクター
+- `dlt/pipelines/github_pipeline.py`: GitHubパイプライン
+- `docker-compose.yml`: dltサービス追加（profiles: dlt）
 
 ## 未実装コンポーネント（今後の実装）
 

@@ -1209,6 +1209,317 @@ def generate_github_bronze_data():
     print(f"  Created: {actions_path} ({len(actions_runs)} workflow runs)")
 
 
+def generate_gitlab_issues_data():
+    """Generate GitLab Issues bronze data (for gitlab-devops process)"""
+    issues = []
+    loaded_at = datetime.now().isoformat()
+
+    # Generate 20 issues over 2024
+    for i in range(1, 21):
+        issue_iid = i
+        issue_id = 2000 + i
+
+        created_at = random_date(START_DATE, END_DATE - timedelta(days=30))
+        # 80% of issues are closed
+        if random.random() < 0.8:
+            closed_at = add_days(created_at, random.randint(3, 30))
+            state = "closed"
+        else:
+            closed_at = None
+            state = "opened"
+
+        title_type = random.choice(["Feature", "Bug", "Enhancement"])
+        issues.append(
+            {
+                "id": issue_id,
+                "iid": issue_iid,
+                "title": f"[GL-{issue_iid}] {title_type}: Implement module {i}",
+                "state": state,
+                "created_at": created_at.isoformat(),
+                "closed_at": closed_at.isoformat() if closed_at else None,
+                "labels": f'["{title_type.lower()}"]',
+                "loaded_at": loaded_at,
+            }
+        )
+
+    # Write to CSV
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    issues_path = OUTPUT_DIR / "bronze_gitlab_issues.csv"
+    with open(issues_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "iid",
+                "title",
+                "state",
+                "created_at",
+                "closed_at",
+                "labels",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(issues)
+    print(f"  Created: {issues_path} ({len(issues)} GitLab issues)")
+
+
+def generate_gitlab_mr_data():
+    """Generate GitLab Merge Requests bronze data (for gitlab-devops + hybrid-devops)"""
+    mrs = []
+    loaded_at = datetime.now().isoformat()
+
+    # Generate 15 MRs (75% of 20 issues)
+    for i in range(1, 16):
+        mr_iid = i
+        mr_id = 3000 + i
+
+        # Corresponding issue IID (1-15 map to issues 1-20 randomly)
+        issue_iid = random.randint(1, 20)
+
+        created_at = random_date(START_DATE, END_DATE - timedelta(days=20))
+        # 85% of MRs are merged
+        if random.random() < 0.85:
+            merged_at = add_days(created_at, random.randint(1, 14))
+            state = "merged"
+        else:
+            merged_at = None
+            state = "opened"
+
+        mrs.append(
+            {
+                "id": mr_id,
+                "iid": mr_iid,
+                "title": f"[GL-{issue_iid}] Resolve issue #{issue_iid}",
+                "state": state,
+                "created_at": created_at.isoformat(),
+                "merged_at": merged_at.isoformat() if merged_at else None,
+                "source_branch": f"feature/gl-{issue_iid}",
+                "loaded_at": loaded_at,
+            }
+        )
+
+    # Write to CSV
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    mrs_path = OUTPUT_DIR / "bronze_gitlab_merge_requests.csv"
+    with open(mrs_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "iid",
+                "title",
+                "state",
+                "created_at",
+                "merged_at",
+                "source_branch",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(mrs)
+    print(f"  Created: {mrs_path} ({len(mrs)} GitLab MRs)")
+
+
+def generate_gitlab_ci_data():
+    """Generate GitLab CI Pipelines bronze data (for gitlab-devops process)"""
+    pipelines = []
+    loaded_at = datetime.now().isoformat()
+
+    # Generate 2-3 pipelines per MR (15 MRs → ~37 pipelines)
+    pipeline_id = 4000
+    for mr_iid in range(1, 16):
+        num_pipelines = random.randint(2, 3)
+        for _ in range(num_pipelines):
+            pipeline_id += 1
+            created_at = random_date(START_DATE, END_DATE - timedelta(days=10))
+            started_at = add_hours(created_at, 0.1)
+            finished_at = add_hours(started_at, random.uniform(0.5, 2.0))
+
+            # 90% success, 10% failed
+            status = "success" if random.random() < 0.9 else "failed"
+            duration_seconds = (finished_at - started_at).total_seconds()
+
+            pipelines.append(
+                {
+                    "id": pipeline_id,
+                    "ref": f"feature/gl-{mr_iid}",
+                    "status": status,
+                    "created_at": created_at.isoformat(),
+                    "started_at": started_at.isoformat(),
+                    "finished_at": finished_at.isoformat(),
+                    "duration": int(duration_seconds),
+                    "loaded_at": loaded_at,
+                }
+            )
+
+    # Write to CSV
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    pipelines_path = OUTPUT_DIR / "bronze_gitlab_pipelines.csv"
+    with open(pipelines_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "ref",
+                "status",
+                "created_at",
+                "started_at",
+                "finished_at",
+                "duration",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(pipelines)
+    print(f"  Created: {pipelines_path} ({len(pipelines)} GitLab CI pipelines)")
+
+
+def generate_jira_data():
+    """Generate Jira Issues with changelog bronze data (for hybrid-devops process)"""
+    issues = []
+    loaded_at = datetime.now().isoformat()
+
+    # Generate 20 Jira issues over 2024
+    for i in range(1, 21):
+        issue_key = f"PROJ-{i}"
+        issue_id = 5000 + i
+
+        created_at = random_date(START_DATE, END_DATE - timedelta(days=30))
+
+        # Status transitions: TODO → In Progress → Done (80% complete, 20% in progress)
+        status_transitions = []
+        current_time = created_at
+
+        # Initial: TODO
+        # Transition to In Progress (after 1-5 days)
+        in_progress_time = add_days(current_time, random.randint(1, 5))
+        status_transitions.append(
+            {
+                "created": in_progress_time.isoformat(),
+                "from": "TODO",
+                "to": "In Progress",
+                "author": "John Doe",
+            }
+        )
+
+        # 80% transition to Done
+        if random.random() < 0.8:
+            done_time = add_days(in_progress_time, random.randint(3, 20))
+            status_transitions.append(
+                {
+                    "created": done_time.isoformat(),
+                    "from": "In Progress",
+                    "to": "Done",
+                    "author": "John Doe",
+                }
+            )
+            current_status = "Done"
+            resolutiondate = done_time.isoformat()
+        else:
+            current_status = "In Progress"
+            resolutiondate = None
+
+        # Convert status_transitions to JSON array string
+        import json
+
+        transitions_json = json.dumps(status_transitions)
+
+        issues.append(
+            {
+                "id": issue_id,
+                "key": issue_key,
+                "summary": f"Implement feature for {issue_key}",
+                "issue_type": random.choice(["Story", "Task", "Bug"]),
+                "status": current_status,
+                "priority": random.choice(["High", "Medium", "Low"]),
+                "created": created_at.isoformat(),
+                "resolutiondate": resolutiondate,
+                "assignee": "John Doe",
+                "reporter": "Jane Smith",
+                "status_transitions": transitions_json,
+                "loaded_at": loaded_at,
+            }
+        )
+
+    # Write to CSV
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    issues_path = OUTPUT_DIR / "bronze_jira_issues.csv"
+    with open(issues_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "key",
+                "summary",
+                "issue_type",
+                "status",
+                "priority",
+                "created",
+                "resolutiondate",
+                "assignee",
+                "reporter",
+                "status_transitions",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(issues)
+    print(f"  Created: {issues_path} ({len(issues)} Jira issues)")
+
+
+def generate_jenkins_data():
+    """Generate Jenkins Builds bronze data (for hybrid-devops process)"""
+    builds = []
+    loaded_at = datetime.now().isoformat()
+
+    # Generate 15 builds (corresponding to 15 GitLab MRs)
+    for mr_iid in range(1, 16):
+        build_id = f"backend-build-{mr_iid}"
+        build_number = mr_iid
+
+        timestamp = random_date(START_DATE, END_DATE - timedelta(days=5))
+        timestamp_ms = int(timestamp.timestamp() * 1000)
+
+        # 80% success, 20% failure
+        result = "SUCCESS" if random.random() < 0.8 else "FAILURE"
+        duration_ms = int(random.uniform(60000, 300000))  # 1-5 minutes
+
+        builds.append(
+            {
+                "id": build_id,
+                "job_name": "backend-build",
+                "build_number": build_number,
+                "result": result,
+                "timestamp": timestamp_ms,
+                "duration": duration_ms,
+                "commit_messages": f'["Fix for PROJ-{mr_iid}"]',
+                "loaded_at": loaded_at,
+            }
+        )
+
+    # Write to CSV
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    builds_path = OUTPUT_DIR / "bronze_jenkins_builds.csv"
+    with open(builds_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=[
+                "id",
+                "job_name",
+                "build_number",
+                "result",
+                "timestamp",
+                "duration",
+                "commit_messages",
+                "loaded_at",
+            ],
+        )
+        writer.writeheader()
+        writer.writerows(builds)
+    print(f"  Created: {builds_path} ({len(builds)} Jenkins builds)")
+
+
 # Generate all data
 def main():
     print("Generating sample data for 2024...")
@@ -1290,8 +1601,22 @@ def main():
     print("\n- GitHub Bronze Layer (20 issues, 15 PRs, 25 workflow runs)")
     generate_github_bronze_data()
 
+    # GitLab Bronze layer data
+    print("\n- GitLab Bronze Layer (20 issues, 15 MRs, ~37 pipelines)")
+    generate_gitlab_issues_data()
+    generate_gitlab_mr_data()
+    generate_gitlab_ci_data()
+
+    # Jira Bronze layer data
+    print("\n- Jira Bronze Layer (20 issues with status transitions)")
+    generate_jira_data()
+
+    # Jenkins Bronze layer data
+    print("\n- Jenkins Bronze Layer (15 builds)")
+    generate_jenkins_data()
+
     print("\nDone! Generated 6 process types with source-specific CSV schemas.")
-    print("Plus Bronze layer GitHub data (simulating dlt output).\n")
+    print("Plus Bronze layer data from GitHub, GitLab, Jira, Jenkins.\n")
     print("\nSource schemas:")
     print("  - Order to Cash: order_id, order_status, status_changed_at, employee_id")
     print(

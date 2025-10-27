@@ -12,7 +12,6 @@ import {
   useEdgesState,
   Node as FlowNode,
   Edge as FlowEdge,
-  MarkerType,
 } from "@xyflow/react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import "@xyflow/react/dist/style.css";
@@ -22,11 +21,11 @@ import StartNode from "../StartNode";
 import EndNode from "../EndNode";
 import BackEdge from "../BackEdge";
 import { useLayout } from "../../hooks/useLayout";
+import { useEdgeStyling } from "../../hooks/useEdgeStyling";
 import OutcomeControls from "./OutcomeControls";
 import { detectBackEdges } from "../../utils/detectBackEdges";
 import type {
   OutcomeAnalysisDetail,
-  OutcomeStats,
   PathDifference,
 } from "../../types/outcome";
 
@@ -63,75 +62,23 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
   const [nodes, setNodes, onNodesChange] = useNodesState<FlowNode>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<FlowEdge>([]);
 
-  // エッジに成果メトリックを表示
-  const processedEdges = useMemo(() => {
+  // エッジにラベルを設定（成果メトリック or 頻度）
+  const edgesWithLabels = useMemo(() => {
     if (!analysis.result_data.edges) return [];
 
     const metricName = analysis.metric_name;
 
-    // セグメント比較の場合は、highlightDifferencesが優先される
+    // セグメント比較の場合
     if (highlightDifferences && highlightDifferences.length > 0) {
       return analysis.result_data.edges.map((edge) => {
-        const diff = highlightDifferences.find(
-          (d) => d.source === edge.source && d.target === edge.target,
-        );
-
         const waitingTime =
           edge.data.avg_waiting_time_hours?.toFixed(1) || "0.0";
-        const baseLabel = `${edge.data.frequency} 件 (${waitingTime}h)`;
-
-        if (diff) {
-          // 主要な差分テーブルと同じ配色
-          const strokeColor = diff.diff_rate > 0 ? "#38a169" : "#e53e3e";
-          // 差分の大きさに応じて太さを調整（10% → 太さ3、20% → 太さ5、30% → 太さ7）
-          const diffStrokeWidth = Math.max(
-            2,
-            Math.min(8, 2 + (Math.abs(diff.diff_rate) / 10) * 2),
-          );
-
-          return {
-            ...edge,
-            label: baseLabel,
-            markerEnd: {
-              type: MarkerType.ArrowClosed,
-              color: strokeColor,
-            },
-            style: {
-              stroke: strokeColor,
-              strokeWidth: diffStrokeWidth,
-            },
-          };
-        }
-
-        // 差分に含まれないエッジはデフォルトのグレー
-        return {
-          ...edge,
-          label: baseLabel,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: "#ccc",
-          },
-          style: {
-            stroke: "#ccc",
-            strokeWidth: 2,
-          },
-        };
+        const label = `${edge.data.frequency} 件 (${waitingTime}h)`;
+        return { ...edge, label };
       });
     }
 
     // 以下はパス別成果分析の場合
-    const allStats: OutcomeStats[] = analysis.result_data.edges
-      .map((e) => e.data.outcome_stats?.[metricName])
-      .filter((s): s is OutcomeStats => s !== undefined);
-
-    if (allStats.length === 0) return analysis.result_data.edges;
-
-    // 正規化のため最大値と最小値を計算
-    const values = allStats.map((s) => s[displayMode]);
-    const maxValue = Math.max(...values);
-    const minValue = Math.min(...values);
-    const range = maxValue - minValue || 1;
-
     return analysis.result_data.edges.map((edge) => {
       const outcomeStats = edge.data.outcome_stats?.[metricName];
 
@@ -139,19 +86,10 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         return {
           ...edge,
           label: `${edge.data.frequency} 件`,
-          markerEnd: {
-            type: MarkerType.ArrowClosed,
-            color: "#ccc",
-          },
-          style: {
-            stroke: "#ccc",
-            strokeWidth: 2,
-          },
         };
       }
 
       const value = outcomeStats[displayMode];
-      const normalized = (value - minValue) / range;
 
       // メトリック単位に応じたラベル表示
       const unit = analysis.result_data.edges?.[0]?.data.outcome_stats?.[
@@ -162,43 +100,33 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
       const formattedValue = formatMetricValue(value, metricName);
       const label = `${formattedValue}${unit} (${edge.data.frequency}件)`;
 
-      // 成果値ベースの色分け
-      let strokeColor = "#718096"; // デフォルト: グレー
-      if (normalized > 0.75) {
-        strokeColor = "#38a169"; // 高成果: 緑
-      } else if (normalized < 0.25) {
-        strokeColor = "#e53e3e"; // 低成果: 赤
-      }
-
-      // エッジの太さ: 最大3.5倍に調整
-      const strokeWidth = Math.max(2, normalized * 3.5);
-
       return {
         ...edge,
         label,
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: strokeColor,
-        },
-        style: {
-          stroke: strokeColor,
-          strokeWidth,
-        },
       };
     });
   }, [analysis, displayMode, highlightDifferences]);
 
+  // useEdgeStylingでプロセス分析と統一されたスタイルを適用
+  // セグメント比較でもプロセス分析と同じ色ルール（頻度80%以上: 青、待機時間70%以上: 赤）
+  const styledEdges = useEdgeStyling(edgesWithLabels, {
+    maxStrokeWidthMultiplier: 3.5,
+    excludeStartEndEdges: true,
+  });
+
   // バックエッジを検出してタイプを設定
   const edgesWithBackEdgeType = useMemo(() => {
-    if (!layoutedNodes || layoutedNodes.length === 0 || !processedEdges) {
-      return processedEdges;
+    if (!layoutedNodes || layoutedNodes.length === 0 || !styledEdges) {
+      return styledEdges;
     }
 
-    const backEdgeIds = detectBackEdges(layoutedNodes, processedEdges);
+    const backEdgeIds = detectBackEdges(layoutedNodes, styledEdges);
     const backEdgeIdSet = new Set(backEdgeIds);
 
-    return processedEdges.map((edge) => {
-      const isBackEdge = backEdgeIdSet.has(edge.id);
+    return styledEdges.map((edge) => {
+      // エッジキーを "source->target" 形式で作成して比較
+      const edgeKey = `${edge.source}->${edge.target}`;
+      const isBackEdge = backEdgeIdSet.has(edgeKey);
       return {
         ...edge,
         type: isBackEdge ? "backEdge" : undefined,
@@ -207,7 +135,7 @@ const OutcomeProcessMap: React.FC<OutcomeProcessMapProps> = ({
         targetHandle: isBackEdge ? "right-target" : undefined,
       };
     });
-  }, [layoutedNodes, processedEdges]);
+  }, [layoutedNodes, styledEdges]);
 
   React.useEffect(() => {
     if (layoutedNodes && layoutedNodes.length > 0) {

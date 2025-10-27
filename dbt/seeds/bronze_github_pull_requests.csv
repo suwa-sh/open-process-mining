@@ -1,11 +1,11 @@
 id,number,title,state,created_at,merged_at,head_ref,loaded_at
-2103,203,Implement API endpoint for PROJ-103,closed,2024-05-06T16:36:00,2024-05-11T16:36:00,feature/PROJ-103-implement-api,2025-10-27T11:46:46.517849
-2104,204,Implement API endpoint for PROJ-104,closed,2024-10-02T06:45:00,2024-10-05T06:45:00,feature/PROJ-104-implement-api,2025-10-27T11:46:46.517864
-3104,1204,[REWORK] Implement API endpoint for PROJ-104,closed,2024-10-06T08:48:16.057437,2024-10-06T11:53:55.267389,feature/PROJ-104-implement-api,2025-10-27T11:46:46.517874
-2105,205,Implement API endpoint for PROJ-105,closed,2024-10-07T00:46:00,2024-10-12T00:46:00,feature/PROJ-105-implement-api,2025-10-27T11:46:46.517887
-2106,206,Implement API endpoint for PROJ-106,closed,2024-09-04T11:44:00,2024-09-06T11:44:00,feature/PROJ-106-implement-api,2025-10-27T11:46:46.517901
-2001,101,Fix authentication bug (fixes #1),closed,2024-04-07T11:24:00,2024-04-11T11:24:00,fix/issue-1,2025-10-27T11:46:46.517919
-3001,1101,[REWORK] Fix authentication bug (fixes #1),closed,2024-04-12T14:08:39.298736,2024-04-12T19:02:07.142807,fix/issue-1,2025-10-27T11:46:46.517929
-2002,102,Fix authentication bug (fixes #2),closed,2024-06-14T03:29:00,2024-06-19T03:29:00,fix/issue-2,2025-10-27T11:46:46.517943
-3002,1102,[REWORK] Fix authentication bug (fixes #2),closed,2024-06-20T05:06:17.530826,2024-06-20T07:21:47.153387,fix/issue-2,2025-10-27T11:46:46.517952
-2003,103,Fix authentication bug (fixes #3),closed,2024-06-03T17:46:00,2024-06-04T17:46:00,fix/issue-3,2025-10-27T11:46:46.517967
+2103,203,Implement API endpoint for PROJ-103,closed,2024-05-06T16:36:00,2024-05-11T16:36:00,feature/PROJ-103-implement-api,2025-10-27T19:19:44.712667
+2104,204,Implement API endpoint for PROJ-104,closed,2024-10-02T06:45:00,2024-10-05T06:45:00,feature/PROJ-104-implement-api,2025-10-27T19:19:44.712685
+3104,1204,[REWORK] Implement API endpoint for PROJ-104,closed,2024-10-06T08:48:16.057437,2024-10-06T11:53:55.267389,feature/PROJ-104-implement-api,2025-10-27T19:19:44.712696
+2105,205,Implement API endpoint for PROJ-105,closed,2024-10-07T00:46:00,2024-10-12T00:46:00,feature/PROJ-105-implement-api,2025-10-27T19:19:44.712711
+2106,206,Implement API endpoint for PROJ-106,closed,2024-09-04T11:44:00,2024-09-06T11:44:00,feature/PROJ-106-implement-api,2025-10-27T19:19:44.712726
+2001,101,Fix authentication bug (fixes #1),closed,2024-04-07T11:24:00,2024-04-11T11:24:00,fix/issue-1,2025-10-27T19:19:44.712740
+3001,1101,[REWORK] Fix authentication bug (fixes #1),closed,2024-04-12T14:08:39.298736,2024-04-12T19:02:07.142807,fix/issue-1,2025-10-27T19:19:44.712749
+2002,102,Fix authentication bug (fixes #2),closed,2024-06-14T03:29:00,2024-06-19T03:29:00,fix/issue-2,2025-10-27T19:19:44.712761
+3002,1102,[REWORK] Fix authentication bug (fixes #2),closed,2024-06-20T05:06:17.530826,2024-06-20T07:21:47.153387,fix/issue-2,2025-10-27T19:19:44.712772
+2003,103,Fix authentication bug (fixes #3),closed,2024-06-03T17:46:00,2024-06-04T17:46:00,fix/issue-3,2025-10-27T19:19:44.712786

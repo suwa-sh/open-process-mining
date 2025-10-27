@@ -14,7 +14,7 @@
 
 ## 🚀 ゼロから分析結果を確認するまでの手順
 
-### ステップ1: 環境構築（5分）
+### ステップ1: 環境構築
 
 ```bash
 # リポジトリをクローン
@@ -31,10 +31,10 @@ docker compose up -d
 docker compose ps
 ```
 
-### ステップ2: サンプルデータで動作確認（10分）
+### ステップ2: サンプルデータで動作確認
 
 ```bash
-# サンプルデータを生成（6プロセス、620ケース、3,907イベント）
+# サンプルデータを生成（8プロセス、約700ケース、4,400イベント + 1,350件の成果データ）
 python scripts/generate_sample_data.py
 
 # バックエンドコンテナに入る
@@ -50,20 +50,20 @@ dbt test
 exit
 ```
 
-### ステップ3: Web UIで確認（2分）
+### ステップ3: Web UIで確認
 
 ブラウザで <http://localhost:5173> を開く
 
 **初期状態**: 分析結果が0件表示される
 
-### ステップ4: 分析を実行（3分）
+### ステップ4: 分析を実行
 
 Web UI上で「新規作成」ボタンから分析を作成：
 
 **1. プロセス分析**:
 
-- プロセスタイプ: `order-delivery`（受注配送）
-- 分析名: 「受注配送プロセス\_2024」
+- プロセスタイプ: `order-to-cash`（受注から入金）
+- 分析名: 「受注から入金プロセス\_2024」
 - 「作成」ボタンをクリック
 - → プロセスマップが表示される
 
@@ -88,7 +88,20 @@ Web UI上で「新規作成」ボタンから分析を作成：
 
 ## 🔧 自組織データに合わせたカスタマイズポイント
 
-### カスタマイズポイント1: イベントログデータの準備（最重要）
+### データ投入の2つのパターン
+
+自組織のデータ規模と運用形態に応じて、以下のいずれかを選択してください。
+
+| パターン              | 用途               | データ量        | 更新頻度 | 技術レベル |
+| --------------------- | ------------------ | --------------- | -------- | ---------- |
+| **パターン1（簡易）** | PoC、初回検証      | ~1,000ケース    | 手動更新 | 初級       |
+| **パターン2（本格）** | 継続運用、定期分析 | 1,000ケース以上 | 自動更新 | 中級       |
+
+---
+
+## パターン1: CSV手動投入（簡易・PoC向け）
+
+### ステップ1: イベントログデータの準備
 
 **場所**: `dbt/seeds/raw_<your_process>_2024.csv`
 
@@ -101,11 +114,12 @@ ORD-001,入金確認,2024-01-15 14:30:00,EMP-002
 ORD-001,出荷完了,2024-01-16 10:15:00,EMP-003
 ```
 
-**カスタマイズ方法**:
+**データ準備方法**:
 
 1. 自社システムからエクスポート（例: 販売管理システム、CRM、ERP）
-2. 上記フォーマットに変換
+2. 上記フォーマットに変換（Excel、Python、SQLなど）
 3. `dbt/seeds/`に配置
+4. `dbt seed`で投入
 
 **データ抽出例（受注プロセス）**:
 
@@ -114,7 +128,7 @@ ORD-001,出荷完了,2024-01-16 10:15:00,EMP-003
 - **タイムスタンプ**: ステータス更新日時（UPDATED_AT）
 - **担当者**: 担当者ID（EMPLOYEE_ID）
 
-### カスタマイズポイント2: dbt stagingモデルの作成
+### ステップ2: dbt stagingモデルの作成
 
 **場所**: `dbt/models/staging/stg_<your_process>_2024.sql`
 
@@ -140,7 +154,7 @@ WHERE opportunity_id IS NOT NULL
 2. process_type、カラム名を変更
 3. `stg_all_events.sql`に UNION ALL で追加
 
-### カスタマイズポイント3: 組織マスターデータ（組織分析を使う場合）
+### ステップ3: 組織マスターデータ（組織分析を使う場合）
 
 **場所**:
 
@@ -162,7 +176,7 @@ EMP-002,佐藤花子,経理,DEPT-ACCOUNTING
 3. `dbt/seeds/`に配置
 4. `dbt seed`で投入
 
-### カスタマイズポイント4: 成果データ（成果分析を使う場合）
+### ステップ4: 成果データ（成果分析を使う場合）
 
 **場所**: `dbt/seeds/outcome_<your_process>.csv`
 
@@ -170,9 +184,9 @@ EMP-002,佐藤花子,経理,DEPT-ACCOUNTING
 
 ```csv
 process_type,case_id,metric_name,metric_value,metric_unit
-order-delivery,ORD-001,revenue,150000,JPY
-order-delivery,ORD-001,profit_margin,25.5,percent
-order-delivery,ORD-002,revenue,280000,JPY
+order-to-cash,ORD-001,revenue,150000,JPY
+order-to-cash,ORD-001,profit_margin,0.255,percent
+order-to-cash,ORD-002,revenue,280000,JPY
 ```
 
 **カスタマイズ方法**:
@@ -181,18 +195,170 @@ order-delivery,ORD-002,revenue,280000,JPY
 2. ケースIDと紐付け
 3. `dbt/models/marts/fct_case_outcomes.sql`に追加
 
-### カスタマイズポイント5: プロセスタイプの追加
+---
 
-**場所**: `backend/src/config.py`（存在しない場合は新規作成不要、データで自動認識）
+## パターン2: dlt自動投入（本格運用向け）
+
+### 概要
+
+dlt（data load tool）を使用して、外部APIやデータベースから自動的にデータを抽出します。
+
+**メリット**:
+
+- 定期実行による自動データ更新
+- 大量データの効率的な処理
+- 増分ロード（差分更新）対応
+- エラーリトライ機能
+
+**前提条件**:
+
+- Pythonの基本知識
+- REST API または データベース接続の経験
+
+### ステップ1: dltソースの作成
+
+**場所**: `dlt/sources/your_system_source.py`
+
+**サンプル（REST API）**:
+
+```python
+"""Your System data source for dlt."""
+import dlt
+from typing import Iterator, Any
+import requests
+
+@dlt.resource(write_disposition="append", primary_key="id")
+def your_system_records(
+    api_url: str,
+    api_key: str = dlt.secrets.value,
+) -> Iterator[dict[str, Any]]:
+    """Extract records from your system API."""
+    headers = {"Authorization": f"Bearer {api_key}"}
+    response = requests.get(f"{api_url}/api/records", headers=headers)
+    response.raise_for_status()
+
+    for record in response.json():
+        yield {
+            "id": record["id"],
+            "case_id": record["order_id"],
+            "status": record["status"],
+            "updated_at": record["updated_at"],
+            "user_id": record["user_id"],
+        }
+```
+
+**参考**: `dlt/sources/github_source.py` にGitHub API連携の実装例があります。
+
+### ステップ2: dltパイプラインの作成
+
+**場所**: `dlt/pipelines/your_system_pipeline.py`
+
+```python
+"""Your System pipeline."""
+import dlt
+from sources.your_system_source import your_system_records
+
+if __name__ == "__main__":
+    pipeline = dlt.pipeline(
+        pipeline_name="your_system_pipeline",
+        destination="postgres",
+        dataset_name="bronze_raw",
+    )
+
+    load_info = pipeline.run(
+        your_system_records(
+            api_url=dlt.config["sources.your_system.api_url"]
+        )
+    )
+
+    print(f"Loaded {len(load_info.loads_ids)} packages")
+```
+
+### ステップ3: dlt設定ファイルの編集
+
+**dlt/.dlt/config.toml**:
+
+```toml
+[sources.your_system]
+api_url = "https://api.yoursystem.com"
+```
+
+**dlt/.dlt/secrets.toml**:
+
+```toml
+[sources.your_system]
+api_key = "your_api_key_here"
+
+[destination.postgres.credentials]
+database = "process_mining_db"
+username = "process_mining"
+password = "your_password"
+host = "postgres"
+port = 5432
+```
+
+### ステップ4: dbtステージングモデルの作成
+
+**場所**: `dbt/models/staging/your_system/stg_your_system.sql`
+
+```sql
+{{
+  config(
+    materialized='view'
+  )
+}}
+
+-- Bronze層（dltで投入）からステージングへ変換
+SELECT
+    'your-process' AS process_type,
+    case_id,
+    status AS activity,
+    updated_at::timestamptz AS timestamp,
+    'your_system' AS source_system,
+    jsonb_build_object('record_id', id) AS attributes_json
+FROM {{ source('bronze_raw', 'your_system_records') }}
+WHERE case_id IS NOT NULL
+```
+
+**Bronze層sources定義**: `dbt/models/bronze/_bronze__sources.yml`にテーブル定義を追加
+
+### ステップ5: パイプラインの実行
+
+**手動実行**:
+
+```bash
+# dltコンテナでパイプライン実行
+docker compose run --rm --profile dlt dlt python pipelines/your_system_pipeline.py
+
+# dbtでステージング→マート変換
+docker compose exec backend bash -c "cd /app/dbt && dbt run"
+```
+
+**定期実行（cron）**:
+
+```bash
+# crontabに追加（毎日午前2時）
+0 2 * * * cd /path/to/open-process-mining && docker compose run --rm --profile dlt dlt python pipelines/your_system_pipeline.py && docker compose exec backend bash -c "cd /app/dbt && dbt run"
+```
+
+詳細は [dlt/README.md](dlt/README.md) を参照してください。
+
+---
+
+### プロセスタイプの追加
+
+**場所**: 設定ファイルは不要（データドリブン）
 
 **現在サポート済み**:
 
-- `order-delivery`: 受注配送
-- `employee-onboarding`: 入社手続
-- `itsm`: ITサポート
+- `order-to-cash`: 受注から入金
 - `billing`: 請求
 - `invoice-approval`: 請求書承認
+- `employee-onboarding`: 入社手続
+- `itsm`: ITサポート
 - `system-development`: システム開発
+- `gitlab-devops`: GitLab開発プロセス
+- `hybrid-devops`: Jira + GitLab + Jenkins開発プロセス
 
 **新規追加方法**:
 プロセスタイプは**データドリブン**なので、`fct_event_log`に新しい`process_type`を投入すれば自動的に認識されます。コード変更は不要です。
@@ -241,8 +407,9 @@ APPLICANT-001,内定通知,2024-01-25 10:00:00,EMP-HR-01
 
 ```csv
 process_type,case_id,metric_name,metric_value,metric_unit
-recruitment,APPLICANT-001,time_to_hire_days,20,days
-recruitment,APPLICANT-001,satisfaction_score,4.5,score
+employee-onboarding,APPLICANT-001,recruitment_cost,500000,JPY
+employee-onboarding,APPLICANT-001,recruitment_days,20,days
+employee-onboarding,APPLICANT-001,candidate_score,85.5,score
 ```
 
 **分析観点**:
@@ -268,7 +435,7 @@ A: 各システムごとに`raw_<system>_2024.csv`を作成し、stagingモデ�
 A: はい、完全対応しています。「受注登録」「入金確認」など日本語推奨です。
 
 **Q5: リアルタイム分析は可能？**
-A: 現在はバッチ処理のみ。日次でdbt runを実行し、Web UIから新規分析を作成してください。
+A: 5分単位などのマイクロバッチでdbt runを実行し、分析したいタイミングでWeb UIから新規分析を作成してください。
 
 **Q6: データベースをリセットしたい場合は？**
 
@@ -278,9 +445,6 @@ docker compose down -v
 
 # コンテナを再起動（DBが初期化される）
 docker compose up -d
-
-# サンプルデータを再生成
-python scripts/generate_sample_data.py
 
 # dbtでデータ投入
 docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"

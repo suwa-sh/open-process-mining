@@ -9,7 +9,7 @@ class EventLog(BaseModel):
     case_id: str
     activity: str
     timestamp: datetime
-    resource: str
+    resource: Optional[str] = None
     employee_id: Optional[str] = None
     employee_name: Optional[str] = None
     role: Optional[str] = None

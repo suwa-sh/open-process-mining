@@ -222,9 +222,11 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
               value={processType}
               onChange={(e) => handleProcessTypeChange(e.target.value)}
               size="small"
-              SelectDisplayProps={{
-                "data-testid": "process-type-select-trigger",
-              }}
+              SelectDisplayProps={
+                {
+                  "data-testid": "process-type-select-trigger",
+                } as any
+              }
             >
               {processTypes.map((type) => (
                 <MenuItem key={type} value={type}>
@@ -243,9 +245,11 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
               onChange={(e) => setMetricName(e.target.value)}
               disabled={availableMetrics.length === 0}
               size="small"
-              SelectDisplayProps={{
-                "data-testid": "metric-select-trigger",
-              }}
+              SelectDisplayProps={
+                {
+                  "data-testid": "metric-select-trigger",
+                } as any
+              }
             >
               {availableMetrics.map((metric) => (
                 <MenuItem key={metric.metric_name} value={metric.metric_name}>
@@ -267,9 +271,11 @@ const CreateOutcomeAnalysisModal: React.FC<CreateOutcomeAnalysisModalProps> = ({
                 )
               }
               size="small"
-              SelectDisplayProps={{
-                "data-testid": "analysis-type-select-trigger",
-              }}
+              SelectDisplayProps={
+                {
+                  "data-testid": "analysis-type-select-trigger",
+                } as any
+              }
             >
               <MenuItem value="path-outcome">パス別成果分析</MenuItem>
               <MenuItem value="segment-comparison">セグメント比較分析</MenuItem>

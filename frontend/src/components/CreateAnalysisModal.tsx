@@ -191,9 +191,11 @@ const CreateAnalysisModal: React.FC<CreateAnalysisModalProps> = ({
               id="process-type-select"
               value={processType}
               onChange={(e) => setProcessType(e.target.value)}
-              SelectDisplayProps={{
-                "data-testid": "process-type-select-trigger",
-              }}
+              SelectDisplayProps={
+                {
+                  "data-testid": "process-type-select-trigger",
+                } as any
+              }
             >
               {processTypes.map((type) => (
                 <MenuItem key={type} value={type}>

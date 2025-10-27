@@ -223,7 +223,12 @@ docker compose logs frontend -f
 
 ### データ準備
 
-#### 1. サンプルデータ生成（初回のみ、またはデータ再生成時）
+データ取得には2つの方法があります：
+
+1. **サンプルデータ生成**（開発・テスト用）: Pythonスクリプトで擬似データを生成
+2. **dlt (data load tool)**（本番用）: 外部システムから実データを取得（独立プロジェクト: `dlt/`）
+
+#### 方法1: サンプルデータ生成（初回のみ、またはデータ再生成時）
 
 ```bash
 # リポジトリルートからスクリプトを実行
@@ -242,7 +247,71 @@ python scripts/generate_sample_data.py
 各ソースシステム固有のスキーマでCSVファイルを `dbt/seeds/` に出力します。
 詳細は `scripts/README.md` を参照してください。
 
-#### 2. dbtでデータパイプライン実行
+#### 方法2: dlt (data load tool) で外部システムからデータ取得
+
+**dlt**は、外部システム（GitHub、GitLab、Jira、Jenkinsなど）からデータを抽出し、PostgreSQLにロードするPythonライブラリです。
+
+**重要**: dltは**独立したプロジェクト**（`dlt/`）として分離されています。backendとは別のコンテナで実行します。
+
+##### セットアップ手順
+
+**ステップ1: secrets.tomlの作成**
+
+```bash
+# dlt/.dlt/secrets.tomlを作成（.gitignoreで除外済み）
+cp dlt/.dlt/secrets.toml.example dlt/.dlt/secrets.toml
+```
+
+**ステップ2: 認証情報の設定**
+
+`dlt/.dlt/secrets.toml`を編集し、各サービスの認証情報を設定：
+
+```toml
+[destination.postgres.credentials]
+database = "process_mining_db"
+password = "process_mining_password"
+username = "process_mining"
+host = "postgres"
+port = 5432
+
+[sources.github]
+# https://github.com/settings/tokens から取得
+access_token = "ghp_your_github_personal_access_token"
+```
+
+**ステップ3: データ取得の実行**
+
+```bash
+# dltコンテナでパイプライン実行（--profile dlt でオプション起動）
+docker compose run --rm --profile dlt dlt python pipelines/github_pipeline.py
+
+# または、手動でビルド・実行
+docker compose build dlt
+docker compose run --rm dlt python pipelines/github_pipeline.py
+```
+
+##### 利用可能なデータソース
+
+- **GitHub** (`dlt/sources/github_source.py`)
+  - Issues, Pull Requests, Actions Runs
+  - 認証: Personal Access Token
+
+##### dltの設定ファイル
+
+- **`dlt/.dlt/config.toml`**: データソースの設定（リポジトリ名、API URLなど）
+- **`dlt/.dlt/secrets.toml`**: 認証情報（gitignore対象、secrets.toml.exampleからコピー）
+
+##### データの流れ
+
+1. dlt → `bronze_raw` スキーマ（PostgreSQL）
+2. dbt seed → `public` スキーマにCSVをロード
+3. dbt run → ステージング → マート（`fct_event_log`, `fct_case_outcomes`）
+
+**詳細**: [dlt/README.md](dlt/README.md)、[USAGE.md パターン2](USAGE.md#パターン2-dlt自動投入本格運用向け) を参照
+
+**注意**: 現在はサンプルデータ生成（方法1）を推奨。dltは外部システムと連携する場合に使用。
+
+#### 方法3: dbtでデータパイプライン実行（共通）
 
 ```bash
 # バックエンドコンテナに入る
@@ -677,6 +746,9 @@ useEffect(() => {
 - パスフィルタリング: `pathThreshold`に基づき`edges`に`hidden`プロパティを追加
 - ハッピーパス強調: 頻度80%以上のエッジを青い太線で表示（`strokeColor: '#3182ce'`, `strokeWidth: normalizedFreq * 8`）
 - 問題パス警告: 待機時間70%以上のエッジを赤線で表示（`strokeColor: '#e53e3e'`）
+- **バックエッジ判定**: `detectBackEdges()`から返されるキー（`source->target`形式）と比較
+  - `edgeKey = \`${edge.source}->${edge.target}\``でキーを生成
+  - バックエンドが生成する`edge.id`（`edge-1`, `edge-2`等）とは異なるため変換が必要
 
 **バックエッジ検出（`detectBackEdges.ts`）**:
 
@@ -718,6 +790,49 @@ useEffect(() => {
 - `analyze_handover`: ハンドオーバーネットワーク分析（employee/department単位）
 - `analyze_workload`: 作業負荷分析（アクティビティ数・ケース数）
 - `analyze_performance`: パフォーマンス分析（平均処理時間・中央値・合計時間）
+
+### dbt Models
+
+**リファクタリングパターン**:
+
+1. **定数の集約**: 繰り返し使用される文字列リテラルを`constants` CTEに抽出
+
+   ```sql
+   WITH
+   constants AS (
+       SELECT
+           'hybrid-devops' AS process_type,
+           'jira_issue' AS source_system
+   ),
+   ...
+   FROM source s
+   CROSS JOIN constants c
+   ```
+
+2. **重複ロジックの統合**: 複数のUNION ALLクエリで重複する判定ロジックを`base_events` CTEに集約
+
+   ```sql
+   -- 例: stg_gitlab_merge_requests.sql
+   base_events AS (
+       SELECT
+           CASE
+               WHEN gitlab_issue_iid IS NOT NULL THEN 'gitlab-devops'
+               WHEN jira_key IS NOT NULL THEN 'hybrid-devops'
+           END AS process_type,
+           COALESCE(
+               'gitlab-issue-' || gitlab_issue_iid,
+               jira_key
+           ) AS case_id,
+           ...
+       FROM case_extraction
+   ),
+   events AS (
+       -- MR Created + Code Merged を base_events から生成
+       SELECT process_type, case_id, ... FROM base_events
+       UNION ALL
+       SELECT process_type, case_id, ... FROM base_events WHERE ...
+   )
+   ```
 
 ## トラブルシューティング
 
@@ -843,6 +958,24 @@ MUI SelectコンポーネントのE2Eテストで問題が発生する場合：
 - [tmp/仕様.md](tmp/仕様.md): 詳細実装仕様
 - [tmp/plan.md](tmp/plan.md): 実装計画書
 
+### 設計ドキュメント（docs/）
+
+プロジェクトの設計思想とデータ仕様を定義する参照用ドキュメントです。現在はコード実装前の設計段階であり、SQLコメントや実装時の参考資料として機能しています。
+
+**docs/metrics_dictionary.yaml**:
+
+- **役割**: 成果メトリックの定義辞書
+- **内容**: 各プロセスタイプで計測すべきメトリック（lead_time_days, cycle_time_days, code_review_time_hoursなど）の仕様
+- **現在の利用**: `dbt/models/marts/outcome_github_system_development.sql`のコメントで参照
+- **将来の展開**: メトリック計算ロジックの自動生成やバリデーション定義として活用予定
+
+**docs/process_definition.yaml**:
+
+- **役割**: プロセスタイプ別の開始/終了イベント定義
+- **内容**: 各プロセスの開始イベント（start_events）、終了イベント（end_events）、完了条件（completion_mode）、タイムゾーン設定
+- **現在の利用**: 実装ガイドライン（未使用）
+- **将来の展開**: ケースフィルタリングや分析範囲の自動判定に利用予定
+
 ## 技術スタック
 
 ### 必須技術
@@ -877,15 +1010,19 @@ MUI SelectコンポーネントのE2Eテストで問題が発生する場合：
     - chrome-devtoolsで動作確認
     - ハッピーパスをe2eテストにケース追加
     - e2eテストで動作確認
+- t-wadaさん推奨のTDDアプローチ
+  - テストパターン: Given/When/Thenパターン
+  - メソッド名形式: `テスト対象メソッド名_XXXの場合_YYYであること`
 
 ### テスト・検証フェーズ
 
 - docker composeで**ティアをまたいだ動作確認**
   - 包括的な動作確認を**e2eテストに追加**
-- **作業が完了したら確認**すること
+- **作業が完了したら確認・解消**すること ※先送りは複雑にするだけなので、即時解消
   - `make fmt` - コード自動整形
-  - `make lint-fix` - すべてのLinterが0 issues
-  - `docker compose down -v`, `docker compose up -d` - クリーン状態からe2eを実行する準備
+  - `make lint-fix` - すべてのLinterが0 issues。qltyの自動fixで改善しないものは手動で修正。
+  - クリーンな状態からの回帰テスト
+    - `docker compose down -v`, `docker compose up -d` - クリーン状態からe2eを実行する準備
     - `docker compose exec frontend npm install`
     - `docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"`
   - `test-all` - すべてのテストがPASS、0 warnings

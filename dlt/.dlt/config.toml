@@ -1,0 +1,32 @@
+# dlt configuration file
+# See: https://dlthub.com/docs/general-usage/credentials/config_toml
+
+[runtime]
+log_level = "INFO"
+log_format = "JSON"
+
+[destination.postgres]
+dataset_name = "bronze_raw"
+
+[sources.github]
+# GitHub organization/owner and repositories
+owner = "suwa-sh"
+repositories = ["open-process-mining"]
+
+[sources.gitlab]
+# GitLab project ID (e.g., "namespace/project" or numeric ID)
+project_id = "your-company/your-project"
+# GitLab instance URL (default: https://gitlab.com)
+url = "https://gitlab.com"
+
+[sources.jira]
+# Jira instance URL
+url = "https://your-company.atlassian.net"
+# JQL query (default: ORDER BY updated ASC)
+jql = "project = PROJ ORDER BY updated ASC"
+
+[sources.jenkins]
+# Jenkins instance URL
+url = "https://jenkins.example.com"
+# Job name to extract builds from
+job_name = "backend-build"

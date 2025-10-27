@@ -101,7 +101,9 @@ const ProcessMap: React.FC<ProcessMapProps> = ({ analysisId, onBack }) => {
     const backEdgeIdSet = new Set(backEdgeIds);
 
     return styledEdges.map((edge) => {
-      const isBackEdge = backEdgeIdSet.has(edge.id);
+      // エッジキーを "source->target" 形式で作成して比較
+      const edgeKey = `${edge.source}->${edge.target}`;
+      const isBackEdge = backEdgeIdSet.has(edgeKey);
       return {
         ...edge,
         type: isBackEdge ? "backEdge" : undefined,

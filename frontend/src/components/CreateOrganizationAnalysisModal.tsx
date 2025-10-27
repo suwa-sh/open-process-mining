@@ -156,9 +156,11 @@ const CreateOrganizationAnalysisModal: React.FC<
               value={processType}
               onChange={(e) => setProcessType(e.target.value)}
               size="small"
-              SelectDisplayProps={{
-                "data-testid": "process-type-select-trigger",
-              }}
+              SelectDisplayProps={
+                {
+                  "data-testid": "process-type-select-trigger",
+                } as any
+              }
             >
               {processTypes.map((type) => (
                 <MenuItem key={type} value={type}>

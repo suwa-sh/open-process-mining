@@ -34,8 +34,8 @@ system-development:
 
   # 再オープン処理
   reopen_handling:
-    keep_original_start: true  # 初回作成時刻を維持
-    track_reopen_count: true   # 再オープン回数を別途集計
+    keep_original_start: true # 初回作成時刻を維持
+    track_reopen_count: true # 再オープン回数を別途集計
 
   # タイムゾーン設定
   timezone: "UTC"

@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_jenkins_builds
+    description: "Jenkins Buildsのステージングビュー（hybrid-devopsプロセス）"
+    columns:
+      - name: process_type
+        description: "プロセスタイプ（hybrid-devops）"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["hybrid-devops"]
+      - name: case_id
+        description: "ケースID（Jira Issue Key、例: PROJ-123）"
+        data_tests:
+          - not_null
+      - name: activity
+        description: "アクティビティ名"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ["Build Started", "Build Completed", "Build Failed"]
+      - name: timestamp
+        description: "イベント発生日時"
+        data_tests:
+          - not_null
+      - name: source_system
+        description: "ソースシステム"
+        data_tests:
+          - accepted_values:
+              values: ["jenkins_build"]

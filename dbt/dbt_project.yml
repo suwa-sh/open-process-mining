@@ -112,3 +112,70 @@ seeds:
         updated_at: timestamp
         head_branch: varchar
         loaded_at: timestamp
+
+    # GitLab Bronze layer
+    bronze_gitlab_issues:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        iid: int
+        title: varchar
+        state: varchar
+        created_at: timestamp
+        closed_at: timestamp
+        labels: varchar
+        loaded_at: timestamp
+
+    bronze_gitlab_merge_requests:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        iid: int
+        title: varchar
+        state: varchar
+        created_at: timestamp
+        merged_at: timestamp
+        source_branch: varchar
+        loaded_at: timestamp
+
+    bronze_gitlab_pipelines:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        ref: varchar
+        status: varchar
+        created_at: timestamp
+        started_at: timestamp
+        finished_at: timestamp
+        duration: int
+        loaded_at: timestamp
+
+    # Jira Bronze layer
+    bronze_jira_issues:
+      +schema: bronze_raw
+      +column_types:
+        id: bigint
+        key: varchar
+        summary: varchar
+        issue_type: varchar
+        status: varchar
+        priority: varchar
+        created: timestamp
+        resolutiondate: timestamp
+        assignee: varchar
+        reporter: varchar
+        status_transitions: varchar
+        loaded_at: timestamp
+
+    # Jenkins Bronze layer
+    bronze_jenkins_builds:
+      +schema: bronze_raw
+      +column_types:
+        id: varchar
+        job_name: varchar
+        build_number: int
+        result: varchar
+        timestamp: bigint
+        duration: bigint
+        commit_messages: varchar
+        loaded_at: timestamp

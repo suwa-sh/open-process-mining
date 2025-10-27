@@ -242,9 +242,11 @@ const OrganizationAnalysisDetail: React.FC<OrganizationAnalysisDetailProps> = ({
                   onChange={(e) =>
                     setAggregationLevel(e.target.value as AggregationLevel)
                   }
-                  SelectDisplayProps={{
-                    "data-testid": "aggregation-level-select-trigger",
-                  }}
+                  SelectDisplayProps={
+                    {
+                      "data-testid": "aggregation-level-select-trigger",
+                    } as any
+                  }
                 >
                   <MenuItem value="employee">
                     <Stack direction="row" spacing={1} alignItems="center">

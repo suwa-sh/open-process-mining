@@ -18,6 +18,8 @@ models:
                     "billing",
                     "invoice-approval",
                     "system-development",
+                    "gitlab-devops",
+                    "hybrid-devops",
                   ]
       - name: case_id
         description: "Case identifier (process instance)"
@@ -32,9 +34,7 @@ models:
         tests:
           - not_null
       - name: resource
-        description: "Resource that performed the activity (employee_id)"
-        tests:
-          - not_null
+        description: "Resource that performed the activity (employee_id, may be NULL for gitlab/hybrid-devops)"
       - name: employee_id
         description: "Employee ID"
         tests:
@@ -75,6 +75,8 @@ models:
                     "billing",
                     "invoice-approval",
                     "system-development",
+                    "gitlab-devops",
+                    "hybrid-devops",
                   ]
       - name: case_id
         description: "Case identifier"

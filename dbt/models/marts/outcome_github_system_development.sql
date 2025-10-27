@@ -1,5 +1,5 @@
 -- System Development process outcomes
--- Calculates metrics based on config/metrics_dictionary.yaml
+-- Calculates metrics based on docs/metrics_dictionary.yaml
 
 {{ config(materialized='table') }}
 
@@ -33,31 +33,31 @@ metrics AS (
     SELECT
         case_id,
         -- リードタイム: Issue Created → Issue Closed
+        deployment_count AS deployment_frequency,
+
+        -- サイクルタイム: PR Opened → Code Merged
         CASE
             WHEN issue_created_ts IS NOT NULL AND issue_closed_ts IS NOT NULL
             THEN EXTRACT(EPOCH FROM (issue_closed_ts - issue_created_ts)) / 86400
         END AS lead_time_days,
 
-        -- サイクルタイム: PR Opened → Code Merged
+        -- コードレビュー時間: PR Opened → Code Merged
         CASE
             WHEN pr_opened_ts IS NOT NULL AND code_merged_ts IS NOT NULL
             THEN EXTRACT(EPOCH FROM (code_merged_ts - pr_opened_ts)) / 86400
         END AS cycle_time_days,
 
-        -- コードレビュー時間: PR Opened → Code Merged
+        -- ビルド時間: Build Started → Build Completed
         CASE
             WHEN pr_opened_ts IS NOT NULL AND code_merged_ts IS NOT NULL
             THEN EXTRACT(EPOCH FROM (code_merged_ts - pr_opened_ts)) / 3600
         END AS code_review_time_hours,
 
-        -- ビルド時間: Build Started → Build Completed
+        -- デプロイ頻度
         CASE
             WHEN build_started_ts IS NOT NULL AND build_completed_ts IS NOT NULL
             THEN EXTRACT(EPOCH FROM (build_completed_ts - build_started_ts)) / 60
-        END AS build_time_minutes,
-
-        -- デプロイ頻度
-        deployment_count AS deployment_frequency
+        END AS build_time_minutes
     FROM case_events
 ),
 
