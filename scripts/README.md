@@ -104,7 +104,7 @@ python /path/to/open-process-mining/scripts/generate_sample_data.py
 python scripts/generate_sample_data.py
 
 # 2. Dockerコンテナ内でdbtを実行
-docker compose exec backend bash -c "cd /app/dbt && dbt seed --full-refresh && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed --full-refresh && dbt run"
 ```
 
 ### カスタマイズ

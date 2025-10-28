@@ -80,3 +80,51 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+
+      - name: Extract metadata for dbt-base
+        id: dbt-base-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dbt-base
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push dbt-base image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./dbt
+          file: ./dbt/Dockerfile.base
+          push: true
+          tags: ${{ steps.dbt-base-meta.outputs.tags }}
+          labels: ${{ steps.dbt-base-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Extract metadata for dlt-base
+        id: dlt-base-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dlt-base
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push dlt-base image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./dlt
+          file: ./dlt/Dockerfile.base
+          push: true
+          tags: ${{ steps.dlt-base-meta.outputs.tags }}
+          labels: ${{ steps.dlt-base-meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64

@@ -210,15 +210,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 環境変数設定
 cp .env.example .env
 
-# コンテナ起動 (Docker Compose V2)
-docker compose up -d
+# 開発環境のコンテナ起動 (Docker Compose V2)
+docker compose -f compose.dev.yml up -d
 
 # ログ確認
-docker compose logs -f
+docker compose -f compose.dev.yml logs -f
 
 # 特定のサービスログ確認
-docker compose logs backend -f
-docker compose logs frontend -f
+docker compose -f compose.dev.yml logs backend -f
+docker compose -f compose.dev.yml logs frontend -f
 ```
 
 ### データ準備
@@ -283,11 +283,11 @@ access_token = "ghp_your_github_personal_access_token"
 
 ```bash
 # dltコンテナでパイプライン実行（--profile dlt でオプション起動）
-docker compose run --rm --profile dlt dlt python pipelines/github_pipeline.py
+docker compose -f compose.dev.yml --profile dlt run --rm dlt python pipelines/github_pipeline.py
 
 # または、手動でビルド・実行
-docker compose build dlt
-docker compose run --rm dlt python pipelines/github_pipeline.py
+docker compose -f compose.dev.yml build dlt
+docker compose -f compose.dev.yml run --rm dlt python pipelines/github_pipeline.py
 ```
 
 ##### 利用可能なデータソース
@@ -314,28 +314,21 @@ docker compose run --rm dlt python pipelines/github_pipeline.py
 #### 方法3: dbtでデータパイプライン実行（共通）
 
 ```bash
-# バックエンドコンテナに入る
-docker compose exec backend bash
+# dbtコンテナでコマンド実行（開発環境）
+# 注: compose.dev.ymlではdbtをbackendから分離
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt deps"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt test"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt test --store-failures"
 
-# dbtディレクトリに移動
+# または、dbtコンテナ内に入ってから実行
+docker compose -f compose.dev.yml run --rm dbt bash
 cd /app/dbt
-
-# 依存パッケージのインストール
 dbt deps
-
-# サンプルデータのロード（seedファイルをDBにロード）
 dbt seed
-
-# ステージングモデル→マートモデルの実行
-# - ステージング: ソース固有スキーマ → 標準イベントログ形式
-# - マート: fct_event_log（統合イベントログ）、fct_case_outcomes（成果データ）
 dbt run
-
-# データテストの実行
 dbt test
-
-# テスト結果の詳細表示（失敗したケースを保存）
-dbt test --store-failures
 ```
 
 **dbt テストの種類**:
@@ -439,10 +432,10 @@ make test-frontend
 make test-e2e
 
 # 個別に実行する場合
-docker compose exec backend pytest tests/         # バックエンドテスト
-docker compose exec frontend npm test             # フロントエンドテスト
-docker compose exec frontend npm test -- --coverage  # カバレッジ付き
-cd e2e && npm test                                # E2Eテスト（Playwright）
+docker compose -f compose.dev.yml exec backend pytest tests/         # バックエンドテスト
+docker compose -f compose.dev.yml exec frontend npm test             # フロントエンドテスト
+docker compose -f compose.dev.yml exec frontend npm test -- --coverage  # カバレッジ付き
+cd e2e && npm test                                                    # E2Eテスト（Playwright）
 ```
 
 **フロントエンドユニットテスト:**
@@ -509,9 +502,9 @@ Playwrightのstrict modeに対応するため、以下の優先順位でロケ�
 
 ```bash
 # コンテナ内からのAPI確認 (curlが無いためPythonを使用)
-docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/health').json())"
+docker compose -f compose.dev.yml exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/health').json())"
 
-docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/process/analyses').json())"
+docker compose -f compose.dev.yml exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/process/analyses').json())"
 
 # ホストマシンからのAPI確認 (curlが使える場合)
 curl http://localhost:8000/health
@@ -850,13 +843,13 @@ useEffect(() => {
 
 - dbtは`public`スキーマにテーブルを作成
 - クエリは`public.fct_event_log`または`fct_event_log`を指定
-- スキーマ確認: `docker compose exec postgres psql -U process_mining -d process_mining_db -c "\dn"`
+- スキーマ確認: `docker compose -f compose.dev.yml exec postgres psql -U process_mining -d process_mining_db -c "\dn"`
 
 ### データベース接続エラー
 
-- PostgreSQLコンテナが起動しているか確認: `docker compose ps`
+- PostgreSQLコンテナが起動しているか確認: `docker compose -f compose.dev.yml ps`
 - 環境変数が正しく設定されているか確認: `.env`ファイル
-- ヘルスチェック確認: `docker compose ps postgres`
+- ヘルスチェック確認: `docker compose -f compose.dev.yml ps postgres`
 
 ### データベースの完全リセット
 
@@ -864,22 +857,22 @@ useEffect(() => {
 
 ```bash
 # コンテナとボリュームを完全削除
-docker compose down -v
+docker compose -f compose.dev.yml down -v
 
 # コンテナを再起動（DBが初期化される）
-docker compose up -d
+docker compose -f compose.dev.yml up -d
 
 # サンプルデータを再生成
 python scripts/generate_sample_data.py
 
 # dbtでデータ投入
-docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed && dbt run"
 ```
 
 **注意**:
 
 - `-v` フラグを付けると、PostgreSQLの全データ（Named Volume `postgres-data`）が削除されます
-- **フロントエンドの`node_modules`も削除される**ため、再起動後に`docker compose exec frontend npm install`が必要です
+- **フロントエンドの`node_modules`も削除される**ため、再起動後に`docker compose -f compose.dev.yml exec frontend npm install`が必要です
 
 ### dbtエラー
 
@@ -889,15 +882,15 @@ docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
 
 ### フロントエンドが表示されない
 
-- バックエンドAPIが起動しているか確認: `docker compose ps backend`
-- フロントエンドログ確認: `docker compose logs frontend`
+- バックエンドAPIが起動しているか確認: `docker compose -f compose.dev.yml ps backend`
+- フロントエンドログ確認: `docker compose -f compose.dev.yml logs frontend`
 - Viteサーバーが起動しているか確認（ログに "Local: <http://localhost:5173/>" が表示）
 - ブラウザのコンソールでエラーを確認
 
 ### フロントエンドのホットリロードが効かない
 
-- フロントエンドコンテナを再起動: `docker compose restart frontend`
-- ログでViteが正常に起動しているか確認: `docker compose logs frontend`
+- フロントエンドコンテナを再起動: `docker compose -f compose.dev.yml restart frontend`
+- ログでViteが正常に起動しているか確認: `docker compose -f compose.dev.yml logs frontend`
 
 ### 組織分析の集計レベル切り替えが動作しない
 
@@ -1001,6 +994,9 @@ MUI SelectコンポーネントのE2Eテストで問題が発生する場合：
 
 ### 実装フェーズ
 
+- t-wadaさん推奨のTDDアプローチ
+  - テストパターン: Given/When/Thenパターン
+  - メソッド名形式: `テスト対象メソッド名_XXXの場合_YYYであること`
 - **テストルールに従ったTDD**
   - presentationからadapterまで、**スケルトン実装**ですべてのレイヤーを通す
     - presentation, adapterは**ティアをまたぐ仕様に従う**こと
@@ -1010,9 +1006,6 @@ MUI SelectコンポーネントのE2Eテストで問題が発生する場合：
     - chrome-devtoolsで動作確認
     - ハッピーパスをe2eテストにケース追加
     - e2eテストで動作確認
-- t-wadaさん推奨のTDDアプローチ
-  - テストパターン: Given/When/Thenパターン
-  - メソッド名形式: `テスト対象メソッド名_XXXの場合_YYYであること`
 
 ### テスト・検証フェーズ
 
@@ -1022,9 +1015,9 @@ MUI SelectコンポーネントのE2Eテストで問題が発生する場合：
   - `make fmt` - コード自動整形
   - `make lint-fix` - すべてのLinterが0 issues。qltyの自動fixで改善しないものは手動で修正。
   - クリーンな状態からの回帰テスト
-    - `docker compose down -v`, `docker compose up -d` - クリーン状態からe2eを実行する準備
-    - `docker compose exec frontend npm install`
-    - `docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"`
+    - `docker compose -f compose.dev.yml down -v`, `docker compose -f compose.dev.yml up -d` - クリーン状態からe2eを実行する準備
+    - `docker compose -f compose.dev.yml exec frontend npm install`
+    - `docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed && dbt run"`
   - `test-all` - すべてのテストがPASS、0 warnings
   - 機能の動作確認が通ること
 - git commit

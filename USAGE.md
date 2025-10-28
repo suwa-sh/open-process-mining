@@ -24,30 +24,51 @@ cd open-process-mining
 # 環境変数を設定
 cp .env.example .env
 
-# Dockerコンテナを起動
+# Dockerコンテナを起動（利用者向け本番環境）
 docker compose up -d
 
 # 全サービスが起動するまで待機（30秒程度）
 docker compose ps
 ```
 
+**実行環境 (compose.yml):**
+
+```mermaid
+graph TB
+    subgraph ProdEnv[Production Environment]
+        subgraph Containers[Docker Containers]
+            FE_PROD[Frontend Container]
+            BE_PROD[Backend Container]
+            DBT_PROD[dbt Container<br/>ghcr.io/dbt-base + mount]
+            DLT_PROD[dlt Container<br/>ghcr.io/dlt-base + mount]
+            DB_PROD[(PostgreSQL)]
+        end
+
+        CustomCode[Custom dbt/dlt<br/>Read-Only Mount]
+    end
+
+    User[User]
+    GHCR[GitHub Container<br/>Registry]
+
+    GHCR --->|Pull Base Images| DBT_PROD
+    GHCR --->|Pull Base Images| DLT_PROD
+
+    CustomCode -.->|Mount :ro| DBT_PROD
+    CustomCode -.->|Mount :ro| DLT_PROD
+
+    User -->|Browse| FE_PROD
+    FE_PROD --> BE_PROD
+    BE_PROD --> DB_PROD
+    DBT_PROD --> DB_PROD
+    DLT_PROD --> DB_PROD
+```
+
+
 ### ステップ2: サンプルデータで動作確認
 
 ```bash
-# サンプルデータを生成（8プロセス、約700ケース、4,400イベント + 1,350件の成果データ）
-python scripts/generate_sample_data.py
-
-# バックエンドコンテナに入る
-docker compose exec backend bash
-
 # dbtでデータ投入
-cd /app/dbt
-dbt deps
-dbt seed
-dbt run
-dbt test
-
-exit
+docker compose run --rm dbt bash -c "cd /app/dbt && dbt deps && dbt seed && dbt run && dbt test"
 ```
 
 ### ステップ3: Web UIで確認
@@ -327,21 +348,114 @@ WHERE case_id IS NOT NULL
 **手動実行**:
 
 ```bash
-# dltコンテナでパイプライン実行
-docker compose run --rm --profile dlt dlt python pipelines/your_system_pipeline.py
+# dltコンテナでパイプライン実行（プロファイル指定）
+docker compose --profile dlt run --rm dlt python pipelines/your_system_pipeline.py
 
 # dbtでステージング→マート変換
-docker compose exec backend bash -c "cd /app/dbt && dbt run"
+docker compose run --rm dbt bash -c "cd /app/dbt && dbt run"
 ```
 
 **定期実行（cron）**:
 
 ```bash
 # crontabに追加（毎日午前2時）
-0 2 * * * cd /path/to/open-process-mining && docker compose run --rm --profile dlt dlt python pipelines/your_system_pipeline.py && docker compose exec backend bash -c "cd /app/dbt && dbt run"
+0 2 * * * cd /path/to/open-process-mining && docker compose --profile dlt run --rm dlt python pipelines/your_system_pipeline.py && docker compose run --rm dbt bash -c "cd /app/dbt && dbt run"
 ```
 
 詳細は [dlt/README.md](dlt/README.md) を参照してください。
+
+---
+
+## 本番デプロイ手順（オプション）
+
+カスタマイズが完了したら、自組織用のイメージをビルドすることを推奨します。
+
+### なぜカスタムイメージをビルドするのか？
+
+**開発フェーズ**: ベースイメージ + ローカルファイルマウント
+
+- メリット: コード変更が即座に反映、試行錯誤しやすい
+- デメリット: ファイルパスに依存、移植性が低い
+
+**本番フェーズ**: カスタムイメージビルド
+
+- メリット: イメージだけで完結、安定性・移植性が高い
+- デメリット: コード変更のたびにビルドが必要
+
+### ステップ1: dbt用Dockerfileの作成
+
+**場所**: `dbt/Dockerfile`
+
+```dockerfile
+FROM ghcr.io/suwa-sh/open-process-mining-dbt-base:latest
+COPY . /app/dbt
+```
+
+### ステップ2: dlt用Dockerfileの作成
+
+**場所**: `dlt/Dockerfile`
+
+```dockerfile
+FROM ghcr.io/suwa-sh/open-process-mining-dlt-base:latest
+COPY . /app/dlt
+```
+
+### ステップ3: イメージビルド
+
+```bash
+# dbt用イメージ
+docker build -t my-company/process-mining-dbt:v1 -f dbt/Dockerfile ./dbt
+
+# dlt用イメージ
+docker build -t my-company/process-mining-dlt:v1 -f dlt/Dockerfile ./dlt
+```
+
+### ステップ4: compose.ymlの更新
+
+本番環境では、カスタムイメージを使用するように変更します：
+
+```yaml
+services:
+  dbt:
+    image: my-company/process-mining-dbt:v1
+    # volumes: を削除（イメージに含まれる）
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+  dlt:
+    image: my-company/process-mining-dlt:v1
+    # volumes: を削除
+    environment:
+      DESTINATION__POSTGRES__CREDENTIALS__HOST: postgres
+      DESTINATION__POSTGRES__CREDENTIALS__DATABASE: ${POSTGRES_DB}
+      DESTINATION__POSTGRES__CREDENTIALS__USERNAME: ${POSTGRES_USER}
+      DESTINATION__POSTGRES__CREDENTIALS__PASSWORD: ${POSTGRES_PASSWORD}
+      # secrets.tomlの内容を環境変数で注入
+      SOURCES__GITHUB__ACCESS_TOKEN: ${GITHUB_TOKEN}
+```
+
+### ステップ5: プライベートレジストリへのpush（オプション）
+
+```bash
+# Docker Hubの場合
+docker push my-company/process-mining-dbt:v1
+docker push my-company/process-mining-dlt:v1
+
+# GitHub Container Registryの場合
+docker tag my-company/process-mining-dbt:v1 ghcr.io/my-company/process-mining-dbt:v1
+docker push ghcr.io/my-company/process-mining-dbt:v1
+```
+
+### メリット
+
+- **移植性**: イメージだけで完結、ファイルマウント不要
+- **安定性**: ローカルファイル変更の影響を受けない
+- **セキュリティ**: secrets.tomlを環境変数で注入、ファイル不要
+- **バージョン管理**: イメージタグでデプロイ履歴を管理
 
 ---
 
@@ -447,7 +561,7 @@ docker compose down -v
 docker compose up -d
 
 # dbtでデータ投入
-docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
+docker compose run --rm dbt bash -c "cd /app/dbt && dbt seed && dbt run"
 ```
 
 **Q7: 本番環境へのデプロイ方法は？**
@@ -485,7 +599,7 @@ docker compose logs postgres
 # - 必須カラムが全て存在するか
 
 # dbt接続確認
-docker compose exec backend bash -c "cd /app/dbt && dbt debug"
+docker compose run --rm dbt bash -c "cd /app/dbt && dbt debug"
 ```
 
 ### Web UIに分析結果が表示されない
@@ -495,10 +609,10 @@ docker compose exec backend bash -c "cd /app/dbt && dbt debug"
 curl http://localhost:8000/health
 
 # データベースにイベントログが存在するか確認
-docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM fct_event_log;"
+docker compose exec -T postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM fct_event_log;"
 
 # 分析結果が存在するか確認
-docker compose exec postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM process_analysis_results;"
+docker compose exec -T postgres psql -U process_mining -d process_mining_db -c "SELECT COUNT(*) FROM process_analysis_results;"
 ```
 
 問題が解決しない場合は、[GitHub Issues](https://github.com/suwa-sh/open-process-mining/issues)で報告してください。

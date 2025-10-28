@@ -40,7 +40,7 @@ graph TB
 
 | 名前                | 説明                                                       |
 | ------------------- | ---------------------------------------------------------- |
-| Data Engineer       | dbtでイベントログデータを準備する担当者                    |
+| Data Engineer       | dlt, dbtでイベントログデータを準備する担当者                    |
 | Process Analyst     | Web UIでプロセス分析を実施する担当者                       |
 | Open Process Mining | プロセスマイニングプラットフォーム                         |
 | Source Systems      | イベントログのソースシステム（CRM、ERP、基幹システムなど） |
@@ -50,48 +50,99 @@ graph TB
 ```mermaid
 graph TB
     User[Process Analyst]
+    DataEngineer[Data Engineer]
 
     subgraph OPM[Open Process Mining]
-        Frontend[Frontend]
-        Backend[Backend API]
-        DB[(Database)]
-        DBT[Data Pipeline]
+        Frontend[Frontend<br/>React SPA]
+        Backend[Backend API<br/>FastAPI]
+        DB[(Database<br/>PostgreSQL)]
+        DBT[dbt<br/>Data Transform]
+        DLT[dlt<br/>Data Load]
     end
 
     User -->|Browse localhost:5173| Frontend
+    DataEngineer --->|Run dbt/dlt| DBT
+    DataEngineer --->|Run dbt/dlt| DLT
     Frontend -->|API calls localhost:8000| Backend
     Backend -->|Query| DB
+    DLT -->|Load Raw Data| DB
     DBT -->|Transform & Load| DB
 ```
 
-| 名前          | 説明                                                                                                                                                                  |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend      | React + TypeScript製のSPA。プロセスマップ、組織分析、成果分析を可視化                                                                                                 |
-| Backend API   | FastAPI製のREST API。分析結果の作成・取得、組織分析、成果分析のエンドポイントを提供                                                                                   |
-| Database      | PostgreSQL。イベントログ、分析結果、マスターデータを格納                                                                                                              |
-| Data Pipeline | dbt Core。ソースシステムから収集したデータをイベントログテーブルに変換するデータパイプライン<br/>※サンプルとして、収集後の想定データをCSVで取り込むようにしています。 |
+| 名前        | 説明                                                                                                 |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| Frontend    | React + TypeScript製のSPA。プロセスマップ、組織分析、成果分析を可視化                                |
+| Backend API | FastAPI製のREST API。分析結果の作成・取得、組織分析、成果分析のエンドポイントを提供                  |
+| Database    | PostgreSQL。イベントログ、分析結果、マスターデータを格納                                             |
+| dbt         | データ変換パイプライン。ソースシステムのデータを標準イベントログ形式に変換                           |
+| dlt         | データ取得ツール。外部システム（GitHub、GitLab、Jira等）からデータを抽出してDBにロード（オプション） |
 
 ### 技術スタック
 
-- **データ加工**: dbt Core, PostgreSQL
+- **データ取得**: dlt (data load tool) - GitHub, GitLab, Jira等からデータ抽出（オプション）
+- **データ変換**: dbt Core - ELTパイプライン、データ品質テスト
+- **データベース**: PostgreSQL - イベントログ、分析結果の格納
 - **バックエンド**: Python 3.11, FastAPI, Pandas, NetworkX
 - **フロントエンド**: React, TypeScript, Vite, MUI (Material-UI), React Flow
-- **インフラ**: Docker Compose
+- **インフラ**: Docker Compose (compose.yml / compose.dev.yml)
 
-## クイックスタート
+### デプロイメント図
+
+**開発者環境 (compose.dev.yml)**:
+
+```mermaid
+graph TB
+    subgraph DevEnv[Development Environment]
+        subgraph Containers[Docker Containers]
+            FE[Frontend Container<br/>with Volume Mount]
+            BE[Backend Container<br/>with Volume Mount]
+            DBT_DEV[dbt Container<br/>backend image + dbt mount]
+            DLT_DEV[dlt Container<br/>dlt mount]
+            DB_DEV[(PostgreSQL)]
+        end
+
+        LocalCode[Local Code<br/>Hot Reload]
+    end
+
+    Developer[Developer]
+
+    Developer -->|Edit Code| LocalCode
+    LocalCode -.->|Mount| FE
+    LocalCode -.->|Mount| BE
+    LocalCode -.->|Mount| DBT_DEV
+    LocalCode -.->|Mount| DLT_DEV
+
+    FE --> BE
+    BE --> DB_DEV
+    DBT_DEV --> DB_DEV
+    DLT_DEV --> DB_DEV
+```
+
+| 環境             | Composeファイル  | 特徴                                           | 用途                     |
+| ---------------- | ---------------- | ---------------------------------------------- | ------------------------ |
+| 開発者環境         | compose.dev.yml  | ホットリロード、ボリュームマウント、デバッグ用 | アプリケーション開発     |
+| 利用者環境         | compose.yml      | ベースイメージ、read-onlyマウント、安定性重視  | データカスタマイズ・運用 |
+
+## クイックスタート（開発者向け）
 
 ```bash
 git clone https://github.com/suwa-sh/open-process-mining.git
 cd open-process-mining
 cp .env.example .env
+
+# 開発環境を起動
+docker compose -f compose.dev.yml up -d
+
+# サンプルデータを生成
 python scripts/generate_sample_data.py
-docker compose up -d
-docker compose exec backend bash -c "cd /app/dbt && dbt deps && dbt seed && dbt run"
+
+# dbtでデータ投入
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt deps && dbt seed && dbt run"
 ```
 
 ブラウザで <http://localhost:5173> を開き、Web UIから分析を作成してください。
 
-**詳細な手順、カスタマイズ方法、トラブルシューティングは [USAGE.md](USAGE.md) を参照してください。**
+**利用者向けの手順（利用者環境）は [USAGE.md](USAGE.md) を参照してください。**
 
 ### 主要な画面
 
@@ -150,7 +201,7 @@ docker compose exec backend bash -c "cd /app/dbt && dbt deps && dbt seed && dbt 
 
 ## サンプルデータ
 
-プロジェクトには2024年1年分の6種類のビジネスプロセスデータが含まれています。
+プロジェクトには2024年1年分のビジネスプロセスデータが含まれています。
 
 - [SAMPLE_DATA.md](./SAMPLE_DATA.md)
 
@@ -235,8 +286,8 @@ make test
 make test-e2e
 
 # 個別にテストを実行する場合
-docker compose exec backend pytest tests/    # バックエンドテスト
-cd e2e && npm test                            # E2Eテスト
+docker compose -f compose.dev.yml exec backend pytest tests/    # バックエンドテスト
+cd e2e && npm test                                               # E2Eテスト
 ```
 
 #### API仕様
@@ -298,7 +349,7 @@ dbt テストは、データパイプラインの品質を保証します。
 make test-dbt
 
 # または個別に実行
-docker compose exec backend bash -c "cd /app/dbt && dbt test"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt test"
 ```
 
 **テスト内容**:
@@ -372,7 +423,7 @@ npx playwright install chromium
 **コンテナ内でpsqlを使用**（推奨）:
 
 ```bash
-docker compose exec postgres psql -U process_mining -d process_mining_db
+docker compose -f compose.dev.yml exec postgres psql -U process_mining -d process_mining_db
 ```
 
 **GUIツールで接続**（TablePlus、DBeaver、pgAdminなど）:
@@ -393,6 +444,36 @@ SELECT process_type, COUNT(*) FROM fct_event_log GROUP BY process_type;
 SELECT analysis_id, analysis_name, created_at FROM process_analysis_results;
 ```
 
+## イメージ配布戦略
+
+本プロジェクトは以下のDockerイメージをGitHub Container Registry (GHCR)で配布しています。
+
+| イメージ名                                            | 用途                              | 配布形態       |
+| ----------------------------------------------------- | --------------------------------- | -------------- |
+| `ghcr.io/suwa-sh/open-process-mining-backend:latest`  | FastAPI バックエンド              | 完全なイメージ |
+| `ghcr.io/suwa-sh/open-process-mining-frontend:latest` | React フロントエンド              | 完全なイメージ |
+| `ghcr.io/suwa-sh/open-process-mining-dbt-base:latest` | dbt実行環境（依存ライブラリのみ） | ベースイメージ |
+| `ghcr.io/suwa-sh/open-process-mining-dlt-base:latest` | dlt実行環境（依存ライブラリのみ） | ベースイメージ |
+
+### 利用者のワークフロー
+
+本プロジェクトは、利用者が自組織のデータソースに合わせてdbt/dltをカスタマイズすることを前提としています。
+
+- 詳細は [USAGE.md](USAGE.md) を参照
+
+### イメージの更新頻度
+
+- **backend/frontend**: 機能追加・バグ修正時に自動ビルド（GitHub Actions）
+- **dbt-base/dlt-base**: ライブラリバージョン更新時に手動ビルド
+
+### タグ戦略
+
+| タグ     | 説明                        | 用途     |
+| -------- | --------------------------- | -------- |
+| `latest` | mainブランチの最新ビルド    | 開発環境 |
+| `vX.Y.Z` | セマンティックバージョン    | 利用者環境 |
+| `vX.Y`   | メジャー.マイナーバージョン | 利用者環境 |
+
 ## ドキュメント
 
 - **[USAGE.md](USAGE.md)**: 自組織でプロセスマイニングを実施する方法（利用者向け）
@@ -405,10 +486,3 @@ MIT License - 詳細は [LICENSE](LICENSE) を参照
 ## コントリビューション
 
 Issue、Pull Requestを歓迎します。
-
-## 参考資料
-
-- [dbt documentation](https://docs.getdbt.com/)
-- [FastAPI documentation](https://fastapi.tiangolo.com/)
-- [React Flow documentation](https://reactflow.dev/)
-- [Chakra UI documentation](https://chakra-ui.com/)

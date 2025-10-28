@@ -80,14 +80,19 @@ If you modified dbt models:
 If you modified database schema:
 
 1. Update `backend/sql/init.sql` if needed
-2. Test with fresh database: `docker compose down -v && docker compose up -d`
+2. Test with fresh database: `docker compose -f compose.dev.yml down -v && docker compose -f compose.dev.yml up -d`
 3. Regenerate sample data: `python scripts/generate_sample_data.py`
-4. Run dbt pipeline: `docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"`
+4. Run dbt pipeline: `docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed && dbt run"`
 
 ### After dbt Model Changes
 
 ```bash
-docker compose exec backend bash
+# Run dbt commands (development environment)
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt test"
+
+# Or enter dbt container for interactive use
+docker compose -f compose.dev.yml run --rm dbt bash
 cd /app/dbt
 dbt run        # Run transformations
 dbt test       # Validate data quality

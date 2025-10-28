@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app/dbt
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install dbt with PostgreSQL adapter
+RUN pip install --no-cache-dir \
+    dbt-core==1.10.13 \
+    dbt-postgres==1.9.1
+
+# Create non-root user
+RUN groupadd -r dbtuser && useradd -r -g dbtuser dbtuser \
+    && chown -R dbtuser:dbtuser /app
+USER dbtuser
+
+# プロジェクトファイルはマウントで注入（COPYしない）
+
+CMD ["bash"]

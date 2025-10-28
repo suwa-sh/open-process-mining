@@ -8,13 +8,13 @@ End-to-end tests for open-process-mining using Playwright.
 
 ```bash
 # From project root
-docker compose up -d
+docker compose -f compose.dev.yml up -d
 
 # Wait for all services to be healthy
-docker compose ps
+docker compose -f compose.dev.yml ps
 
 # Load sample data
-docker compose exec backend bash
+docker compose -f compose.dev.yml exec backend bash
 cd /app/dbt
 dbt deps
 dbt seed
@@ -150,7 +150,7 @@ await blurFocus(page, "新規分析を作成");
 Make sure all Docker Compose services are healthy:
 
 ```bash
-docker compose ps
+docker compose -f compose.dev.yml ps
 # All services should show (healthy)
 ```
 
@@ -159,7 +159,7 @@ docker compose ps
 Load sample data before running tests:
 
 ```bash
-docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed && dbt run"
 ```
 
 ### Port conflicts

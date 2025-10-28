@@ -11,23 +11,23 @@ cp .env.example .env
 # Generate sample data (run from project root)
 python scripts/generate_sample_data.py
 
-# Start containers
-docker compose up -d
+# Start containers (development environment)
+docker compose -f compose.dev.yml up -d
 
 # Load data with dbt
-docker compose exec backend bash -c "cd /app/dbt && dbt deps && dbt seed && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt deps && dbt seed && dbt run"
 ```
 
 ### Checking Status
 
 ```bash
 # Check container status
-docker compose ps
+docker compose -f compose.dev.yml ps
 
 # View logs
-docker compose logs -f
-docker compose logs backend -f
-docker compose logs frontend -f
+docker compose -f compose.dev.yml logs -f
+docker compose -f compose.dev.yml logs backend -f
+docker compose -f compose.dev.yml logs frontend -f
 ```
 
 ## Development Commands
@@ -55,7 +55,7 @@ make test-all
 
 # Backend tests only
 make test
-# Or: docker compose exec backend pytest tests/
+# Or: docker compose -f compose.dev.yml exec backend pytest tests/
 
 # E2E tests only
 make test-e2e
@@ -72,42 +72,38 @@ npm run test:debug   # Debug mode (step execution)
 
 ```bash
 # Connect to PostgreSQL
-docker compose exec postgres psql -U process_mining -d process_mining_db
+docker compose -f compose.dev.yml exec postgres psql -U process_mining -d process_mining_db
 
 # Check event log counts
-docker compose exec -T postgres psql -U process_mining -d process_mining_db -c \
+docker compose -f compose.dev.yml exec -T postgres psql -U process_mining -d process_mining_db -c \
   "SELECT process_type, COUNT(*) FROM fct_event_log GROUP BY process_type;"
 
 # View analysis results
-docker compose exec -T postgres psql -U process_mining -d process_mining_db -c \
+docker compose -f compose.dev.yml exec -T postgres psql -U process_mining -d process_mining_db -c \
   "SELECT analysis_id, analysis_name, created_at FROM process_analysis_results;"
 
 # Complete database reset
-docker compose down -v
-docker compose up -d
+docker compose -f compose.dev.yml down -v
+docker compose -f compose.dev.yml up -d
 python scripts/generate_sample_data.py
-docker compose exec backend bash -c "cd /app/dbt && dbt seed && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed && dbt run"
 ```
 
 ### dbt Operations
 
 ```bash
-# Enter backend container
-docker compose exec backend bash
+# Run dbt commands (development environment)
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt deps"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt seed"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt run"
+docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt test"
 
-# Navigate to dbt directory
+# Or enter dbt container for interactive use
+docker compose -f compose.dev.yml run --rm dbt bash
 cd /app/dbt
-
-# Install dependencies
 dbt deps
-
-# Load sample data
 dbt seed
-
-# Run transformations
 dbt run
-
-# Run tests
 dbt test
 ```
 
@@ -115,10 +111,10 @@ dbt test
 
 ```bash
 # Health check (using Python since curl is not available in container)
-docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/health').json())"
+docker compose -f compose.dev.yml exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/health').json())"
 
 # List analyses
-docker compose exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/process/analyses').json())"
+docker compose -f compose.dev.yml exec -T backend python -c "import requests; print(requests.get('http://localhost:8000/process/analyses').json())"
 
 # From host machine (if curl is available)
 curl http://localhost:8000/health
@@ -132,10 +128,10 @@ curl http://localhost:8000/docs  # Swagger UI
 make clean
 
 # Stop containers
-docker compose down
+docker compose -f compose.dev.yml down
 
 # Stop containers and remove volumes (complete reset)
-docker compose down -v
+docker compose -f compose.dev.yml down -v
 ```
 
 ## Access URLs

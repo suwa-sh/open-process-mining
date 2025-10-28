@@ -35,17 +35,17 @@ lint-fix:
 # Run backend tests
 test:
 	@echo "Running backend tests..."
-	docker compose exec backend pytest tests/
+	docker compose -f compose.dev.yml exec backend pytest tests/
 
 # Run dbt tests
 test-dbt:
 	@echo "Running dbt tests..."
-	docker compose exec backend bash -c "cd /app/dbt && dbt test"
+	docker compose -f compose.dev.yml run --rm dbt bash -c "cd /app/dbt && dbt test"
 
 # Run frontend tests
 test-frontend:
 	@echo "Running frontend tests..."
-	docker compose exec frontend npm test
+	docker compose -f compose.dev.yml exec frontend npm test
 
 # Run E2E tests
 test-e2e:

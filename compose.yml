@@ -1,3 +1,6 @@
+# Production deployment using GHCR images
+# Usage: docker compose -f docker-compose.prod.yml up -d
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -7,20 +10,21 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - 5432:5432
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - process-mining-network
+    restart: unless-stopped
 
   backend:
-    build: ./backend
+    image: ghcr.io/suwa-sh/open-process-mining-backend:latest
     container_name: process-mining-backend
     environment:
       POSTGRES_HOST: postgres
@@ -30,7 +34,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       API_HOST: ${API_HOST:-0.0.0.0}
       API_PORT: ${API_PORT:-8000}
-      PYTHONPATH: /app
     ports:
       - "8000:8000"
     depends_on:
@@ -41,15 +44,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/tests:/app/tests
-      - ./dbt:/app/dbt
     networks:
       - process-mining-network
+    restart: unless-stopped
 
   frontend:
-    build: ./frontend
+    image: ghcr.io/suwa-sh/open-process-mining-frontend:latest
     container_name: process-mining-frontend
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
@@ -63,33 +63,44 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/index.html:/app/index.html
-      - ./frontend/public:/app/public
-      - ./frontend/jest.config.cjs:/app/jest.config.cjs
-      - ./frontend/package.json:/app/package.json
     networks:
       - process-mining-network
+    restart: unless-stopped
 
-  dlt:
-    build: ./dlt
-    container_name: process-mining-dlt
-    profiles:
-      - dlt
+  dbt:
+    image: ghcr.io/suwa-sh/open-process-mining-dbt-base:latest
+    container_name: process-mining-dbt
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles: [dbt]
+    volumes:
+      - ./dbt:/app/dbt:ro
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
+    networks:
+      - process-mining-network
+
+  dlt:
+    image: ghcr.io/suwa-sh/open-process-mining-dlt-base:latest
+    container_name: process-mining-dlt
     depends_on:
       postgres:
         condition: service_healthy
+    profiles: [dlt]
     volumes:
-      - ./dlt/sources:/app/sources
-      - ./dlt/pipelines:/app/pipelines
-      - ./dlt/.dlt:/app/.dlt
+      - ./dlt:/app/dlt:ro
+      - ./dlt/.dlt/secrets.toml:/app/dlt/.dlt/secrets.toml
+    environment:
+      DESTINATION__POSTGRES__CREDENTIALS__HOST: postgres
+      DESTINATION__POSTGRES__CREDENTIALS__PORT: 5432
+      DESTINATION__POSTGRES__CREDENTIALS__DATABASE: ${POSTGRES_DB}
+      DESTINATION__POSTGRES__CREDENTIALS__USERNAME: ${POSTGRES_USER}
+      DESTINATION__POSTGRES__CREDENTIALS__PASSWORD: ${POSTGRES_PASSWORD}
     networks:
       - process-mining-network
 
