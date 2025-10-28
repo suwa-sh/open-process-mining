@@ -66,7 +66,7 @@ SELECT
     case_id,
     activity,
     timestamp,
-    NULL AS resource
+    employee_id AS resource
 FROM {{ ref('stg_gitlab_issues') }}
 
 UNION ALL
@@ -76,7 +76,7 @@ SELECT
     case_id,
     activity,
     timestamp,
-    NULL AS resource
+    employee_id AS resource
 FROM {{ ref('stg_gitlab_merge_requests') }}
 
 UNION ALL
@@ -86,7 +86,7 @@ SELECT
     case_id,
     activity,
     timestamp,
-    NULL AS resource
+    employee_id AS resource
 FROM {{ ref('stg_gitlab_pipelines') }}
 
 UNION ALL
@@ -96,7 +96,7 @@ SELECT
     case_id,
     activity,
     timestamp,
-    NULL AS resource
+    employee_id AS resource
 FROM {{ ref('stg_jira_issues') }}
 
 UNION ALL
@@ -106,5 +106,5 @@ SELECT
     case_id,
     activity,
     timestamp,
-    NULL AS resource
+    employee_id AS resource
 FROM {{ ref('stg_jenkins_builds') }}

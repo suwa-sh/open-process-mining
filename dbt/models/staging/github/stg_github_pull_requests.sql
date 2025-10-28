@@ -12,19 +12,27 @@ WITH source AS (
     SELECT * FROM {{ source('bronze_raw', 'bronze_github_pull_requests') }}
 ),
 
+user_mapping AS (
+    SELECT * FROM public.master_user_mapping
+    WHERE source_system = 'github'
+),
+
 case_extraction AS (
     SELECT
-        *,
+        s.*,
         COALESCE(
             -- 優先順位1: ブランチ名からJiraキー抽出
-            substring(head_ref FROM '([A-Z][A-Z0-9]+-\d+)'),
+            substring(s.head_ref FROM '([A-Z][A-Z0-9]+-\d+)'),
             -- 優先順位2: タイトルからJiraキー抽出
-            substring(title FROM '([A-Z][A-Z0-9]+-\d+)'),
+            substring(s.title FROM '([A-Z][A-Z0-9]+-\d+)'),
             -- 優先順位3: GitHub Issue番号
             '{{ var("github_owner", "suwa-sh") }}' || '/' || '{{ var("github_repo", "open-process-mining") }}' || '#'
-                || substring(title FROM '#(\d+)')
-        ) AS case_id
-    FROM source
+                || substring(s.title FROM '#(\d+)')
+        ) AS case_id,
+        -- Map creator to employee_id
+        COALESCE(um.employee_id, 'SYSTEM') AS creator_employee_id
+    FROM source s
+    LEFT JOIN user_mapping um ON um.user_identifier = s.creator
 ),
 
 events AS (
@@ -34,10 +42,12 @@ events AS (
         'PR Opened' AS activity,
         created_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'github_repo' AS source_system,
+        creator_employee_id AS employee_id,
         jsonb_build_object(
             'pr_id', id,
             'pr_number', number,
-            'title', title
+            'title', title,
+            'creator', creator
         ) AS attributes_json
     FROM case_extraction
     WHERE case_id IS NOT NULL
@@ -50,6 +60,7 @@ events AS (
         'Code Merged' AS activity,
         merged_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'github_repo' AS source_system,
+        creator_employee_id AS employee_id,
         jsonb_build_object(
             'pr_id', id,
             'pr_number', number

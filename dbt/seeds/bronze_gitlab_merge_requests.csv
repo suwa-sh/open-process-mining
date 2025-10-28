@@ -1,16 +1,36 @@
-id,iid,title,state,created_at,merged_at,source_branch,loaded_at
-3001,1,[GL-4] Resolve issue #4,merged,2024-09-07T03:44:00,2024-09-13T03:44:00,feature/gl-4,2025-10-28T11:19:53.152429
-3002,2,[GL-16] Resolve issue #16,merged,2024-09-14T21:21:00,2024-09-19T21:21:00,feature/gl-16,2025-10-28T11:19:53.152429
-3003,3,[GL-12] Resolve issue #12,merged,2024-08-11T06:31:00,2024-08-24T06:31:00,feature/gl-12,2025-10-28T11:19:53.152429
-3004,4,[GL-3] Resolve issue #3,merged,2024-10-01T06:18:00,2024-10-06T06:18:00,feature/gl-3,2025-10-28T11:19:53.152429
-3005,5,[GL-19] Resolve issue #19,merged,2024-07-24T07:39:00,2024-07-26T07:39:00,feature/gl-19,2025-10-28T11:19:53.152429
-3006,6,[GL-19] Resolve issue #19,merged,2024-02-18T18:21:00,2024-02-28T18:21:00,feature/gl-19,2025-10-28T11:19:53.152429
-3007,7,[GL-17] Resolve issue #17,merged,2024-08-31T13:13:00,2024-09-02T13:13:00,feature/gl-17,2025-10-28T11:19:53.152429
-3008,8,[GL-10] Resolve issue #10,merged,2024-09-15T09:27:00,2024-09-21T09:27:00,feature/gl-10,2025-10-28T11:19:53.152429
-3009,9,[GL-7] Resolve issue #7,merged,2024-07-31T12:16:00,2024-08-08T12:16:00,feature/gl-7,2025-10-28T11:19:53.152429
-3010,10,[GL-18] Resolve issue #18,merged,2024-04-02T00:40:00,2024-04-16T00:40:00,feature/gl-18,2025-10-28T11:19:53.152429
-3011,11,[GL-6] Resolve issue #6,merged,2024-10-22T15:13:00,2024-11-05T15:13:00,feature/gl-6,2025-10-28T11:19:53.152429
-3012,12,[GL-15] Resolve issue #15,merged,2024-05-17T20:34:00,2024-05-31T20:34:00,feature/gl-15,2025-10-28T11:19:53.152429
-3013,13,[GL-14] Resolve issue #14,merged,2024-10-16T23:40:00,2024-10-20T23:40:00,feature/gl-14,2025-10-28T11:19:53.152429
-3014,14,[GL-12] Resolve issue #12,merged,2024-08-24T04:15:00,2024-09-04T04:15:00,feature/gl-12,2025-10-28T11:19:53.152429
-3015,15,[GL-10] Resolve issue #10,opened,2024-08-10T13:20:00,,feature/gl-10,2025-10-28T11:19:53.152429
+id,iid,title,state,created_at,merged_at,source_branch,author,assignees,reviewers,jira_key,loaded_at
+3001,1,[GL-18] Resolve issue #18,merged,2024-07-10T22:07:00,2024-07-17T22:07:00,feature/gl-18,ito.mgr,nakamura.lead,nakamura.lead,,2025-10-29T02:50:10.881231
+3002,2,[GL-16] Resolve issue #16,merged,2024-07-07T09:01:00,2024-07-17T09:01:00,feature/gl-16,kato.dev,yoshida.eng,"ito.mgr,yoshida.eng",,2025-10-29T02:50:10.881231
+3003,3,[GL-12] Resolve issue #12,merged,2024-03-03T17:55:00,2024-03-11T17:55:00,feature/gl-12,ito.mgr,ito.mgr,"nakamura.lead,kato.dev",,2025-10-29T02:50:10.881231
+3004,4,[GL-8] Resolve issue #8,opened,2024-06-01T06:55:00,,feature/gl-8,ito.mgr,"ito.mgr,kato.dev","kato.dev,yoshida.eng",,2025-10-29T02:50:10.881231
+3005,5,[GL-16] Resolve issue #16,merged,2024-07-30T10:45:00,2024-08-13T10:45:00,feature/gl-16,kato.dev,nakamura.lead,nakamura.lead,,2025-10-29T02:50:10.881231
+3006,6,[GL-14] Resolve issue #14,merged,2024-11-04T23:52:00,2024-11-10T23:52:00,feature/gl-14,ito.mgr,kato.dev,ito.mgr,,2025-10-29T02:50:10.881231
+3007,7,[GL-5] Resolve issue #5,merged,2024-01-02T12:12:00,2024-01-08T12:12:00,feature/gl-5,kato.dev,yoshida.eng,yoshida.eng,,2025-10-29T02:50:10.881231
+3008,8,[GL-20] Resolve issue #20,merged,2024-07-29T10:28:00,2024-08-10T10:28:00,feature/gl-20,yoshida.eng,"yoshida.eng,nakamura.lead","nakamura.lead,kato.dev",,2025-10-29T02:50:10.881231
+3009,9,[GL-3] Resolve issue #3,merged,2024-07-31T11:11:00,2024-08-07T11:11:00,feature/gl-3,yoshida.eng,kato.dev,kato.dev,,2025-10-29T02:50:10.881231
+3010,10,[GL-15] Resolve issue #15,opened,2024-04-11T08:44:00,,feature/gl-15,kato.dev,"ito.mgr,nakamura.lead","yoshida.eng,kato.dev",,2025-10-29T02:50:10.881231
+3011,11,[GL-12] Resolve issue #12,merged,2024-03-28T18:07:00,2024-04-06T18:07:00,feature/gl-12,ito.mgr,"ito.mgr,kato.dev",yoshida.eng,,2025-10-29T02:50:10.881231
+3012,12,[GL-7] Resolve issue #7,merged,2024-05-16T09:47:00,2024-05-19T09:47:00,feature/gl-7,ito.mgr,yoshida.eng,"yoshida.eng,ito.mgr",,2025-10-29T02:50:10.881231
+3013,13,[GL-6] Resolve issue #6,merged,2024-07-28T04:01:00,2024-08-02T04:01:00,feature/gl-6,yoshida.eng,"yoshida.eng,ito.mgr","kato.dev,ito.mgr",,2025-10-29T02:50:10.881231
+3014,14,[GL-16] Resolve issue #16,merged,2024-03-09T10:44:00,2024-03-13T10:44:00,feature/gl-16,ito.mgr,"nakamura.lead,kato.dev",kato.dev,,2025-10-29T02:50:10.881231
+3015,15,[GL-2] Resolve issue #2,opened,2024-06-19T07:30:00,,feature/gl-2,kato.dev,nakamura.lead,"nakamura.lead,yoshida.eng",,2025-10-29T02:50:10.881231
+3101,101,[PROJ-1] Implement feature for PROJ-1,opened,2024-12-09T11:08:00,,feature/proj-1,kato.dev,nakamura.lead,ito.mgr,PROJ-1,2025-10-29T02:50:10.881231
+3102,102,[PROJ-2] Implement feature for PROJ-2,merged,2024-06-22T14:08:00,2024-07-04T14:08:00,feature/proj-2,ito.mgr,nakamura.lead,nakamura.lead,PROJ-2,2025-10-29T02:50:10.881231
+3103,103,[PROJ-3] Implement feature for PROJ-3,opened,2024-01-23T04:31:00,,feature/proj-3,nakamura.lead,"ito.mgr,yoshida.eng","nakamura.lead,ito.mgr",PROJ-3,2025-10-29T02:50:10.881231
+3104,104,[PROJ-4] Implement feature for PROJ-4,merged,2024-06-09T13:57:00,2024-06-21T13:57:00,feature/proj-4,ito.mgr,ito.mgr,yoshida.eng,PROJ-4,2025-10-29T02:50:10.881231
+3105,105,[PROJ-5] Implement feature for PROJ-5,merged,2024-03-17T01:14:00,2024-03-25T01:14:00,feature/proj-5,nakamura.lead,ito.mgr,"kato.dev,yoshida.eng",PROJ-5,2025-10-29T02:50:10.881231
+3106,106,[PROJ-6] Implement feature for PROJ-6,opened,2024-01-21T14:22:00,,feature/proj-6,ito.mgr,"ito.mgr,kato.dev",kato.dev,PROJ-6,2025-10-29T02:50:10.881231
+3107,107,[PROJ-7] Implement feature for PROJ-7,opened,2024-06-27T02:13:00,,feature/proj-7,yoshida.eng,nakamura.lead,kato.dev,PROJ-7,2025-10-29T02:50:10.881231
+3108,108,[PROJ-8] Implement feature for PROJ-8,merged,2024-09-26T18:11:00,2024-09-28T18:11:00,feature/proj-8,yoshida.eng,"kato.dev,yoshida.eng",nakamura.lead,PROJ-8,2025-10-29T02:50:10.881231
+3109,109,[PROJ-9] Implement feature for PROJ-9,merged,2024-03-03T12:23:00,2024-03-05T12:23:00,feature/proj-9,nakamura.lead,kato.dev,ito.mgr,PROJ-9,2025-10-29T02:50:10.881231
+3110,110,[PROJ-10] Implement feature for PROJ-10,merged,2024-12-03T15:29:00,2024-12-08T15:29:00,feature/proj-10,kato.dev,"kato.dev,nakamura.lead","nakamura.lead,ito.mgr",PROJ-10,2025-10-29T02:50:10.881231
+3111,111,[PROJ-11] Implement feature for PROJ-11,opened,2024-10-18T04:13:00,,feature/proj-11,nakamura.lead,"kato.dev,nakamura.lead",ito.mgr,PROJ-11,2025-10-29T02:50:10.881231
+3112,112,[PROJ-12] Implement feature for PROJ-12,merged,2024-02-17T12:16:00,2024-03-01T12:16:00,feature/proj-12,ito.mgr,kato.dev,yoshida.eng,PROJ-12,2025-10-29T02:50:10.881231
+3113,113,[PROJ-13] Implement feature for PROJ-13,merged,2024-07-17T12:18:00,2024-07-28T12:18:00,feature/proj-13,yoshida.eng,nakamura.lead,"ito.mgr,nakamura.lead",PROJ-13,2025-10-29T02:50:10.881231
+3114,114,[PROJ-14] Implement feature for PROJ-14,merged,2024-06-07T21:38:00,2024-06-18T21:38:00,feature/proj-14,kato.dev,"yoshida.eng,ito.mgr","ito.mgr,yoshida.eng",PROJ-14,2025-10-29T02:50:10.881231
+3115,115,[PROJ-15] Implement feature for PROJ-15,merged,2024-05-17T18:38:00,2024-05-30T18:38:00,feature/proj-15,ito.mgr,"yoshida.eng,ito.mgr","kato.dev,ito.mgr",PROJ-15,2025-10-29T02:50:10.881231
+3116,116,[PROJ-16] Implement feature for PROJ-16,merged,2024-09-19T10:29:00,2024-09-30T10:29:00,feature/proj-16,yoshida.eng,"kato.dev,yoshida.eng","ito.mgr,kato.dev",PROJ-16,2025-10-29T02:50:10.881231
+3117,117,[PROJ-17] Implement feature for PROJ-17,opened,2024-09-01T09:09:00,,feature/proj-17,nakamura.lead,ito.mgr,"kato.dev,nakamura.lead",PROJ-17,2025-10-29T02:50:10.881231
+3118,118,[PROJ-18] Implement feature for PROJ-18,merged,2024-02-09T01:32:00,2024-02-16T01:32:00,feature/proj-18,ito.mgr,ito.mgr,"nakamura.lead,yoshida.eng",PROJ-18,2025-10-29T02:50:10.881231
+3119,119,[PROJ-19] Implement feature for PROJ-19,merged,2024-10-26T02:49:00,2024-10-28T02:49:00,feature/proj-19,ito.mgr,yoshida.eng,"kato.dev,ito.mgr",PROJ-19,2025-10-29T02:50:10.881231
+3120,120,[PROJ-20] Implement feature for PROJ-20,merged,2024-08-01T22:19:00,2024-08-13T22:19:00,feature/proj-20,ito.mgr,"nakamura.lead,yoshida.eng",yoshida.eng,PROJ-20,2025-10-29T02:50:10.881231

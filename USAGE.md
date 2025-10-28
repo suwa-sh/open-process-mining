@@ -184,6 +184,7 @@ WHERE opportunity_id IS NOT NULL
 
 - `dbt/seeds/master_employees.csv`
 - `dbt/seeds/master_departments.csv`
+- `dbt/seeds/master_user_mapping.csv`
 
 **master_employees.csv**:
 
@@ -193,12 +194,34 @@ EMP-001,田中太郎,営業,DEPT-SALES
 EMP-002,佐藤花子,経理,DEPT-ACCOUNTING
 ```
 
+**master_user_mapping.csv**（外部システム連携時）:
+
+外部システム（GitHub、GitLab、Jira、Jenkinsなど）のユーザー識別子を社員IDにマッピングします。
+これにより、イベントログの担当者（creator、assignee、userなど）を社員マスターと紐付けて組織分析が可能になります。
+
+```csv
+source_system,user_identifier,employee_id,notes
+github,kato-dev,EMP-017,GitHub開発者アカウント
+github,yoshida-eng,EMP-018,GitHub上級エンジニアアカウント
+gitlab,kato.dev,EMP-017,GitLab開発者アカウント
+jira,kato@example.com,EMP-017,Jira開発者アカウント
+jenkins,kato,EMP-017,Jenkins開発者アカウント
+```
+
+**マッピングの仕組み**:
+
+1. 外部システムから取得したデータには、各システム固有のユーザー識別子が含まれる（例: GitHub username、Jiraメールアドレス）
+2. dbtのステージングモデルで`master_user_mapping`を参照し、`source_system + user_identifier`から`employee_id`を取得
+3. `employee_id`を`fct_event_log.resource`カラムに格納
+4. 組織分析API（ハンドオーバー、作業負荷、パフォーマンス）で`master_employees`と結合して分析
+
 **カスタマイズ方法**:
 
 1. 人事システムからエクスポート
 2. 上記フォーマットに変換
-3. `dbt/seeds/`に配置
-4. `dbt seed`で投入
+3. 外部システムを使う場合は`master_user_mapping.csv`も作成
+4. `dbt/seeds/`に配置
+5. `dbt seed`で投入
 
 ### ステップ4: 成果データ（成果分析を使う場合）
 
@@ -267,11 +290,15 @@ def your_system_records(
             "case_id": record["order_id"],
             "status": record["status"],
             "updated_at": record["updated_at"],
-            "user_id": record["user_id"],
+            "user_id": record["user_id"],  # 組織分析用: ユーザー識別子を必ず含める
         }
 ```
 
-**参考**: `dlt/sources/github_source.py` にGitHub API連携の実装例があります。
+**組織分析対応のポイント**:
+
+- **ユーザー識別子を必ず抽出**: 組織分析（ハンドオーバー、作業負荷、パフォーマンス）を行うには、各イベントの担当者を特定できる情報が必要です
+- **抽出する情報**: `creator`、`assignee`、`user`、`actor`、`author`など、システムごとに異なるフィールド名
+- **参考実装**: `dlt/sources/github_source.py`（creator, assignees, actor）、`dlt/sources/gitlab_mr_source.py`（author, assignees, reviewers）を参照
 
 ### ステップ2: dltパイプラインの作成
 
@@ -341,17 +368,46 @@ port = 5432
   )
 }}
 
+WITH
+-- ユーザーマッピングCTE（組織分析対応）
+user_mapping AS (
+    SELECT * FROM public.master_user_mapping
+    WHERE source_system = 'your_system'
+),
+
 -- Bronze層（dltで投入）からステージングへ変換
+source AS (
+    SELECT * FROM {{ source('bronze_raw', 'your_system_records') }}
+),
+
+-- ユーザー識別子をemployee_idにマッピング
+case_extraction AS (
+    SELECT
+        s.*,
+        COALESCE(um.employee_id, 'SYSTEM') AS user_employee_id
+    FROM source s
+    LEFT JOIN user_mapping um ON um.user_identifier = s.user_id
+)
+
+-- 最終的なイベントログ形式
 SELECT
     'your-process' AS process_type,
     case_id,
     status AS activity,
     updated_at::timestamptz AS timestamp,
     'your_system' AS source_system,
+    user_employee_id AS employee_id,  -- 組織分析用
     jsonb_build_object('record_id', id) AS attributes_json
-FROM {{ source('bronze_raw', 'your_system_records') }}
+FROM case_extraction
 WHERE case_id IS NOT NULL
 ```
+
+**組織分析対応のポイント**:
+
+1. **user_mapping CTE**: `master_user_mapping`から該当システムのマッピング情報を取得
+2. **LEFT JOIN**: ユーザー識別子をemployee_idに変換（マッピングがない場合は`'SYSTEM'`）
+3. **employee_id カラム**: 組織分析APIで使用されるため必須
+4. **参考実装**: `dbt/models/staging/github/stg_github_issues.sql`、`dbt/models/staging/gitlab/stg_gitlab_merge_requests.sql`を参照
 
 **Bronze層sources定義**: `dbt/models/bronze/_bronze__sources.yml`にテーブル定義を追加
 

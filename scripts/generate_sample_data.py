@@ -12,6 +12,7 @@ Output:
 """
 
 import csv
+import json
 import random
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -25,6 +26,25 @@ OUTPUT_DIR = Path(__file__).parent.parent / "dbt" / "seeds"
 # Date range: 2024-01-01 to 2024-12-31
 START_DATE = datetime(2024, 1, 1)
 END_DATE = datetime(2024, 12, 31)
+
+# Development team pools - User identifiers that map to employees via master_user_mapping
+# These identifiers are used to generate sample data that can be linked to employee records
+# for organization analysis (handover, workload, performance analysis)
+
+# GitHub usernames (maps to EMP-014, EMP-017, EMP-018, EMP-019)
+DEV_TEAM_GITHUB = ["kato-dev", "yoshida-eng", "nakamura-lead", "ito-mgr"]
+
+# GitLab usernames (maps to EMP-014, EMP-017, EMP-018, EMP-019)
+DEV_TEAM_GITLAB = ["kato.dev", "yoshida.eng", "nakamura.lead", "ito.mgr"]
+
+# Hybrid team - Multiple system identifiers for the same employees
+# Used for Jira (email), GitLab (username), Jenkins (username) integration
+DEV_TEAM_HYBRID = [
+    {"jira": "kato@example.com", "gitlab": "kato.dev", "jenkins": "kato"},  # EMP-017
+    {"jira": "yoshida@example.com", "gitlab": "yoshida.eng", "jenkins": "yoshida"},  # EMP-018
+    {"jira": "nakamura@example.com", "gitlab": "nakamura.lead", "jenkins": "nakamura"},  # EMP-019
+    {"jira": "ito@example.com", "gitlab": "ito.mgr", "jenkins": "ito"},  # EMP-014
+]
 
 
 def random_date(start, end):
@@ -997,6 +1017,9 @@ def generate_github_bronze_data():
             # (unmerged PRs don't proceed to build/deploy)
             merged_time = add_days(pr_created, random.randint(1, 5))
 
+            pr_creator = random.choice(DEV_TEAM_GITHUB)
+            pr_assignees = random.sample(DEV_TEAM_GITHUB, k=random.randint(1, 2))
+
             pull_requests.append(
                 {
                     "id": 2000 + issue_num,
@@ -1006,6 +1029,8 @@ def generate_github_bronze_data():
                     "created_at": pr_created.isoformat(),
                     "merged_at": merged_time.isoformat(),
                     "head_ref": head_ref,
+                    "creator": pr_creator,
+                    "assignees": ",".join(pr_assignees),
                     "loaded_at": datetime.now().isoformat(),
                 }
             )
@@ -1037,6 +1062,7 @@ def generate_github_bronze_data():
                         "created_at": build_started_1.isoformat(),
                         "updated_at": build_completed_1.isoformat(),
                         "head_branch": head_branch,
+                        "actor": random.choice(DEV_TEAM_GITHUB),
                         "loaded_at": datetime.now().isoformat(),
                     }
                 )
@@ -1049,6 +1075,10 @@ def generate_github_bronze_data():
                 else:
                     rework_pr_title = f"[REWORK] Fix authentication bug (fixes #{issue_num})"
 
+                # Assign creator and assignees for rework PR
+                rework_pr_creator = random.choice(DEV_TEAM_GITHUB)
+                rework_pr_assignees = random.sample(DEV_TEAM_GITHUB, k=random.randint(1, 2))
+
                 pull_requests.append(
                     {
                         "id": 2000 + issue_num + 1000,  # Different ID for rework PR
@@ -1058,6 +1088,8 @@ def generate_github_bronze_data():
                         "created_at": add_hours(build_completed_1, random.uniform(0.5, 2)).isoformat(),
                         "merged_at": rework_merge_time.isoformat(),
                         "head_ref": head_branch,
+                        "creator": rework_pr_creator,
+                        "assignees": ",".join(rework_pr_assignees),
                         "loaded_at": datetime.now().isoformat(),
                     }
                 )
@@ -1078,6 +1110,7 @@ def generate_github_bronze_data():
                         "created_at": build_started_2.isoformat(),
                         "updated_at": build_completed_2.isoformat(),
                         "head_branch": head_branch,
+                        "actor": random.choice(DEV_TEAM_GITHUB),
                         "loaded_at": datetime.now().isoformat(),
                     }
                 )
@@ -1099,6 +1132,7 @@ def generate_github_bronze_data():
                         "created_at": build_started.isoformat(),
                         "updated_at": build_completed.isoformat(),
                         "head_branch": head_branch,
+                        "actor": random.choice(DEV_TEAM_GITHUB),
                         "loaded_at": datetime.now().isoformat(),
                     }
                 )
@@ -1118,6 +1152,7 @@ def generate_github_bronze_data():
                         "created_at": deploy_time.isoformat(),
                         "updated_at": add_hours(deploy_time, 0.2).isoformat(),
                         "head_branch": head_branch,
+                        "actor": random.choice(DEV_TEAM_GITHUB),
                         "loaded_at": datetime.now().isoformat(),
                     }
                 )
@@ -1132,6 +1167,10 @@ def generate_github_bronze_data():
             # Close after workflow: 1-7 days after last activity
             issue_closed_time = add_days(current_time, random.randint(1, 7))
 
+        # Assign creator and assignees
+        creator = random.choice(DEV_TEAM_GITHUB)
+        assignees = random.sample(DEV_TEAM_GITHUB, k=random.randint(1, 2))
+
         issues.append(
             {
                 "id": 1000 + issue_num,
@@ -1141,6 +1180,8 @@ def generate_github_bronze_data():
                 "created_at": issue_created_time.isoformat(),
                 "closed_at": issue_closed_time.isoformat(),
                 "labels": labels,
+                "creator": creator,
+                "assignees": ",".join(assignees),
                 "loaded_at": datetime.now().isoformat(),
             }
         )
@@ -1161,6 +1202,8 @@ def generate_github_bronze_data():
                 "created_at",
                 "closed_at",
                 "labels",
+                "creator",
+                "assignees",
                 "loaded_at",
             ],
         )
@@ -1181,6 +1224,8 @@ def generate_github_bronze_data():
                 "created_at",
                 "merged_at",
                 "head_ref",
+                "creator",
+                "assignees",
                 "loaded_at",
             ],
         )
@@ -1201,6 +1246,7 @@ def generate_github_bronze_data():
                 "created_at",
                 "updated_at",
                 "head_branch",
+                "actor",
                 "loaded_at",
             ],
         )
@@ -1229,6 +1275,11 @@ def generate_gitlab_issues_data():
             state = "opened"
 
         title_type = random.choice(["Feature", "Bug", "Enhancement"])
+
+        # Assign author and assignees
+        author = random.choice(DEV_TEAM_GITLAB)
+        assignees = random.sample(DEV_TEAM_GITLAB, k=random.randint(1, 2))
+
         issues.append(
             {
                 "id": issue_id,
@@ -1238,6 +1289,8 @@ def generate_gitlab_issues_data():
                 "created_at": created_at.isoformat(),
                 "closed_at": closed_at.isoformat() if closed_at else None,
                 "labels": f'["{title_type.lower()}"]',
+                "author": author,
+                "assignees": ",".join(assignees),
                 "loaded_at": loaded_at,
             }
         )
@@ -1256,6 +1309,8 @@ def generate_gitlab_issues_data():
                 "created_at",
                 "closed_at",
                 "labels",
+                "author",
+                "assignees",
                 "loaded_at",
             ],
         )
@@ -1269,7 +1324,7 @@ def generate_gitlab_mr_data():
     mrs = []
     loaded_at = datetime.now().isoformat()
 
-    # Generate 15 MRs (75% of 20 issues)
+    # Generate 15 MRs for gitlab-devops (75% of 20 issues)
     for i in range(1, 16):
         mr_iid = i
         mr_id = 3000 + i
@@ -1286,6 +1341,11 @@ def generate_gitlab_mr_data():
             merged_at = None
             state = "opened"
 
+        # Assign author, assignees, and reviewers
+        author = random.choice(DEV_TEAM_GITLAB)
+        assignees = random.sample(DEV_TEAM_GITLAB, k=random.randint(1, 2))
+        reviewers = random.sample(DEV_TEAM_GITLAB, k=random.randint(1, 2))
+
         mrs.append(
             {
                 "id": mr_id,
@@ -1295,6 +1355,49 @@ def generate_gitlab_mr_data():
                 "created_at": created_at.isoformat(),
                 "merged_at": merged_at.isoformat() if merged_at else None,
                 "source_branch": f"feature/gl-{issue_iid}",
+                "author": author,
+                "assignees": ",".join(assignees),
+                "reviewers": ",".join(reviewers),
+                "jira_key": "",  # Empty for gitlab-devops
+                "loaded_at": loaded_at,
+            }
+        )
+
+    # Generate MRs for hybrid-devops (Jira + GitLab workflow)
+    # Generate 20 MRs linked to Jira issues
+    mr_iid_offset = 100  # Start from 100 to avoid collision with gitlab-devops
+    for i in range(1, 21):
+        mr_iid = mr_iid_offset + i
+        mr_id = 3000 + mr_iid
+        jira_key = f"PROJ-{i}"
+
+        created_at = random_date(START_DATE, END_DATE - timedelta(days=20))
+        # 85% of MRs are merged
+        if random.random() < 0.85:
+            merged_at = add_days(created_at, random.randint(1, 14))
+            state = "merged"
+        else:
+            merged_at = None
+            state = "opened"
+
+        # Assign author, assignees, and reviewers from hybrid team
+        author_member = random.choice(DEV_TEAM_HYBRID)
+        assignee_members = random.sample(DEV_TEAM_HYBRID, k=random.randint(1, 2))
+        reviewer_members = random.sample(DEV_TEAM_HYBRID, k=random.randint(1, 2))
+
+        mrs.append(
+            {
+                "id": mr_id,
+                "iid": mr_iid,
+                "title": f"[{jira_key}] Implement feature for {jira_key}",
+                "state": state,
+                "created_at": created_at.isoformat(),
+                "merged_at": merged_at.isoformat() if merged_at else None,
+                "source_branch": f"feature/{jira_key.lower()}",
+                "author": author_member["gitlab"],
+                "assignees": ",".join([m["gitlab"] for m in assignee_members]),
+                "reviewers": ",".join([m["gitlab"] for m in reviewer_members]),
+                "jira_key": jira_key,
                 "loaded_at": loaded_at,
             }
         )
@@ -1313,12 +1416,16 @@ def generate_gitlab_mr_data():
                 "created_at",
                 "merged_at",
                 "source_branch",
+                "author",
+                "assignees",
+                "reviewers",
+                "jira_key",
                 "loaded_at",
             ],
         )
         writer.writeheader()
         writer.writerows(mrs)
-    print(f"  Created: {mrs_path} ({len(mrs)} GitLab MRs)")
+    print(f"  Created: {mrs_path} ({len(mrs)} GitLab MRs: {15} gitlab-devops + {20} hybrid-devops)")
 
 
 def generate_gitlab_ci_data():
@@ -1340,6 +1447,9 @@ def generate_gitlab_ci_data():
             status = "success" if random.random() < 0.9 else "failed"
             duration_seconds = (finished_at - started_at).total_seconds()
 
+            # Assign user
+            user = random.choice(DEV_TEAM_GITLAB)
+
             pipelines.append(
                 {
                     "id": pipeline_id,
@@ -1349,6 +1459,7 @@ def generate_gitlab_ci_data():
                     "started_at": started_at.isoformat(),
                     "finished_at": finished_at.isoformat(),
                     "duration": int(duration_seconds),
+                    "user": user,
                     "loaded_at": loaded_at,
                 }
             )
@@ -1367,6 +1478,7 @@ def generate_gitlab_ci_data():
                 "started_at",
                 "finished_at",
                 "duration",
+                "user",
                 "loaded_at",
             ],
         )
@@ -1391,6 +1503,10 @@ def generate_jira_data():
         status_transitions = []
         current_time = created_at
 
+        # Assign team members
+        assignee_member = random.choice(DEV_TEAM_HYBRID)
+        reporter_member = random.choice(DEV_TEAM_HYBRID)
+
         # Initial: TODO
         # Transition to In Progress (after 1-5 days)
         in_progress_time = add_days(current_time, random.randint(1, 5))
@@ -1399,7 +1515,7 @@ def generate_jira_data():
                 "created": in_progress_time.isoformat(),
                 "from": "TODO",
                 "to": "In Progress",
-                "author": "John Doe",
+                "author": assignee_member["jira"],
             }
         )
 
@@ -1411,7 +1527,7 @@ def generate_jira_data():
                     "created": done_time.isoformat(),
                     "from": "In Progress",
                     "to": "Done",
-                    "author": "John Doe",
+                    "author": assignee_member["jira"],
                 }
             )
             current_status = "Done"
@@ -1421,8 +1537,6 @@ def generate_jira_data():
             resolutiondate = None
 
         # Convert status_transitions to JSON array string
-        import json
-
         transitions_json = json.dumps(status_transitions)
 
         issues.append(
@@ -1435,8 +1549,8 @@ def generate_jira_data():
                 "priority": random.choice(["High", "Medium", "Low"]),
                 "created": created_at.isoformat(),
                 "resolutiondate": resolutiondate,
-                "assignee": "John Doe",
-                "reporter": "Jane Smith",
+                "assignee": assignee_member["jira"],
+                "reporter": reporter_member["jira"],
                 "status_transitions": transitions_json,
                 "loaded_at": loaded_at,
             }
@@ -1485,6 +1599,9 @@ def generate_jenkins_data():
         result = "SUCCESS" if random.random() < 0.8 else "FAILURE"
         duration_ms = int(random.uniform(60000, 300000))  # 1-5 minutes
 
+        # Assign user
+        user_member = random.choice(DEV_TEAM_HYBRID)
+
         builds.append(
             {
                 "id": build_id,
@@ -1493,6 +1610,7 @@ def generate_jenkins_data():
                 "result": result,
                 "timestamp": timestamp_ms,
                 "duration": duration_ms,
+                "user": user_member["jenkins"],
                 "commit_messages": f'["Fix for PROJ-{mr_iid}"]',
                 "loaded_at": loaded_at,
             }
@@ -1511,6 +1629,7 @@ def generate_jenkins_data():
                 "result",
                 "timestamp",
                 "duration",
+                "user",
                 "commit_messages",
                 "loaded_at",
             ],

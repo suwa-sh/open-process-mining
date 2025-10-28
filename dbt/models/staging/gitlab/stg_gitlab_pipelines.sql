@@ -11,12 +11,20 @@ WITH source AS (
     SELECT * FROM {{ source('bronze_raw', 'bronze_gitlab_pipelines') }}
 ),
 
+user_mapping AS (
+    SELECT * FROM public.master_user_mapping
+    WHERE source_system = 'gitlab'
+),
+
 -- Extract GitLab issue IID from branch name (e.g., feature/gl-123)
 case_extraction AS (
     SELECT
-        *,
-        substring(ref FROM 'feature/gl-(\d+)') AS gitlab_issue_iid
-    FROM source
+        s.*,
+        substring(s.ref FROM 'feature/gl-(\d+)') AS gitlab_issue_iid,
+        -- Map user to employee_id
+        COALESCE(um.employee_id, 'SYSTEM') AS user_employee_id
+    FROM source s
+    LEFT JOIN user_mapping um ON um.user_identifier = s.user
 ),
 
 events AS (
@@ -27,10 +35,12 @@ events AS (
         'Build Started' AS activity,
         started_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'gitlab_ci' AS source_system,
+        user_employee_id AS employee_id,
         jsonb_build_object(
             'pipeline_id', id,
             'ref', ref,
-            'status', status
+            'status', status,
+            'user', user
         ) AS attributes_json
     FROM case_extraction
     WHERE gitlab_issue_iid IS NOT NULL
@@ -44,6 +54,7 @@ events AS (
         'Build Completed' AS activity,
         finished_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'gitlab_ci' AS source_system,
+        user_employee_id AS employee_id,
         jsonb_build_object(
             'pipeline_id', id,
             'status', status,
@@ -61,6 +72,7 @@ events AS (
         'Build Failed' AS activity,
         finished_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'gitlab_ci' AS source_system,
+        user_employee_id AS employee_id,
         jsonb_build_object(
             'pipeline_id', id,
             'status', status,

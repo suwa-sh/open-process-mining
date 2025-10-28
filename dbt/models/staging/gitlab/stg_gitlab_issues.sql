@@ -11,6 +11,19 @@ WITH source AS (
     SELECT * FROM {{ source('bronze_raw', 'bronze_gitlab_issues') }}
 ),
 
+user_mapping AS (
+    SELECT * FROM public.master_user_mapping
+    WHERE source_system = 'gitlab'
+),
+
+source_with_employee AS (
+    SELECT
+        s.*,
+        COALESCE(um.employee_id, 'SYSTEM') AS author_employee_id
+    FROM source s
+    LEFT JOIN user_mapping um ON um.user_identifier = s.author
+),
+
 events AS (
     -- Issue Created event
     SELECT
@@ -19,13 +32,15 @@ events AS (
         'Issue Created' AS activity,
         created_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'gitlab_issue' AS source_system,
+        author_employee_id AS employee_id,
         jsonb_build_object(
             'issue_id', id,
             'issue_iid', iid,
             'title', title,
-            'labels', labels::jsonb
+            'labels', labels::jsonb,
+            'author', author
         ) AS attributes_json
-    FROM source
+    FROM source_with_employee
 
     UNION ALL
 
@@ -36,8 +51,9 @@ events AS (
         'Issue Closed' AS activity,
         closed_at::timestamptz AT TIME ZONE 'UTC' AS timestamp,
         'gitlab_issue' AS source_system,
+        author_employee_id AS employee_id,
         jsonb_build_object('issue_id', id, 'issue_iid', iid) AS attributes_json
-    FROM source
+    FROM source_with_employee
     WHERE state = 'closed' AND closed_at IS NOT NULL
 )
 

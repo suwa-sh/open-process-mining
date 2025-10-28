@@ -50,6 +50,7 @@ def gitlab_pipelines(
                 "started_at": pipeline.get("started_at"),
                 "finished_at": pipeline.get("finished_at"),
                 "duration": pipeline.get("duration"),
+                "user": pipeline.get("user", {}).get("username"),
                 "web_url": pipeline.get("web_url"),
             }
 
@@ -98,6 +99,7 @@ def gitlab_deployments(
                 "created_at": deployment.get("created_at"),
                 "updated_at": deployment.get("updated_at"),
                 "finished_at": deployment.get("finished_at"),
+                "user": deployment.get("user", {}).get("username"),
             }
 
         if "x-next-page" not in response.headers or not response.headers["x-next-page"]:

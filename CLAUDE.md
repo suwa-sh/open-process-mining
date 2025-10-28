@@ -234,17 +234,25 @@ docker compose -f compose.dev.yml logs frontend -f
 # リポジトリルートからスクリプトを実行
 python scripts/generate_sample_data.py
 
-# 6つのプロセスタイプ、合計約4,200イベント + 1,350件の成果データを生成
-# - order-to-cash: 50件の注文、約500-600イベント
-# - employee-onboarding: 40人の候補者、約165イベント
-# - itsm: 150件のインシデント、約981イベント
-# - billing: 180件の請求、約1,011イベント
-# - invoice-approval: 200件の請求書、約1,290イベント
-# - system-development: 30プロジェクト、約262イベント
+# 8つのプロセスタイプ、合計約4,300イベント + 1,350件の成果データを生成
+# - order-to-cash: 50件の注文、約540イベント
+# - employee-onboarding: 40人の候補者、約162イベント
+# - itsm: 150件のインシデント、約975イベント
+# - billing: 180件の請求、約1,029イベント
+# - invoice-approval: 200件の請求書、約1,287イベント
+# - system-development: 10プロジェクト、約47イベント（GitHub）
+# - gitlab-devops: 20ケース、約135イベント（GitLab Issues + MRs + Pipelines）
+# - hybrid-devops: 20ケース、約122イベント（Jira + GitLab MRs + Jenkins）
 ```
 
 **注**: `scripts/generate_sample_data.py` はETLプロセスをシミュレートし、
 各ソースシステム固有のスキーマでCSVファイルを `dbt/seeds/` に出力します。
+
+**組織分析対応**: サンプルデータには`master_user_mapping.csv`を介して、
+外部システムのユーザー識別子（GitHub username、GitLabusername、Jira email、Jenkins username）と
+社員ID（EMP-014, EMP-017, EMP-018, EMP-019）のマッピングが含まれており、
+組織分析（ハンドオーバー、作業負荷、パフォーマンス分析）が可能です。
+
 詳細は `scripts/README.md` を参照してください。
 
 #### 方法2: dlt (data load tool) で外部システムからデータ取得
@@ -342,8 +350,32 @@ dbt test
 **テスト対象**:
 
 - `stg_all_events`: 統合ステージングテーブル
-- `fct_event_log`: イベントログファクトテーブル（全6プロセスタイプ）
+- `fct_event_log`: イベントログファクトテーブル（全8プロセスタイプ）
 - `fct_case_outcomes`: 成果データテーブル
+
+**ステージングモデルの構造**:
+
+各ソースシステムのステージングモデルは、bronzeレイヤーからデータを読み取り、
+`master_user_mapping`テーブルを使用してユーザー識別子を社員IDにマッピングします。
+
+例（GitHub Issues）:
+```sql
+user_mapping AS (
+    SELECT * FROM public.master_user_mapping
+    WHERE source_system = 'github'
+),
+
+case_extraction AS (
+    SELECT
+        s.*,
+        COALESCE(um.employee_id, 'SYSTEM') AS creator_employee_id
+    FROM source s
+    LEFT JOIN user_mapping um ON um.user_identifier = s.creator
+)
+```
+
+この設計により、すべてのイベントログに社員情報が紐づき、
+組織分析（ハンドオーバー、作業負荷、パフォーマンス）が可能になります。
 
 ### 分析の実行
 

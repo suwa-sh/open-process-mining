@@ -222,6 +222,62 @@ dbt run
 dbt test
 ```
 
+#### 組織分析のためのデータソース追加（外部システム連携時）
+
+外部システム（GitHub、GitLab、Jira、Jenkinsなど）からデータを取得する場合、組織分析を有効にするには以下の手順が必要です。
+
+**ステップ1: ユーザーマッピングCSVを作成**
+
+`dbt/seeds/master_user_mapping.csv`に外部システムのユーザー識別子を追加：
+
+```csv
+source_system,user_identifier,employee_id,notes
+your_system,user123,EMP-001,Your System User Account
+```
+
+**ステップ2: dltソースでユーザー情報を抽出**
+
+```python
+# dlt/sources/your_system_source.py
+yield {
+    "id": record["id"],
+    "case_id": record["order_id"],
+    "user_id": record["user_id"],  # 組織分析用: ユーザー識別子を必ず含める
+}
+```
+
+**ステップ3: dbtステージングモデルでemployee_idにマッピング**
+
+```sql
+-- dbt/models/staging/your_system/stg_your_system.sql
+WITH user_mapping AS (
+    SELECT * FROM public.master_user_mapping
+    WHERE source_system = 'your_system'
+),
+case_extraction AS (
+    SELECT
+        s.*,
+        COALESCE(um.employee_id, 'SYSTEM') AS user_employee_id
+    FROM source s
+    LEFT JOIN user_mapping um ON um.user_identifier = s.user_id
+)
+SELECT
+    'your-process' AS process_type,
+    case_id,
+    activity,
+    timestamp,
+    user_employee_id AS employee_id  -- 組織分析用: employee_idを必ず含める
+FROM case_extraction
+```
+
+**参考実装**:
+
+- `dlt/sources/github_source.py`: GitHubユーザー情報の抽出（creator, assignees, actor）
+- `dbt/models/staging/github/stg_github_issues.sql`: ユーザーマッピングパターン
+- `scripts/generate_sample_data.py`: サンプルデータ生成時のユーザー情報設定
+
+詳細は [USAGE.md](USAGE.md) の「パターン2: dlt自動投入」を参照してください。
+
 #### 分析の実行
 
 分析はWeb UI (<http://localhost:5173>) から実行します：
@@ -406,15 +462,16 @@ npx playwright install chromium
 
 ### 主要テーブル
 
-| テーブル                        | 説明                                             |
-| ------------------------------- | ------------------------------------------------ |
-| `fct_event_log`                 | プロセスマイニング用イベントログ（組織情報含む） |
-| `fct_case_outcomes`             | ケース別成果データ（メトリック値）               |
-| `process_analysis_results`      | プロセス分析結果（JSON形式）                     |
-| `organization_analysis_results` | 組織分析結果（JSON形式）                         |
-| `outcome_analysis_results`      | 成果分析結果（JSON形式）                         |
-| `master_employees`              | 社員マスター                                     |
-| `master_departments`            | 部署マスター                                     |
+| テーブル                        | 説明                                                               |
+| ------------------------------- | ------------------------------------------------------------------ |
+| `fct_event_log`                 | プロセスマイニング用イベントログ（組織情報含む）                   |
+| `fct_case_outcomes`             | ケース別成果データ（メトリック値）                                 |
+| `process_analysis_results`      | プロセス分析結果（JSON形式）                                       |
+| `organization_analysis_results` | 組織分析結果（JSON形式）                                           |
+| `outcome_analysis_results`      | 成果分析結果（JSON形式）                                           |
+| `master_employees`              | 社員マスター                                                       |
+| `master_departments`            | 部署マスター                                                       |
+| `master_user_mapping`           | 外部システムユーザーと社員IDのマッピング（組織分析用、シードCSV） |
 
 詳細なスキーマ情報とデータベース操作は [USAGE.md](USAGE.md) を参照してください。
 

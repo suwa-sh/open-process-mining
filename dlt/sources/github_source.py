@@ -65,6 +65,7 @@ def github_issues(
                     "created_at": issue["created_at"],
                     "closed_at": issue.get("closed_at"),
                     "labels": [label["name"] for label in issue.get("labels", [])],
+                    "creator": issue.get("user", {}).get("login"),
                     "assignees": [
                         assignee["login"] for assignee in issue.get("assignees", [])
                     ],
@@ -134,6 +135,10 @@ def github_pull_requests(
                 "closed_at": pr.get("closed_at"),
                 "head_ref": pr["head"]["ref"],
                 "base_ref": pr["base"]["ref"],
+                "creator": pr.get("user", {}).get("login"),
+                "assignees": [
+                    assignee["login"] for assignee in pr.get("assignees", [])
+                ],
             }
 
         # Check if there are more pages
@@ -197,6 +202,7 @@ def github_actions_runs(
                 "head_branch": run["head_branch"],
                 "head_sha": run["head_sha"],
                 "event": run["event"],
+                "actor": run.get("actor", {}).get("login"),
             }
 
         # Check if there are more pages

@@ -8,7 +8,7 @@ WITH github_all_events AS (
         case_id,
         activity,
         timestamp,
-        'SYSTEM' AS resource  -- GitHub data doesn't include employee mapping, use system as placeholder
+        employee_id AS resource
     FROM {{ ref('stg_github_issues') }}
 
     UNION ALL
@@ -18,7 +18,7 @@ WITH github_all_events AS (
         case_id,
         activity,
         timestamp,
-        'SYSTEM' AS resource
+        employee_id AS resource
     FROM {{ ref('stg_github_pull_requests') }}
 
     UNION ALL
@@ -28,7 +28,7 @@ WITH github_all_events AS (
         case_id,
         activity,
         timestamp,
-        'SYSTEM' AS resource
+        employee_id AS resource
     FROM {{ ref('stg_github_actions') }}
 )
 

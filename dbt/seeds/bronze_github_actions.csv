@@ -1,12 +1,11 @@
-id,name,status,conclusion,created_at,updated_at,head_branch,loaded_at
-4031,CI Build,completed,success,2024-05-12T16:36:00,2024-05-12T17:22:59.438923,feature/PROJ-103-implement-api,2025-10-28T11:19:53.151551
-4041,CI Build,completed,failure,2024-10-06T06:45:00,2024-10-06T07:31:13.680605,feature/PROJ-104-implement-api,2025-10-28T11:19:53.151569
-4043,CI Build,completed,success,2024-10-06T12:16:09.454266,2024-10-06T12:56:53.230623,feature/PROJ-104-implement-api,2025-10-28T11:19:53.151582
-4051,CI Build,completed,success,2024-10-12T00:46:00,2024-10-12T01:21:49.436220,feature/PROJ-105-implement-api,2025-10-28T11:19:53.151598
-4061,CI Build,completed,success,2024-09-07T11:44:00,2024-09-07T12:25:02.915706,feature/PROJ-106-implement-api,2025-10-28T11:19:53.151612
-3011,CI Build,completed,failure,2024-04-12T11:24:00,2024-04-12T12:13:45.883418,fix/issue-1,2025-10-28T11:19:53.151628
-3013,CI Build,completed,success,2024-04-12T19:16:39.922929,2024-04-12T20:46:39.978783,fix/issue-1,2025-10-28T11:19:53.151640
-3021,CI Build,completed,failure,2024-06-20T03:29:00,2024-06-20T03:51:32.252403,fix/issue-2,2025-10-28T11:19:53.151654
-3023,CI Build,completed,success,2024-06-20T07:42:52.007670,2024-06-20T08:24:58.892926,fix/issue-2,2025-10-28T11:19:53.151665
-3031,CI Build,completed,success,2024-06-05T17:46:00,2024-06-05T19:17:01.780180,fix/issue-3,2025-10-28T11:19:53.151680
-3032,Deploy to Production,completed,success,2024-06-05T20:45:21.241362,2024-06-05T20:57:21.241362,fix/issue-3,2025-10-28T11:19:53.151687
+id,name,status,conclusion,created_at,updated_at,head_branch,actor,loaded_at
+4031,CI Build,completed,success,2024-05-12T16:36:00,2024-05-12T17:45:25.515092,feature/PROJ-103-implement-api,kato-dev,2025-10-29T02:50:10.879577
+4041,CI Build,completed,success,2024-10-05T06:45:00,2024-10-05T07:33:01.422885,feature/PROJ-104-implement-api,ito-mgr,2025-10-29T02:50:10.879605
+4051,CI Build,completed,success,2024-10-15T00:46:00,2024-10-15T02:44:52.625289,feature/PROJ-105-implement-api,nakamura-lead,2025-10-29T02:50:10.879627
+4061,CI Build,completed,failure,2024-09-08T11:44:00,2024-09-08T12:36:52.387421,feature/PROJ-106-implement-api,ito-mgr,2025-10-29T02:50:10.879648
+4063,CI Build,completed,success,2024-09-08T19:01:56.963110,2024-09-08T20:40:21.888906,feature/PROJ-106-implement-api,ito-mgr,2025-10-29T02:50:10.879665
+3011,CI Build,completed,success,2024-04-13T11:24:00,2024-04-13T13:23:09.842454,fix/issue-1,kato-dev,2025-10-29T02:50:10.879687
+3021,CI Build,completed,success,2024-06-15T03:29:00,2024-06-15T04:43:13.989887,fix/issue-2,yoshida-eng,2025-10-29T02:50:10.879707
+3031,CI Build,completed,failure,2024-06-08T17:46:00,2024-06-08T18:24:46.621649,fix/issue-3,ito-mgr,2025-10-29T02:50:10.879729
+3033,CI Build,completed,success,2024-06-09T00:13:57.489230,2024-06-09T01:59:16.933651,fix/issue-3,nakamura-lead,2025-10-29T02:50:10.879747
+3032,Deploy to Production,completed,success,2024-06-09T03:17:51.325990,2024-06-09T03:29:51.325990,fix/issue-3,kato-dev,2025-10-29T02:50:10.879754

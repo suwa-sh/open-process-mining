@@ -1,0 +1,16 @@
+source_system,user_identifier,employee_id,notes
+github,kato-dev,EMP-017,GitHub開発者アカウント
+github,yoshida-eng,EMP-018,GitHub上級エンジニアアカウント
+github,nakamura-lead,EMP-019,GitHubテックリードアカウント
+gitlab,kato.dev,EMP-017,GitLab開発者アカウント
+gitlab,yoshida.eng,EMP-018,GitLab上級エンジニアアカウント
+gitlab,nakamura.lead,EMP-019,GitLabテックリードアカウント
+jira,kato@example.com,EMP-017,Jira開発者アカウント
+jira,yoshida@example.com,EMP-018,Jira上級エンジニアアカウント
+jira,nakamura@example.com,EMP-019,Jiraテックリードアカウント
+jenkins,kato,EMP-017,Jenkins開発者アカウント
+jenkins,yoshida,EMP-018,Jenkins上級エンジニアアカウント
+jenkins,nakamura,EMP-019,Jenkinsテックリードアカウント
+github,ito-mgr,EMP-014,GitHubのITマネージャー
+gitlab,ito.mgr,EMP-014,GitLabのITマネージャー
+jira,ito@example.com,EMP-014,JiraのITマネージャー

@@ -1,11 +1,10 @@
-id,number,title,state,created_at,merged_at,head_ref,loaded_at
-2103,203,Implement API endpoint for PROJ-103,closed,2024-05-06T16:36:00,2024-05-11T16:36:00,feature/PROJ-103-implement-api,2025-10-28T11:19:53.151543
-2104,204,Implement API endpoint for PROJ-104,closed,2024-10-02T06:45:00,2024-10-05T06:45:00,feature/PROJ-104-implement-api,2025-10-28T11:19:53.151563
-3104,1204,[REWORK] Implement API endpoint for PROJ-104,closed,2024-10-06T08:48:16.057437,2024-10-06T11:53:55.267389,feature/PROJ-104-implement-api,2025-10-28T11:19:53.151576
-2105,205,Implement API endpoint for PROJ-105,closed,2024-10-07T00:46:00,2024-10-12T00:46:00,feature/PROJ-105-implement-api,2025-10-28T11:19:53.151591
-2106,206,Implement API endpoint for PROJ-106,closed,2024-09-04T11:44:00,2024-09-06T11:44:00,feature/PROJ-106-implement-api,2025-10-28T11:19:53.151607
-2001,101,Fix authentication bug (fixes #1),closed,2024-04-07T11:24:00,2024-04-11T11:24:00,fix/issue-1,2025-10-28T11:19:53.151622
-3001,1101,[REWORK] Fix authentication bug (fixes #1),closed,2024-04-12T14:08:39.298736,2024-04-12T19:02:07.142807,fix/issue-1,2025-10-28T11:19:53.151634
-2002,102,Fix authentication bug (fixes #2),closed,2024-06-14T03:29:00,2024-06-19T03:29:00,fix/issue-2,2025-10-28T11:19:53.151649
-3002,1102,[REWORK] Fix authentication bug (fixes #2),closed,2024-06-20T05:06:17.530826,2024-06-20T07:21:47.153387,fix/issue-2,2025-10-28T11:19:53.151660
-2003,103,Fix authentication bug (fixes #3),closed,2024-06-03T17:46:00,2024-06-04T17:46:00,fix/issue-3,2025-10-28T11:19:53.151674
+id,number,title,state,created_at,merged_at,head_ref,creator,assignees,loaded_at
+2103,203,Implement API endpoint for PROJ-103,closed,2024-05-08T16:36:00,2024-05-11T16:36:00,feature/PROJ-103-implement-api,yoshida-eng,ito-mgr,2025-10-29T02:50:10.879566
+2104,204,Implement API endpoint for PROJ-104,closed,2024-10-03T06:45:00,2024-10-04T06:45:00,feature/PROJ-104-implement-api,yoshida-eng,nakamura-lead,2025-10-29T02:50:10.879597
+2105,205,Implement API endpoint for PROJ-105,closed,2024-10-09T00:46:00,2024-10-14T00:46:00,feature/PROJ-105-implement-api,nakamura-lead,"nakamura-lead,yoshida-eng",2025-10-29T02:50:10.879621
+2106,206,Implement API endpoint for PROJ-106,closed,2024-09-04T11:44:00,2024-09-08T11:44:00,feature/PROJ-106-implement-api,ito-mgr,yoshida-eng,2025-10-29T02:50:10.879642
+3106,1206,[REWORK] Implement API endpoint for PROJ-106,closed,2024-09-08T13:34:07.251522,2024-09-08T18:40:59.508139,feature/PROJ-106-implement-api,yoshida-eng,"nakamura-lead,kato-dev",2025-10-29T02:50:10.879658
+2001,101,Fix authentication bug (fixes #1),closed,2024-04-09T11:24:00,2024-04-13T11:24:00,fix/issue-1,ito-mgr,"nakamura-lead,ito-mgr",2025-10-29T02:50:10.879680
+2002,102,Fix authentication bug (fixes #2),closed,2024-06-14T03:29:00,2024-06-15T03:29:00,fix/issue-2,kato-dev,nakamura-lead,2025-10-29T02:50:10.879701
+2003,103,Fix authentication bug (fixes #3),closed,2024-06-03T17:46:00,2024-06-07T17:46:00,fix/issue-3,ito-mgr,"yoshida-eng,nakamura-lead",2025-10-29T02:50:10.879722
+3003,1103,[REWORK] Fix authentication bug (fixes #3),closed,2024-06-08T18:57:18.615377,2024-06-09T00:06:52.518659,fix/issue-3,nakamura-lead,"nakamura-lead,kato-dev",2025-10-29T02:50:10.879740

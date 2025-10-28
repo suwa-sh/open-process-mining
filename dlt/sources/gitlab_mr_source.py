@@ -52,6 +52,14 @@ def gitlab_merge_requests(
                 "source_branch": mr["source_branch"],
                 "target_branch": mr["target_branch"],
                 "author": mr.get("author", {}).get("username"),
+                "assignees": [
+                    assignee["username"]
+                    for assignee in mr.get("assignees", [])
+                ],
+                "reviewers": [
+                    reviewer["username"]
+                    for reviewer in mr.get("reviewers", [])
+                ],
                 "web_url": mr.get("web_url"),
             }
 
