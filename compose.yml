@@ -75,7 +75,7 @@ services:
         condition: service_healthy
     profiles: [dbt]
     volumes:
-      - ./dbt:/app/dbt:ro
+      - ./dbt:/app/dbt
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
@@ -93,7 +93,7 @@ services:
         condition: service_healthy
     profiles: [dlt]
     volumes:
-      - ./dlt:/app/dlt:ro
+      - ./dlt:/app/dlt
       - ./dlt/.dlt/secrets.toml:/app/dlt/.dlt/secrets.toml
     environment:
       DESTINATION__POSTGRES__CREDENTIALS__HOST: postgres

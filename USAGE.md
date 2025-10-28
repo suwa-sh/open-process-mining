@@ -29,6 +29,9 @@ docker compose up -d
 
 # 全サービスが起動するまで待機（30秒程度）
 docker compose ps
+
+# 最新バージョンにアップデート
+docker compose pull
 ```
 
 **実行環境 (compose.yml):**
@@ -44,7 +47,7 @@ graph TB
             DB_PROD[(PostgreSQL)]
         end
 
-        CustomCode[Custom dbt/dlt<br/>Read-Only Mount]
+        CustomCode[Custom dbt/dlt<br/>Read-Write Mount]
     end
 
     User[User]
@@ -53,8 +56,8 @@ graph TB
     GHCR --->|Pull Base Images| DBT_PROD
     GHCR --->|Pull Base Images| DLT_PROD
 
-    CustomCode -.->|Mount :ro| DBT_PROD
-    CustomCode -.->|Mount :ro| DLT_PROD
+    CustomCode -.->|Mount :rw| DBT_PROD
+    CustomCode -.->|Mount :rw| DLT_PROD
 
     User -->|Browse| FE_PROD
     FE_PROD --> BE_PROD

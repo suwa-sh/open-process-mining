@@ -1,8 +1,9 @@
 name: Publish Docker Images
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "*.*.*"
   workflow_dispatch:
     inputs:
       tag:
@@ -15,8 +16,8 @@ env:
   IMAGE_PREFIX: ${{ github.repository }}
 
 jobs:
-  publish:
-    name: Build and Publish Docker Images
+  publish-backend:
+    name: Build and Publish Backend Image
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -36,7 +37,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract metadata for backend
-        id: backend-meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-backend
@@ -52,14 +53,36 @@ jobs:
         with:
           context: ./backend
           push: true
-          tags: ${{ steps.backend-meta.outputs.tags }}
-          labels: ${{ steps.backend-meta.outputs.labels }}
-          cache-from: type=gha
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-backend:latest
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
+  publish-frontend:
+    name: Build and Publish Frontend Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract metadata for frontend
-        id: frontend-meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend
@@ -75,14 +98,36 @@ jobs:
         with:
           context: ./frontend
           push: true
-          tags: ${{ steps.frontend-meta.outputs.tags }}
-          labels: ${{ steps.frontend-meta.outputs.labels }}
-          cache-from: type=gha
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:latest
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
+  publish-dbt-base:
+    name: Build and Publish dbt-base Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract metadata for dbt-base
-        id: dbt-base-meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dbt-base
@@ -99,14 +144,36 @@ jobs:
           context: ./dbt
           file: ./dbt/Dockerfile.base
           push: true
-          tags: ${{ steps.dbt-base-meta.outputs.tags }}
-          labels: ${{ steps.dbt-base-meta.outputs.labels }}
-          cache-from: type=gha
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dbt-base:latest
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
+  publish-dlt-base:
+    name: Build and Publish dlt-base Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract metadata for dlt-base
-        id: dlt-base-meta
+        id: meta
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dlt-base
@@ -123,8 +190,10 @@ jobs:
           context: ./dlt
           file: ./dlt/Dockerfile.base
           push: true
-          tags: ${{ steps.dlt-base-meta.outputs.tags }}
-          labels: ${{ steps.dlt-base-meta.outputs.labels }}
-          cache-from: type=gha
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: |
+            type=gha
+            type=registry,ref=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-dlt-base:latest
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
