@@ -31,7 +31,7 @@ docker compose up -d
 docker compose ps
 
 # 最新バージョンにアップデート
-docker compose pull
+docker compose --profile dbt --profile dlt pull
 ```
 
 **実行環境 (compose.yml):**
@@ -300,17 +300,21 @@ if __name__ == "__main__":
 
 ### ステップ3: dlt設定ファイルの編集
 
+**重要**: dltは設定を読み込む際、ソースファイル名（モジュール名）に基づいてキーを探します。
+例: `your_system_source.py` → `[sources.your_system_source]`
+
 **dlt/.dlt/config.toml**:
 
 ```toml
-[sources.your_system]
+[sources.your_system_source]
 api_url = "https://api.yoursystem.com"
 ```
 
 **dlt/.dlt/secrets.toml**:
 
 ```toml
-[sources.your_system]
+[sources.your_system_source]
+# ソースファイル名に _source が含まれる場合、設定キーにも必要
 api_key = "your_api_key_here"
 
 [destination.postgres.credentials]
@@ -320,6 +324,11 @@ password = "your_password"
 host = "postgres"
 port = 5432
 ```
+
+**設定キーの命名規則**:
+- ソースファイル: `dlt/sources/your_system_source.py`
+- 設定セクション: `[sources.your_system_source]`
+- ファイル名と設定キーを一致させること
 
 ### ステップ4: dbtステージングモデルの作成
 

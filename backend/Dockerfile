@@ -11,14 +11,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Install Python dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install dbt-core==1.10.13 dbt-postgres==1.9.1
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY src/ ./src/
-
-# Make directory for dbt
-RUN mkdir -p /app/dbt
 
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser \
