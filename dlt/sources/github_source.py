@@ -327,7 +327,7 @@ def github_source(
     owner: str = dlt.config.value,
     repositories: list[str] = dlt.config.value,
     since: Optional[str] = None,
-) -> list[dlt.Resource]:
+) -> list:
     """
     GitHub source combining Issues, Pull Requests, Actions Runs, Commits, and Releases.
 

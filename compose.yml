@@ -94,8 +94,8 @@ services:
     profiles: [dlt]
     volumes:
       - ./dlt:/app/dlt
-      - ./dlt/.dlt/secrets.toml:/app/dlt/.dlt/secrets.toml
     environment:
+      PYTHONPATH: /app/dlt
       DESTINATION__POSTGRES__CREDENTIALS__HOST: postgres
       DESTINATION__POSTGRES__CREDENTIALS__PORT: 5432
       DESTINATION__POSTGRES__CREDENTIALS__DATABASE: ${POSTGRES_DB}

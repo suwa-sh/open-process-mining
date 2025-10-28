@@ -47,26 +47,6 @@ services:
     networks:
       - process-mining-network
 
-  dbt:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: process-mining-dbt
-    environment:
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./dbt:/app/dbt
-    networks:
-      - process-mining-network
-    command: [bash]
-
   frontend:
     build: ./frontend
     container_name: process-mining-frontend
@@ -91,13 +71,12 @@ services:
     networks:
       - process-mining-network
 
-  dlt:
-    build: ./dlt
-    container_name: process-mining-dlt
-    profiles:
-      - dlt
+  dbt:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: process-mining-dbt
     environment:
-      PYTHONPATH: /app
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: ${POSTGRES_USER}
@@ -107,9 +86,28 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./dlt/sources:/app/sources
-      - ./dlt/pipelines:/app/pipelines
-      - ./dlt/.dlt:/app/.dlt
+      - ./dbt:/app/dbt
+    networks:
+      - process-mining-network
+    command: [bash]
+
+  dlt:
+    build: ./dlt
+    container_name: process-mining-dlt
+    profiles:
+      - dlt
+    environment:
+      PYTHONPATH: /app/dlt
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./dlt:/app/dlt
     networks:
       - process-mining-network
 

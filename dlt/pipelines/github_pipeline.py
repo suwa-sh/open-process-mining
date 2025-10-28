@@ -20,7 +20,7 @@ def load_github_data() -> None:
     """
     # Get configuration
     owner = dlt.config["sources.github.owner"]
-    repo = dlt.config["sources.github.repo"]
+    repositories = dlt.config["sources.github.repositories"]
 
     # Create pipeline
     pipeline = dlt.pipeline(
@@ -29,14 +29,16 @@ def load_github_data() -> None:
         dataset_name="bronze_raw",
     )
 
-    # Load data from all sources
-    load_info = pipeline.run(
-        [
+    # Load data from all sources for each repository
+    sources = []
+    for repo in repositories:
+        sources.extend([
             github_issues(owner=owner, repo=repo),
             github_pull_requests(owner=owner, repo=repo),
             github_actions_runs(owner=owner, repo=repo),
-        ]
-    )
+        ])
+
+    load_info = pipeline.run(sources)
 
     # Print results
     print(f"Pipeline run completed!")
