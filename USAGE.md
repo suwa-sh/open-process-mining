@@ -684,3 +684,52 @@ docker compose exec -T postgres psql -U process_mining -d process_mining_db -c "
 ```
 
 問題が解決しない場合は、[GitHub Issues](https://github.com/suwa-sh/open-process-mining/issues)で報告してください。
+
+---
+
+## Agent Skills (Claude Code)
+
+このプロジェクトには、[Claude Code](https://docs.anthropic.com/en/docs/claude-code)で利用できるAgent Skillsが含まれています。
+
+### 利用可能なスキル
+
+| スキル | 説明 | トリガー例 |
+| --- | --- | --- |
+| `opm-add-csv-source` | CSVデータとdbt stagingモデルを生成し、新しいプロセスタイプを追加 | 「新しいプロセスを追加」「CSVデータソースを追加」 |
+| `opm-add-dlt-source` | dltソース、パイプライン、dbt stagingモデルを一式生成し、外部システム連携を追加 | 「dltソースを追加」「外部APIからデータ取得」 |
+| `opm-add-outcome-metric` | 成果データCSVまたはdbtマートモデルを生成し、成果分析を可能にする | 「成果メトリックを追加」「KPIを追加」 |
+| `opm-setup` | 環境セットアップ、データリセット、トラブルシューティングをガイド | 「OPMをセットアップ」「データベースをリセット」 |
+
+### インストール
+
+```bash
+# リポジトリを取得
+git clone https://github.com/suwa-sh/open-process-mining.git
+cd open-process-mining
+```
+
+利用パターンに応じてコピー先を選択してください。
+
+#### A. 自組織のデータリポジトリに配置する場合
+
+自組織のdbt/dltカスタマイズを管理するリポジトリにスキルを配置します。チームでスキルを共有できます。
+
+```bash
+dest=/path/to/your-data-repo/.claude/skills
+mkdir -p "$dest"
+for d in .claude/skills/opm-*; do cp -R "$d" "$dest/$(basename "$d")"; done
+```
+
+#### B. ユーザーグローバルに配置する場合
+
+どのディレクトリからでもスキルを利用したい場合に適しています。
+
+```bash
+dest=~/.claude/skills
+mkdir -p "$dest"
+for d in .claude/skills/opm-*; do cp -R "$d" "$dest/$(basename "$d")"; done
+```
+
+### 使い方
+
+Claude Codeのチャットで、トリガー例のようなメッセージを送信すると、対応するスキルが自動的に発動します。
